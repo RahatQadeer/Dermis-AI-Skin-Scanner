@@ -1,0 +1,17 @@
+---
+description: Git commit and PR safety for Dermis
+alwaysApply: true
+---
+
+## Commits
+
+- **Commit only when the user asks.** Never push unless asked. No empty commits.
+- Before commit (in parallel): `git status`, `git diff`, `git log` — message focuses on **why** (1–2 sentences).
+- Never commit secrets; warn if asked to commit `.env` or keys.
+- Hook failed → fix and **new** commit. Amend only if user asked, HEAD is yours, not pushed, and hook auto-fixed after success.
+- Never: `git config` changes, skip hooks, `-i` git, destructive git unless explicitly requested. No force-push to main/master.
+
+## Pull requests
+
+- Use `gh`: parallel status, diff, remote tracking, `git log`, `git diff base...HEAD`.
+- Summarise **all** branch commits. Push `-u origin HEAD` if needed. Body: `## Summary`, `## Test plan`. Return PR URL.
