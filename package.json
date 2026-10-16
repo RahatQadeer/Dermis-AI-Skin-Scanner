@@ -1,0 +1,41 @@
+{
+  "name": "dermis",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "backend"
+  ],
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "verify:max-lines": "node scripts/verify-max-lines.mjs",
+    "test": "node --test scripts/ci-smoke.test.mjs scripts/verify-migrations.test.mjs && npm run test --workspace=@dermis/domain && npm run test --workspace=@dermis/backend && npm run test --workspace=@dermis/mobile",
+    "build": "npm run build --workspace=@dermis/mobile",
+    "ci": "npm run format:check && npm run lint && npm run typecheck && npm run verify:max-lines && npm test && npm run build",
+    "mobile": "npm run start --workspace=@dermis/mobile",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
+    "eslint-config-expo": "^10.0.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.6",
+    "prettier": "^3.6.2",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.46.4"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,mjs,cjs}": [
+      "eslint --fix"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  }
+}
