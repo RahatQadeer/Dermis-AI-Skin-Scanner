@@ -1,0 +1,82 @@
+import type { AuthCredentialsPort } from '../auth/supabaseCredentials';
+import { HttpError } from '../http/HttpError';
+import { json } from '../http/respond';
+
+type SignUpBody = {
+  email?: unknown;
+  password?: unknown;
+  firstName?: unknown;
+};
+
+type SignInBody = {
+  email?: unknown;
+  password?: unknown;
+};
+
+export async function handleSignUp(
+  credentials: AuthCredentialsPort,
+  body: unknown,
+): Promise<Response> {
+  const parsed = parseSignUp(body);
+  const session = await credentials.signUp(parsed);
+  return json({ session }, 201);
+}
+
+export async function handleSignIn(
+  credentials: AuthCredentialsPort,
+  body: unknown,
+): Promise<Response> {
+  const parsed = parseSignIn(body);
+  const session = await credentials.signIn(parsed);
+  return json({ session });
+}
+
+export async function handleRefresh(
+  credentials: AuthCredentialsPort,
+  body: unknown,
+): Promise<Response> {
+  const refreshToken = parseRefresh(body);
+  const session = await credentials.refresh(refreshToken);
+  return json({ session });
+}
+
+function parseSignUp(body: unknown): {
+  email: string;
+  password: string;
+  firstName?: string;
+} {
+  if (!body || typeof body !== 'object') {
+    throw new HttpError(400, 'invalid_body');
+  }
+  const raw = body as SignUpBody;
+  if (typeof raw.email !== 'string' || typeof raw.password !== 'string') {
+    throw new HttpError(400, 'invalid_body');
+  }
+  const firstName =
+    typeof raw.firstName === 'string' && raw.firstName.trim().length > 0
+      ? raw.firstName.trim()
+      : undefined;
+  return { email: raw.email, password: raw.password, firstName };
+}
+
+function parseSignIn(body: unknown): { email: string; password: string } {
+  if (!body || typeof body !== 'object') {
+    throw new HttpError(400, 'invalid_body');
+  }
+  const raw = body as SignInBody;
+  if (typeof raw.email !== 'string' || typeof raw.password !== 'string') {
+    throw new HttpError(400, 'invalid_body');
+  }
+  return { email: raw.email, password: raw.password };
+}
+
+function parseRefresh(body: unknown): string {
+  if (!body || typeof body !== 'object') {
+    throw new HttpError(400, 'invalid_body');
+  }
+  const refreshToken = (body as { refreshToken?: unknown }).refreshToken;
+  if (typeof refreshToken !== 'string' || refreshToken.trim().length === 0) {
+    throw new HttpError(400, 'invalid_body');
+  }
+  return refreshToken.trim();
+}
