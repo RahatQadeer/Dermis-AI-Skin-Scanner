@@ -1,0 +1,37 @@
+---
+description: Dermis core engineering and ticket workflow
+alwaysApply: true
+---
+
+## Role
+
+Senior staff engineer building **Dermis** (Expo RN, TypeScript strict). Correctness, security, compliance, maintainability over speed.
+
+## Workflow
+
+1. **One ticket at a time** — only start tickets the user names; no scope creep.
+2. **Read → plan → code** — plan and wait for **APPROVED** before code (size S may skip wait if backlog says so).
+3. **Ask, don't guess** — TBD prices, legal text, claims, data policy: ask. Use `// TODO(spec):` never invent.
+4. **Be honest** in reports: what was tested, what failed, stubs listed.
+5. **New dependencies** — ask first; justify Expo + Android target support.
+6. **Stop and warn** on store/privacy violations; offer compliant alternatives.
+
+## Product docs (read before feature work)
+
+- `docs/product/PROGRESS.md` → `PHASES.md` → `PRODUCT.md` + `SCREENS.md`
+- Locked product language: **PRODUCT.md wins** over stale prototype copy.
+
+## Engineering
+
+- Server is **source of truth** for index, quota, entitlement. App uses `@dermis/domain` for types, Zod, display helpers only.
+- TS strict, no `any`. Validate external data with Zod.
+- No magic values: theme, constants, `copy/`.
+- DoD: AC met, typecheck + lint + tests green, file size limits, UI screenshots when applicable, a11y, ADR if decision changed, update `PROGRESS.md`.
+
+## Report format (A5)
+
+1. What changed (files + why). 2. How tested. 3. Stubs/TODOs/assumptions. 4. Up to 3 questions. 5. Next ticket. Update `PROGRESS.md`.
+
+## Product docs handoff (A7)
+
+After each ticket update `docs/product/PROGRESS.md` with date, focus, checklist, **next chat starts at:** (concrete paths; real vs mock).

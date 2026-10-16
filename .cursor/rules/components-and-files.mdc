@@ -1,0 +1,27 @@
+---
+description: Component library and file size limits
+globs: "**/*.ts,**/*.tsx"
+alwaysApply: false
+---
+
+## File limits (ESLint enforced)
+
+| Item | Limit |
+|------|-------|
+| File | 300 lines (target &lt;200) |
+| Function | 50 lines, complexity 10 |
+| Screen `app/*` | &lt;100 lines — compose only |
+| Params | 4 max |
+| JSX depth | 4 — extract components |
+
+One component per file. Features: `components/`, `hooks/`, `services/`, `api/`, `types.ts`, `constants.ts`, `index.ts`.
+
+## UI
+
+- Reuse `apps/mobile/src/components/` — no copy-paste between screens.
+- Tokens only (Fredoka, Nunito). One primary CTA per screen. No fake press on read-only rows.
+- No cross-feature internal imports — shared code in `components/` or `lib/`.
+- Phone + tablet parity; same product behaviour on iOS/Android.
+- No lorem; use `copy/` or `TODO(spec)`. Prototype copy except D4 banned claims.
+
+Required inventory: see Part B3 in `Dermis_Cursor_Prompt_v3.md`.

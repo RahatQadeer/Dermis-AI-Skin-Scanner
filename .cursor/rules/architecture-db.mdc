@@ -1,0 +1,26 @@
+---
+description: Architecture, backend, and database rules
+alwaysApply: false
+---
+
+## Stack
+
+Expo app → hooks → services → API client. Backend handlers → services → repositories + adapters (Gemini, billing, storage).
+
+- TanStack Query for server data. **No new global state library** until a ticket needs it and user approves.
+- Expo Router; onboarding/auth stack separate from tabs.
+- No secrets in the app.
+
+## Scan pipeline (server)
+
+Auth → entitlement/quota → validate image → SkinAnalyzer (Gemini, Zod) → calculateIndex → transactional save + usage → photo retention → return (idempotent).
+
+## DB
+
+One table per entity; JSONB for scan scores; RLS on all user data; atomic quota upsert; full user deletion path. Migrations only — never edit old ones.
+
+## Repo layout
+
+`apps/mobile`, `packages/domain`, `backend/`, `docs/`.
+
+See Part C in `Dermis_Cursor_Prompt_v3.md`.
