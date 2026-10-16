@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+# Strip Cursor Agent co-author trailers so they never appear as GitHub contributors.
+msg_file="$1"
+if [ -n "$msg_file" ] && [ -f "$msg_file" ]; then
+  tmp=$(mktemp)
+  sed '/^Co-authored-by: Cursor <cursoragent@cursor.com>$/d' "$msg_file" > "$tmp"
+  mv "$tmp" "$msg_file"
+fi
