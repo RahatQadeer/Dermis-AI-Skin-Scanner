@@ -1,0 +1,23 @@
+---
+description: App Store and Play compliance (blocking)
+alwaysApply: true
+---
+
+Treat as **blocking**. Items marked **[verify]** — re-check official policy at submission.
+
+## Critical
+
+- **No on-device / photos-never-leave claims** — cloud + Gemini (see D4 in master prompt).
+- **AI consent before first scan** — name Google Gemini; no API call before consent stored.
+- **Account deletion** in-app + public URL; delete associated data.
+- **Store billing** for Pro (RevenueCat); Restore Purchases; D3 paywall disclosures.
+- **Health/wellness wording** — not a medical device; no unproven clinical/dermatologist claims.
+- **Permissions:** camera + notifications only, in context.
+- **Audience 18+**; honest listings and screenshots.
+- **Android:** target API 36+ path, predictive back, 16 KB **[verify]** with Expo SDK.
+
+## Copy audit (D4)
+
+Rewrite prototype strings listed in `docs/product/PRODUCT.md` banned claims before submission (DERM-061).
+
+Full checklist: ticket DERM-069 / Part D7 in `Dermis_Cursor_Prompt_v3.md`.
