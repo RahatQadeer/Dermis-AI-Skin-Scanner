@@ -1,7 +1,7 @@
 # Dermis — progress handoff
 
-**Last updated:** 2026-10-16  
-**Current focus:** Real scan data only (Home / Progress / Recommendations) — no demo scores
+**Last updated:** 2026-10-19  
+**Current focus:** Account scan history always loads (Home / Progress) from Supabase
 
 **GitHub:** https://github.com/RahatQadeer/Dermis-AI-Skin-Scanner.git (you commit/push)
 
@@ -42,13 +42,15 @@ cd apps/mobile && npx expo start -c --lan
 
 ## Progress (live)
 
-- Real **GET /v1/scans** only. Empty = no scans; session error vs network error are separate copy.
+- Real **GET /v1/scans** (Supabase) only. Empty = no scans; session error vs network error are separate copy.
 - Before/after = baseline vs latest **index scores** (photos deleted after Gemini analysis — no selfie retention).
-- Note: scan rows still in **backend memory** until Supabase scan persistence; restart clears history.
+- Scans persist in Supabase; backend restart does not clear history.
 
 ## Home / Recommendations (live)
 
 - Home hero/priorities from latest real scan + live quota/routine — **no DEMO mock scores** when signed in.
+- Home loads quota / scans / routine with `Promise.allSettled` so a quota blip cannot blank the page.
+- Missing `entitlements` / `scan_usage` rows are healed on first `GET /v1/quota` (signup trigger gaps).
 - Recommended actives ranked by weakest concern scores from latest scan; empty until a scan exists. Ingredient catalog is still a fixed example list (not store SKUs).
 
 ## Profile Data (live)
@@ -66,6 +68,8 @@ cd apps/mobile && npx expo start -c --lan
 
 ## Scan UX (live)
 
+- Camera live guidance: MediaPipe Face Detector (TFJS/CPU on-device) + lighting/blur heuristics; green oval + chips when face is framed; shutter gated; auto-capture after ~550ms ready (short 2–1); hi-res recheck before upload. Failed/unclear faces are not saved. Local unlock does not block daily limit.
+- **Create scan** client timeout is **90s** (was 12s — that aborted Gemini and showed “Could not complete your scan”). Server trusts `faceClear=true` even if a stray `faceIssue` is set; Gemini prompt v7 prefers pass for ordinary clear selfies.
 - Unclear / failed analysis → toast on **camera** (not Analysing). Analysing eases toward 98% then snaps to 100% on accept. Toast Close dismisses.
 
 ## Tab bar (live)
@@ -74,4 +78,4 @@ cd apps/mobile && npx expo start -c --lan
 
 ## Next chat starts at
 
-Persist scans to Supabase (replace memoryScanRepository), **or** wire RevenueCat sandbox + webhook.
+Retry a full scan on iPhone after Metro reload (auto-take → analysing → results). Restart backend so Gemini prompt v7 is live. Then RevenueCat sandbox + webhook, **or** store copy audit (DERM-061).
