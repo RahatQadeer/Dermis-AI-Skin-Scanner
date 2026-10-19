@@ -51,6 +51,32 @@ test('api client maps error payloads', async () => {
   }
 });
 
+test('post accepts longer timeout for scan uploads', async () => {
+  const prev = process.env.EXPO_PUBLIC_API_URL;
+  process.env.EXPO_PUBLIC_API_URL = 'http://api.test';
+  let sawSignal = false;
+  const client = createApiClient({
+    getAccessToken: () => 'tok',
+    fetchImpl: async (_input, init) => {
+      sawSignal = init?.signal instanceof AbortSignal;
+      return new Response(JSON.stringify({ scan: { id: 's1' }, replayed: false }), {
+        status: 200,
+      });
+    },
+  });
+  try {
+    const body = await client.post<{ scan: { id: string } }>(
+      '/v1/scans',
+      { idempotencyKey: 'k' },
+      { timeoutMs: 90_000 },
+    );
+    assert.equal(body.scan.id, 's1');
+    assert.equal(sawSignal, true);
+  } finally {
+    process.env.EXPO_PUBLIC_API_URL = prev;
+  }
+});
+
 test('postPublic omits Authorization', async () => {
   const prev = process.env.EXPO_PUBLIC_API_URL;
   process.env.EXPO_PUBLIC_API_URL = 'http://api.test';

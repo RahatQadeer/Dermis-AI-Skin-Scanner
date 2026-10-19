@@ -31,23 +31,28 @@ export function useSessionStorageHydrate(setters: SessionSetters): void {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const [stored, onboarding] = await Promise.all([
-        loadStoredSession(),
-        loadOnboardingComplete(),
-      ]);
-      if (cancelled) {
-        return;
+      try {
+        const [stored, onboarding] = await Promise.all([
+          loadStoredSession(),
+          loadOnboardingComplete(),
+        ]);
+        if (cancelled) {
+          return;
+        }
+        if (stored) {
+          setters.setAccessToken(stored.accessToken);
+          setters.setRefreshToken(stored.refreshToken);
+          setters.setEmail(stored.email);
+          setters.setFirstName(stored.firstName);
+          const fromMemory = parseMemoryAccessToken(stored.accessToken)?.userId ?? null;
+          setters.setUserId(stored.userId ?? fromMemory);
+        }
+        setters.setOnboardingComplete(onboarding);
+      } finally {
+        if (!cancelled) {
+          setters.setHydrated(true);
+        }
       }
-      if (stored) {
-        setters.setAccessToken(stored.accessToken);
-        setters.setRefreshToken(stored.refreshToken);
-        setters.setEmail(stored.email);
-        setters.setFirstName(stored.firstName);
-        const fromMemory = parseMemoryAccessToken(stored.accessToken)?.userId ?? null;
-        setters.setUserId(stored.userId ?? fromMemory);
-      }
-      setters.setOnboardingComplete(onboarding);
-      setters.setHydrated(true);
     })();
     return () => {
       cancelled = true;
