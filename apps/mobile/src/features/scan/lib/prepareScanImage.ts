@@ -26,18 +26,27 @@ export async function prepareScanImage(uri: string): Promise<PreparedScanImage> 
   let base64 = '';
 
   for (let attempt = 0; attempt < 4; attempt += 1) {
-    const result = await manipulateAsync(uri, [{ resize: { width: TARGET_SCAN_WIDTH_PX } }], {
-      compress: quality,
-      format: SaveFormat.JPEG,
-      base64: true,
-    });
-    lastWidth = result.width;
-    lastHeight = result.height;
-    base64 = result.base64 ?? '';
+    try {
+      const result = await manipulateAsync(
+        uri,
+        [{ resize: { width: TARGET_SCAN_WIDTH_PX } }],
+        {
+          compress: quality,
+          format: SaveFormat.JPEG,
+          base64: true,
+        },
+      );
+      lastWidth = result.width;
+      lastHeight = result.height;
+      base64 = result.base64 ?? '';
+    } catch {
+      throw new ScanImageError('prepare_failed');
+    }
     if (!base64) {
       throw new ScanImageError('prepare_failed');
     }
-    if (Math.min(lastWidth, lastHeight) < MIN_SCAN_EDGE_PX) {
+    // Front-camera crops can be tall/narrow — only reject if both edges are tiny.
+    if (lastWidth < MIN_SCAN_EDGE_PX && lastHeight < MIN_SCAN_EDGE_PX) {
       throw new ScanImageError('too_small');
     }
     if (isWithinScanSizeLimit(base64)) {

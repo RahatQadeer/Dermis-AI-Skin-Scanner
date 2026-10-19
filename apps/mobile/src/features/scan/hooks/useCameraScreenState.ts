@@ -1,84 +1,43 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
+import { useCallback, useRef, useState, type RefObject } from 'react';
 
 import { useConsent } from '@/src/features/consent/ConsentContext';
 
 import type { CameraPreviewLiveHandle } from '../components/CameraPreviewLive';
-import { useCaptureCountdown } from './useCaptureCountdown';
-import { useScanCaptureFlow } from './useScanCaptureFlow';
+import { useScanCapture } from '../context/ScanCaptureContext';
+import { useFaceAnalysisConsentRedirect, useRetakeMessageEffect } from './cameraScreenHelpers';
+import { useCameraCaptureControls } from './useCameraCaptureControls';
 
 export function useCameraScreenState() {
   const router = useRouter();
   const consent = useConsent();
+  const { retakeMessage, setRetakeMessage } = useScanCapture();
   const params = useLocalSearchParams<{ retakeMessage?: string | string[] }>();
   const cameraRef = useRef<CameraPreviewLiveHandle>(null);
-  const [flashing, setFlashing] = useState(false);
   const [retakeToast, setRetakeToast] = useState<string | null>(null);
-  const capture = useScanCaptureFlow(cameraRef);
+  const controls = useCameraCaptureControls(cameraRef);
 
-  useRetakeMessageEffect(params.retakeMessage, setRetakeToast);
+  useRetakeMessageEffect(params.retakeMessage, retakeMessage, setRetakeToast, setRetakeMessage);
   useFaceAnalysisConsentRedirect(consent.ready, consent.faceAnalysisGranted, router);
 
-  const afterFlash = useCallback(() => {
-    setFlashing(false);
-    void capture.runCapture();
-  }, [capture]);
-
-  const beginCapture = useCallback(() => {
-    if (!flashing && !capture.capturing) {
-      setFlashing(true);
-    }
-  }, [flashing, capture.capturing]);
-
-  const countdown = useCaptureCountdown(beginCapture);
-
-  const shutter = useCallback(() => {
-    if (flashing || capture.capturing || countdown.active) {
-      return;
-    }
-    countdown.start();
-  }, [countdown, flashing, capture.capturing]);
-
-  const errorToast = retakeToast ?? capture.errorToast;
   const clearError = useCallback(() => {
+    controls.clearCoachToast();
     setRetakeToast(null);
-    capture.clearError();
-  }, [capture]);
+    setRetakeMessage(null);
+    controls.capture.clearError();
+  }, [controls, setRetakeMessage]);
 
   return {
     router,
     cameraRef: cameraRef as RefObject<CameraPreviewLiveHandle | null>,
-    flashing,
-    capture,
-    shutter,
-    afterFlash,
-    countdown,
-    errorToast,
+    flashing: controls.flashing,
+    capture: controls.capture,
+    shutter: controls.shutter,
+    afterFlash: controls.afterFlash,
+    countdown: controls.countdown,
+    errorToast: controls.coachToast ?? retakeToast ?? controls.capture.errorToast,
     clearError,
-    busy: flashing || capture.capturing || countdown.active,
+    busy: controls.busy,
+    liveQuality: controls.liveQuality,
   };
-}
-
-function useRetakeMessageEffect(
-  raw: string | string[] | undefined,
-  setRetakeToast: (v: string) => void,
-): void {
-  useEffect(() => {
-    const message = Array.isArray(raw) ? raw[0] : raw;
-    if (message) {
-      setRetakeToast(message);
-    }
-  }, [raw, setRetakeToast]);
-}
-
-function useFaceAnalysisConsentRedirect(
-  ready: boolean,
-  faceAnalysisGranted: boolean,
-  router: ReturnType<typeof useRouter>,
-): void {
-  useEffect(() => {
-    if (ready && !faceAnalysisGranted) {
-      router.replace('/(scan)/ai-consent');
-    }
-  }, [faceAnalysisGranted, ready, router]);
 }

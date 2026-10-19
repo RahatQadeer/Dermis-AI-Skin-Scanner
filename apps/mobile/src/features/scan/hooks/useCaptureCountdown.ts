@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const COUNT_FROM = 3;
-const TICK_MS = 700;
+/** Short 2–1 beat so auto-take feels instant once the frame is green. */
+const COUNT_FROM = 2;
+const TICK_MS = 450;
 
 /**
- * 3–2–1 hold-still gate before capture. Native face ML is unavailable in Expo Go;
- * server Gemini still rejects unclear faces after the photo is taken.
+ * 3–2–1 hold-still gate before capture. Expo Go readiness (light + motion) is
+ * separate; server Gemini still rejects unclear faces after the photo is taken.
  */
 export function useCaptureCountdown(onFinished: () => void) {
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);

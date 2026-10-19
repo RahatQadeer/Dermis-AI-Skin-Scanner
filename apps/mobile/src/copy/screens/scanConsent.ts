@@ -18,7 +18,8 @@ export const scanConsentCopy = {
   uploadError: 'Could not complete your scan. Try again.',
   freeLimit:
     'You’ve used your free scan. Upgrade to Pro for more scans, or restore purchases if you already subscribed.',
-  dailyLimit: 'You’ve reached today’s scan limit. Try again tomorrow.',
+  dailyLimit:
+    'You’ve reached today’s scan limit. Try again tomorrow, or keep testing with local unlock enabled.',
   analyzerFailed: 'Analysis failed. Check your connection and try another clear selfie.',
   analyzerTimeout: 'Analysis took too long. Try again with a clearer, closer face photo.',
   consentError: 'Could not save your choice. If this keeps happening, sign out and sign in again.',

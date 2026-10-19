@@ -11,7 +11,7 @@ import { useAutoScanUpload } from './useAutoScanUpload';
 
 export function useAnalysingUpload(apiLive: boolean, onScanAccepted: () => void) {
   const router = useRouter();
-  const { pending, setPending, setLastScan } = useScanCapture();
+  const { pending, setPending, setLastScan, setRetakeMessage } = useScanCapture();
   const uploadStarted = useRef(false);
   const [consentOpen, setConsentOpen] = useState(false);
   const [busyConsent, setBusyConsent] = useState(false);
@@ -20,9 +20,10 @@ export function useAnalysingUpload(apiLive: boolean, onScanAccepted: () => void)
 
   const onRetake = useCallback(
     (message: string) => {
-      router.replace({ pathname: '/(scan)/camera', params: { retakeMessage: message } });
+      setRetakeMessage(message);
+      router.replace('/(scan)/camera');
     },
-    [router],
+    [router, setRetakeMessage],
   );
 
   const applyOutcome = useCallback(

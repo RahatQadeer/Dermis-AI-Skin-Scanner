@@ -8,12 +8,13 @@ import { Mascot } from '@/src/components/mascot/Mascot';
 import { SpeechBubble } from '@/src/components/SpeechBubble';
 import { AppText } from '@/src/components/text/AppText';
 import { getCopy } from '@/src/copy';
-import { colors, spacing } from '@/src/theme';
+import { colors, motion, spacing } from '@/src/theme';
 
 import { CameraStage } from '../components/CameraStage';
 import { ScanQualityChips } from '../components/ScanQualityChips';
 import { ScanShutterButton } from '../components/ScanShutterButton';
 import { useCameraScreenState } from '../hooks/useCameraScreenState';
+import { messageForLiveIssue } from '../lib/liveGuidanceCopy';
 
 export function CameraScreen() {
   const c = getCopy().screens.camera;
@@ -21,14 +22,24 @@ export function CameraScreen() {
   const onBack = state.router.canGoBack()
     ? () => state.router.back()
     : () => state.router.replace('/(tabs)/home');
+  const faceLocked = state.liveQuality.ready || state.countdown.active;
   const prompt = state.countdown.active
     ? state.countdown.secondsLeft === 1
       ? c.faceLocked
       : c.faceGetReady
-    : c.faceInOval;
+    : state.liveQuality.ready
+      ? c.liveReady
+      : state.liveQuality.issue
+        ? messageForLiveIssue(state.liveQuality.issue)
+        : c.tip;
 
   return (
-    <Screen padded edges={['top', 'left', 'right', 'bottom']} style={styles.screen} contentStyle={styles.content}>
+    <Screen
+      padded
+      edges={['top', 'left', 'right', 'bottom']}
+      style={styles.screen}
+      contentStyle={styles.content}
+    >
       <StatusBar style="light" />
       <CameraHeader label={c.frontViewLabel} onBack={onBack} />
       <CameraStage
@@ -36,15 +47,22 @@ export function CameraScreen() {
         cameraRef={state.cameraRef}
         flashing={state.flashing || state.capture.capturing}
         afterFlash={state.afterFlash}
-        faceLocked={state.countdown.frameReady}
+        faceLocked={faceLocked}
         countdownSeconds={state.countdown.secondsLeft}
       />
-      <ScanQualityChips frameReady={state.countdown.frameReady} />
-      <CameraBottomBar prompt={prompt} onShutter={state.shutter} busy={state.busy} />
+      <ScanQualityChips liveIssue={state.liveQuality.issue} ready={state.liveQuality.ready} />
+      <CameraBottomBar
+        prompt={prompt}
+        onShutter={state.shutter}
+        busy={state.busy}
+        ready={state.liveQuality.ready}
+      />
       <ToastHost
         message={state.errorToast ?? ''}
         visible={Boolean(state.errorToast)}
         onDismiss={state.clearError}
+        durationMs={motion.duration.toastImportant}
+        celebrate={false}
       />
     </Screen>
   );
@@ -71,10 +89,12 @@ function CameraBottomBar({
   prompt,
   onShutter,
   busy,
+  ready,
 }: {
   prompt: string;
   onShutter: () => void;
   busy: boolean;
+  ready: boolean;
 }) {
   return (
     <View style={styles.bottom}>
@@ -84,7 +104,7 @@ function CameraBottomBar({
           <SpeechBubble message={prompt} tail="left" compact />
         </View>
       </View>
-      <ScanShutterButton onPress={onShutter} disabled={busy} />
+      <ScanShutterButton onPress={onShutter} disabled={busy} ready={ready} />
     </View>
   );
 }

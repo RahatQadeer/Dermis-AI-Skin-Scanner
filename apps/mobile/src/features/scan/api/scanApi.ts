@@ -1,6 +1,7 @@
 import type { ConcernScores, ZoneScores } from '@dermis/domain/server';
 
 import { getApiClient } from '@/src/lib/api/client';
+import { SCAN_UPLOAD_TIMEOUT_MS } from '@/src/lib/api/httpClient';
 
 export type ScanDto = {
   id: string;
@@ -26,7 +27,8 @@ export type CreateScanInput = {
 export async function createScan(
   input: CreateScanInput,
 ): Promise<{ scan: ScanDto; replayed: boolean }> {
-  return getApiClient().post('/v1/scans', input);
+  // Gemini analysis often exceeds the default 12s client timeout.
+  return getApiClient().post('/v1/scans', input, { timeoutMs: SCAN_UPLOAD_TIMEOUT_MS });
 }
 
 /** Newest-first scan history for the signed-in user. */

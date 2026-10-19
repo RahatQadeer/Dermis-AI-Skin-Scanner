@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { StyleSheet } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
@@ -13,6 +13,8 @@ export type FlashOverlayProps = {
 export function FlashOverlay({ visible, onFinished }: FlashOverlayProps) {
   const reduceMotion = useReduceMotion();
   const opacity = useSharedValue(0);
+  const onFinishedRef = useRef(onFinished);
+  onFinishedRef.current = onFinished;
 
   useEffect(() => {
     if (!visible) {
@@ -20,14 +22,14 @@ export function FlashOverlay({ visible, onFinished }: FlashOverlayProps) {
       return;
     }
     if (reduceMotion) {
-      onFinished();
+      onFinishedRef.current();
       return;
     }
     opacity.value = 1;
     opacity.value = withTiming(0, { duration: motion.duration.flash });
-    const timer = setTimeout(onFinished, motion.duration.flash);
+    const timer = setTimeout(() => onFinishedRef.current(), motion.duration.flash);
     return () => clearTimeout(timer);
-  }, [visible, reduceMotion, onFinished, opacity]);
+  }, [visible, reduceMotion, opacity]);
 
   const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
 

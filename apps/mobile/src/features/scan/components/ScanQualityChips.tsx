@@ -4,28 +4,60 @@ import { AppText } from '@/src/components/text/AppText';
 import { getCopy } from '@/src/copy';
 import { colors, radii, spacing } from '@/src/theme';
 
-type ScanQualityChipsProps = {
-  /** Hold-still countdown active — treat framing as ready. */
-  frameReady?: boolean;
+import {
+  isFaceIssue,
+  isHoldIssue,
+  isLightingIssue,
+  type LiveScanIssue,
+} from '../lib/liveScanGuidance';
+
+type ChipState = 'neutral' | 'warn' | 'ok';
+
+type Props = {
+  liveIssue?: LiveScanIssue | null;
+  ready?: boolean;
 };
 
-/** Framing-quality hints shown under the camera preview. */
-export function ScanQualityChips({ frameReady = false }: ScanQualityChipsProps) {
+function stateFor(
+  chip: 'lighting' | 'distance' | 'hold',
+  issue: LiveScanIssue | null | undefined,
+  ready: boolean,
+): ChipState {
+  // Warn only the chip that matches the current tip — clears when issue clears.
+  if (chip === 'lighting') {
+    if (isLightingIssue(issue)) return 'warn';
+    if (ready) return 'ok';
+    return 'neutral';
+  }
+  if (chip === 'distance') {
+    if (isFaceIssue(issue)) return 'warn';
+    if (ready) return 'ok';
+    return 'neutral';
+  }
+  if (isHoldIssue(issue)) return 'warn';
+  if (ready) return 'ok';
+  return 'neutral';
+}
+
+/** Always show all three tips; amber = current problem, green = ready. */
+export function ScanQualityChips({ liveIssue = null, ready = false }: Props) {
   const c = getCopy().screens.camera;
   return (
-    <View style={styles.row} accessibilityRole="summary">
-      <QualityChip label={c.qualityLighting} ok={frameReady} />
-      <QualityChip label={c.qualityDistance} ok={frameReady} />
-      <QualityChip label={c.qualityHold} ok={frameReady} />
+    <View style={styles.row} accessibilityRole="text">
+      <TipChip label={c.qualityLighting} state={stateFor('lighting', liveIssue, ready)} />
+      <TipChip label={c.qualityDistance} state={stateFor('distance', liveIssue, ready)} />
+      <TipChip label={c.qualityHold} state={stateFor('hold', liveIssue, ready)} />
     </View>
   );
 }
 
-function QualityChip({ label, ok = false }: { label: string; ok?: boolean }) {
+function TipChip({ label, state }: { label: string; state: ChipState }) {
+  const background = state === 'warn' ? colors.amber : state === 'ok' ? colors.green : colors.mute;
+  const textColor = state === 'warn' ? colors.ink : colors.surface;
   return (
-    <View style={[styles.chip, ok ? styles.ok : styles.neutral]}>
-      <AppText variant="caption" color={colors.surface}>
-        {ok ? `✓ ${label}` : label}
+    <View style={[styles.chip, { backgroundColor: background }]}>
+      <AppText variant="caption" color={textColor}>
+        {state === 'ok' ? `✓ ${label}` : state === 'warn' ? `! ${label}` : label}
       </AppText>
     </View>
   );
@@ -34,19 +66,15 @@ function QualityChip({ label, ok = false }: { label: string; ok?: boolean }) {
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
     justifyContent: 'center',
-    gap: spacing.sm,
+    alignItems: 'center',
+    gap: spacing.xs,
   },
   chip: {
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: radii.pill,
-  },
-  ok: {
-    backgroundColor: colors.green,
-  },
-  neutral: {
-    backgroundColor: colors.mute,
+    flexShrink: 1,
   },
 });

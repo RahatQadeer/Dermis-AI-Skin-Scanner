@@ -54,9 +54,12 @@ describe('performance / crash-free (DERM-070)', () => {
   });
 
   it('animated surfaces honour reduce-motion', () => {
+    // Either the surface reads reduce-motion directly, or it delegates its
+    // animation to a reduce-motion-aware motion hook (e.g. the Toast banner).
+    const reduceMotionAware = /useReduceMotion|useFloatingBannerMotion/;
     for (const rel of REDUCE_MOTION_FILES) {
       const text = readFileSync(path.join(mobileRoot, rel), 'utf8');
-      assert.match(text, /useReduceMotion/, rel);
+      assert.match(text, reduceMotionAware, rel);
     }
   });
 

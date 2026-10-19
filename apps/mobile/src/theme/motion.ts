@@ -6,6 +6,8 @@ export const motion = {
     normal: 280,
     slow: 420,
     toast: 2600,
+    /** Face / retake errors — long enough to read on camera. */
+    toastImportant: 8000,
     countdown: 750,
     flash: 420,
     indexCountUp: 1100,

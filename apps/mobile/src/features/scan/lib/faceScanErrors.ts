@@ -9,6 +9,7 @@ const FACE_CODES = new Set([
   'face_blurry',
   'face_poor_lighting',
   'face_obstructed',
+  'face_glasses',
   'face_not_front',
   'face_not_clear',
 ]);
@@ -22,24 +23,25 @@ export function messageForFaceScanError(error: unknown): string {
   if (!isApiError(error)) {
     return camera.faceNotClear;
   }
-  switch (error.code) {
-    case 'no_face':
-      return camera.noFace;
-    case 'multiple_faces':
-      return camera.multipleFaces;
-    case 'face_too_far':
-      return camera.faceTooFar;
-    case 'face_too_close':
-      return camera.faceTooClose;
-    case 'face_blurry':
-      return camera.faceBlurry;
-    case 'face_poor_lighting':
-      return camera.facePoorLighting;
-    case 'face_obstructed':
-      return camera.faceObstructed;
-    case 'face_not_front':
-      return camera.faceNotFront;
-    default:
-      return camera.faceNotClear;
+  // Prefer model tip naming which area is unclear / cut off.
+  if (error.detail && error.detail.length >= 8) {
+    return error.detail;
   }
+  return faceCopyByCode(error.code) ?? camera.faceNotClear;
+}
+
+function faceCopyByCode(code: string): string | undefined {
+  const camera = getCopy().screens.camera;
+  const map: Record<string, string> = {
+    no_face: camera.noFace,
+    multiple_faces: camera.multipleFaces,
+    face_too_far: camera.faceTooFar,
+    face_too_close: camera.faceTooClose,
+    face_blurry: camera.faceBlurry,
+    face_poor_lighting: camera.facePoorLighting,
+    face_obstructed: camera.faceObstructed,
+    face_glasses: camera.faceGlasses,
+    face_not_front: camera.faceNotFront,
+  };
+  return map[code];
 }

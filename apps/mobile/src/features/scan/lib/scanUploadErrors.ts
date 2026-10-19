@@ -8,6 +8,8 @@ const RETAKE_CODES = new Set([
   'analyzer_failed',
   'analyzer_unavailable',
   'analyzer_timeout',
+  'network_timeout',
+  'network_unreachable',
   'quota_unavailable',
   'invalid_image',
   'invalid_body',
@@ -15,28 +17,35 @@ const RETAKE_CODES = new Set([
   'daily_limit',
 ]);
 
+function messageForApiScanCode(
+  code: string,
+  copy: ReturnType<typeof getCopy>['screens']['scanConsent'],
+  fallback: string,
+): string {
+  if (code === 'free_limit') return copy.freeLimit;
+  if (code === 'daily_limit') return copy.dailyLimit;
+  if (
+    code === 'analyzer_failed' ||
+    code === 'analyzer_unavailable' ||
+    code === 'quota_unavailable' ||
+    code === 'network_unreachable'
+  ) {
+    return copy.analyzerFailed;
+  }
+  if (code === 'analyzer_timeout' || code === 'network_timeout') {
+    return copy.analyzerTimeout;
+  }
+  return fallback;
+}
+
 export function messageForScanUploadError(error: unknown, fallback: string): string {
-  const copy = getCopy().screens.scanConsent;
   if (isFaceScanError(error)) {
     return messageForFaceScanError(error);
   }
   if (!isApiError(error)) {
     return fallback;
   }
-  switch (error.code) {
-    case 'free_limit':
-      return copy.freeLimit;
-    case 'daily_limit':
-      return copy.dailyLimit;
-    case 'analyzer_failed':
-    case 'analyzer_unavailable':
-    case 'quota_unavailable':
-      return copy.analyzerFailed;
-    case 'analyzer_timeout':
-      return copy.analyzerTimeout;
-    default:
-      return fallback;
-  }
+  return messageForApiScanCode(error.code, getCopy().screens.scanConsent, fallback);
 }
 
 /** Face clarity + analysis failures → camera page with the message. */

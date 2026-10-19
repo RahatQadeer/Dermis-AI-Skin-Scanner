@@ -14,6 +14,9 @@ type ScanCaptureState = {
   setPending: (value: PendingScanCapture | null) => void;
   lastScan: ScanDto | null;
   setLastScan: (scan: ScanDto | null) => void;
+  /** Face / upload failure shown on camera (avoids flaky router query params). */
+  retakeMessage: string | null;
+  setRetakeMessage: (message: string | null) => void;
 };
 
 const ScanCaptureContext = createContext<ScanCaptureState | null>(null);
@@ -21,9 +24,10 @@ const ScanCaptureContext = createContext<ScanCaptureState | null>(null);
 export function ScanCaptureProvider({ children }: { children: ReactNode }) {
   const [pending, setPending] = useState<PendingScanCapture | null>(null);
   const [lastScan, setLastScan] = useState<ScanDto | null>(null);
+  const [retakeMessage, setRetakeMessage] = useState<string | null>(null);
   const value = useMemo(
-    () => ({ pending, setPending, lastScan, setLastScan }),
-    [pending, lastScan],
+    () => ({ pending, setPending, lastScan, setLastScan, retakeMessage, setRetakeMessage }),
+    [pending, lastScan, retakeMessage],
   );
   return createElement(ScanCaptureContext.Provider, { value }, children);
 }
