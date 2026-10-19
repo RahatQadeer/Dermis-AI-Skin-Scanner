@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Animated, Easing } from 'react-native';
+import { Animated, Easing, Platform } from 'react-native';
 import { Circle, Ellipse, G, Path, Rect } from 'react-native-svg';
 
 import { useReduceMotion } from '@/src/lib/useReduceMotion';
@@ -7,6 +7,8 @@ import { colors } from '@/src/theme';
 
 const AnimatedG = Animated.createAnimatedComponent(G);
 const AnimatedPath = Animated.createAnimatedComponent(Path);
+/** Animated SVG props are unreliable under react-native-web. */
+const IS_WEB = Platform.OS === 'web';
 
 const SMOOTH = Easing.inOut(Easing.ease);
 
@@ -61,7 +63,7 @@ export function AnimatedEar({ side }: { side: EarSide }) {
 
   useEffect(() => {
     rotate.setValue(0);
-    if (reduceMotion) {
+    if (reduceMotion || IS_WEB) {
       return;
     }
     const loop = Animated.loop(
@@ -77,14 +79,22 @@ export function AnimatedEar({ side }: { side: EarSide }) {
     };
   }, [backMs, cfg.peak, reduceMotion, rotate, stillMs, toPeakMs]);
 
+  const ear = (
+    <G rotation={cfg.baseRot} origin={`${cfg.cx}, ${pivotY}`}>
+      <Ellipse cx={cfg.cx} cy={pivotY} rx={13} ry={6.5} fill={P.face} stroke={P.outline} strokeWidth={3} />
+      <Ellipse cx={cfg.innerX} cy={pivotY} rx={7} ry={3} fill={P.ear} />
+    </G>
+  );
+
+  if (IS_WEB || reduceMotion) {
+    return ear;
+  }
+
   return (
     <G x={pivotX} y={pivotY}>
       <AnimatedG rotation={rotate}>
         <G x={-pivotX} y={-pivotY}>
-          <G rotation={cfg.baseRot} origin={`${cfg.cx}, ${pivotY}`}>
-            <Ellipse cx={cfg.cx} cy={pivotY} rx={13} ry={6.5} fill={P.face} stroke={P.outline} strokeWidth={3} />
-            <Ellipse cx={cfg.innerX} cy={pivotY} rx={7} ry={3} fill={P.ear} />
-          </G>
+          {ear}
         </G>
       </AnimatedG>
     </G>
@@ -98,7 +108,7 @@ export function AnimatedBookArm() {
 
   useEffect(() => {
     ty.setValue(0);
-    if (reduceMotion) {
+    if (reduceMotion || IS_WEB) {
       return;
     }
     const loop = Animated.loop(
@@ -113,8 +123,8 @@ export function AnimatedBookArm() {
     };
   }, [reduceMotion, ty]);
 
-  return (
-    <AnimatedG translateY={ty}>
+  const bookArm = (
+    <>
       <Limb d="M120 128 Q132 138 134 150" color={P.cardigan} width={13} />
       <G rotation={12} origin="138, 150">
         <Rect
@@ -136,18 +146,25 @@ export function AnimatedBookArm() {
         />
       </G>
       <Circle cx={134} cy={152} r={7} fill={P.skin} stroke={P.outline} strokeWidth={3} />
-    </AnimatedG>
+    </>
   );
+
+  if (IS_WEB || reduceMotion) {
+    return <G>{bookArm}</G>;
+  }
+
+  return <AnimatedG translateY={ty}>{bookArm}</AnimatedG>;
 }
 
 /** Prototype happy star `pulse 1.6s` — opacity 0.35 ↔ 1. */
 export function AnimatedHappyStar() {
   const reduceMotion = useReduceMotion();
   const opacity = useRef(new Animated.Value(0.35)).current;
+  const starPath = 'M158 60 l3 6 6 1 -4.5 4 1 6 -5.5-3 -5.5 3 1-6 -4.5-4 6-1z';
 
   useEffect(() => {
     opacity.setValue(0.35);
-    if (reduceMotion) {
+    if (reduceMotion || IS_WEB) {
       return;
     }
     const loop = Animated.loop(
@@ -162,13 +179,11 @@ export function AnimatedHappyStar() {
     };
   }, [opacity, reduceMotion]);
 
-  return (
-    <AnimatedPath
-      d="M158 60 l3 6 6 1 -4.5 4 1 6 -5.5-3 -5.5 3 1-6 -4.5-4 6-1z"
-      fill={P.blush}
-      opacity={opacity}
-    />
-  );
+  if (IS_WEB || reduceMotion) {
+    return <Path d={starPath} fill={P.blush} opacity={0.7} />;
+  }
+
+  return <AnimatedPath d={starPath} fill={P.blush} opacity={opacity} />;
 }
 
 function Limb({ d, color, width }: { d: string; color: string; width: number }) {

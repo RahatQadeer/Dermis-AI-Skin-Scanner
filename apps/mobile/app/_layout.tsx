@@ -56,7 +56,13 @@ function SplashGate({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (session.hydrated) {
       void SplashScreen.hideAsync();
+      return;
     }
+    // Safety: never leave Expo Go stuck on splash if hydrate stalls.
+    const id = setTimeout(() => {
+      void SplashScreen.hideAsync();
+    }, 2500);
+    return () => clearTimeout(id);
   }, [session.hydrated]);
 
   if (!session.hydrated) {

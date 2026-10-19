@@ -1,11 +1,12 @@
 import { useEffect, useRef } from 'react';
-import { Animated, Easing } from 'react-native';
+import { Animated, Easing, Platform } from 'react-native';
 import { G, Path } from 'react-native-svg';
 
 import { useReduceMotion } from '@/src/lib/useReduceMotion';
 import { colors } from '@/src/theme';
 
 const AnimatedG = Animated.createAnimatedComponent(G);
+const IS_WEB = Platform.OS === 'web';
 
 /**
  * Prototype (exact):
@@ -38,7 +39,7 @@ export function SheepHand({ outline }: SheepHandProps) {
 
   useEffect(() => {
     rotate.setValue(WAG_FROM);
-    if (reduceMotion) {
+    if (reduceMotion || IS_WEB) {
       return;
     }
     const loop = Animated.loop(
@@ -63,18 +64,27 @@ export function SheepHand({ outline }: SheepHandProps) {
     };
   }, [reduceMotion, rotate]);
 
+  const paw = (
+    <Path
+      d="M146 132 q14 -2 12 10 q-2 8 -10 4"
+      fill={colors.surface}
+      stroke={outline}
+      strokeWidth={3}
+    />
+  );
+
+  // Animated SVG `rotation` is unreliable on web — keep a static paw there.
+  if (IS_WEB || reduceMotion) {
+    return paw;
+  }
+
   // Translate → rotate around 0,0 → translate back.
   // More reliable than Animated originX/originY (which can orbit wrong).
   return (
     <G x={PIVOT_X} y={PIVOT_Y}>
       <AnimatedG rotation={rotate}>
         <G x={-PIVOT_X} y={-PIVOT_Y}>
-          <Path
-            d="M146 132 q14 -2 12 10 q-2 8 -10 4"
-            fill={colors.surface}
-            stroke={outline}
-            strokeWidth={3}
-          />
+          {paw}
         </G>
       </AnimatedG>
     </G>
