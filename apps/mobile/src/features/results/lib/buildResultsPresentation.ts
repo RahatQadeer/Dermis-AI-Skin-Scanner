@@ -69,7 +69,9 @@ export function buildResultsPresentation(
   return {
     reportWhen,
     deltaLabel: buildDeltaLabel(indexDelta, priorWhen, usePrototypeExtras, r),
-    skinAgeLabel: r.skinAgeEstimate(estimateSkinAge(report.scan.indexScore)),
+    skinAgeLabel: r.skinAgeEstimate(
+      estimateSkinAge(report.scan.indexScore, report.scan.concernScores),
+    ),
     insight: buildIndexInsight(indexDelta, priorWhen, usePrototypeExtras, r),
     concernDeltas: buildConcernDeltas(report, previous, usePrototypeExtras),
   };
