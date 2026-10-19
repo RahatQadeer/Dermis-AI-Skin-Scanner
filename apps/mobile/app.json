@@ -9,8 +9,17 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.righttail.dermis",
+      "appleTeamId": "447FVLNAL3",
       "infoPlist": {
-        "NSCameraUsageDescription": "Dermis uses the camera to take a wellness selfie for analysis on our servers."
+        "NSCameraUsageDescription": "Dermis uses the camera to take a wellness selfie for analysis on our servers.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "owner": "rahat_qadeer",
+    "extra": {
+      "eas": {
+        "projectId": "548ca3a2-4123-4a46-87fa-1b7e1385626e"
       }
     },
     "android": {
