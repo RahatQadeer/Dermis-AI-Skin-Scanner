@@ -11,6 +11,7 @@ export const geminiFaceIssueSchema = z.enum([
   'blurry',
   'poor_lighting',
   'obstructed',
+  'glasses',
   'not_front_facing',
 ]);
 
@@ -19,6 +20,11 @@ export const geminiScanAnalysisSchema = z.object({
   /** False when the photo is not a clear, single, front-facing face. */
   faceClear: z.boolean(),
   faceIssue: geminiFaceIssueSchema.optional().default('none'),
+  /**
+   * Short, user-facing tip when faceClear=false (e.g. which area is cut off).
+   * Wellness coaching only — not medical advice.
+   */
+  faceGuidance: z.string().trim().max(160).optional(),
   concerns: concernScoresSchema,
   zones: zoneScoresSchema,
   /** Optional wellness notes per concern — not medical advice. */

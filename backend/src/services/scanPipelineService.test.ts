@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+// Deterministic product free quota for these tests (ignore local .env unlock overrides).
+process.env.DERMIS_FORCE_PRO = '0';
+process.env.EXPO_PUBLIC_UNLOCK_ALL_FEATURES = '0';
+process.env.DERMIS_FREE_LIFETIME_SCANS = '1';
+
 import { createFakeSkinAnalyzer } from '../adapters/fakeSkinAnalyzer';
 import { createMemoryPhotoStorage } from '../adapters/memoryPhotoStorage';
 import { FACE_ANALYSIS_CONSENT_VERSION } from '../constants/consent';
@@ -27,6 +32,7 @@ async function grantFaceConsent(consents: ReturnType<typeof createConsentService
 
 function buildPipeline(overrides?: {
   failAnalyzer?: boolean;
+  faceUnclear?: boolean;
   scans?: ScanRepository;
   photos?: ReturnType<typeof createMemoryPhotoStorage>;
 }) {
@@ -37,7 +43,10 @@ function buildPipeline(overrides?: {
   const profiles = createMemoryProfileRepository();
   const consentRepo = createMemoryConsentRepository();
   const consents = createConsentService(consentRepo);
-  const analyzer = createFakeSkinAnalyzer({ fail: overrides?.failAnalyzer });
+  const analyzer = createFakeSkinAnalyzer({
+    fail: overrides?.failAnalyzer,
+    faceUnclear: overrides?.faceUnclear,
+  });
 
   const pipeline = createScanPipelineService({
     scans,
@@ -151,6 +160,66 @@ test('second free scan is blocked after quota used', async () => {
     (err: unknown) =>
       err instanceof Error && 'code' in err && (err as { code: string }).code === 'free_limit',
   );
+});
+
+test('faceClear=true is accepted even if model leaves a stray faceIssue', async () => {
+  const photos = createMemoryPhotoStorage();
+  const quotaRepo = createMemoryQuotaRepository([{ userId: USER, plan: 'free' }]);
+  const quota = createQuotaService(quotaRepo);
+  const scans = createMemoryScanRepository();
+  const profiles = createMemoryProfileRepository();
+  const consentRepo = createMemoryConsentRepository();
+  const consents = createConsentService(consentRepo);
+  await grantFaceConsent(consents);
+
+  const base = createFakeSkinAnalyzer();
+  const analyzer = {
+    ...base,
+    async analyze(input: Parameters<typeof base.analyze>[0]) {
+      const result = await base.analyze(input);
+      return { ...result, faceClear: true as const, faceIssue: 'blurry' as const };
+    },
+  };
+
+  const pipeline = createScanPipelineService({
+    scans,
+    profiles,
+    quota,
+    consent: consents,
+    analyzer,
+    photos,
+  });
+
+  const result = await pipeline.createScan({
+    userId: USER,
+    idempotencyKey: 'idem-stray-issue',
+    imageBase64: IMAGE_B64,
+    contentType: 'image/jpeg',
+  });
+  assert.equal(result.replayed, false);
+  assert.equal((await scans.listByUserId(USER)).length, 1);
+});
+
+test('unclear face is rejected and not saved', async () => {
+  const { pipeline, quota, photos, scans, consents } = buildPipeline({ faceUnclear: true });
+  await grantFaceConsent(consents);
+  await assert.rejects(
+    () =>
+      pipeline.createScan({
+        userId: USER,
+        idempotencyKey: 'idem-unclear',
+        imageBase64: IMAGE_B64,
+        contentType: 'image/jpeg',
+      }),
+    (err: unknown) =>
+      err instanceof HttpError &&
+      err.code === 'face_obstructed' &&
+      typeof err.detail === 'string' &&
+      err.detail.includes('Forehead'),
+  );
+  assert.equal((await scans.listByUserId(USER)).length, 0);
+  assert.equal((await quota.getStatus(USER)).lifetimeScanCount, 0);
+  assert.equal(photos.size(), 0);
 });
 
 test('scan refuses without face_analysis consent', async () => {

@@ -12,6 +12,8 @@ const FAKE_PROMPT_VERSION = 'fake-prompt-v1';
 
 export type FakeSkinAnalyzerOptions = {
   fail?: boolean;
+  /** Reject face gate (must not persist a scan). */
+  faceUnclear?: boolean;
   baseScore?: number;
 };
 
@@ -30,6 +32,15 @@ export function createFakeSkinAnalyzer(
       }
       if (input.imageBytes.byteLength === 0) {
         throw new Error('empty_image');
+      }
+      if (options.faceUnclear) {
+        return geminiScanAnalysisSchema.parse({
+          faceClear: false,
+          faceIssue: 'obstructed',
+          faceGuidance: 'Forehead is cut off — move the phone back a little.',
+          concerns: Object.fromEntries(CONCERN_IDS.map((id) => [id, 50])),
+          zones: Object.fromEntries(ZONE_IDS.map((id) => [id, 50])),
+        });
       }
       return buildFakeAnalysis(base, input.imageBytes[0]! % 5);
     },

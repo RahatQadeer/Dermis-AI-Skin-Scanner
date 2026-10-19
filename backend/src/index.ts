@@ -71,7 +71,7 @@ export function createMemoryBackend(
 
 /**
  * Live Supabase auth + PostgREST + quota RPC + RevenueCat webhook.
- * Scan pipeline stays memory-backed until a Supabase scan repository ships.
+ * Live path persists scans to Supabase when service role is configured.
  * Falls back to memory when env is incomplete or `useMemory` is set.
  */
 export function createBackendFromEnv(

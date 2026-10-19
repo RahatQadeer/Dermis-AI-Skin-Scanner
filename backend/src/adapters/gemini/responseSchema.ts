@@ -27,9 +27,11 @@ export function buildGeminiResponseSchema(): Record<string, unknown> {
           'blurry',
           'poor_lighting',
           'obstructed',
+          'glasses',
           'not_front_facing',
         ],
       },
+      faceGuidance: { type: 'STRING', maxLength: 160 },
       concerns: {
         type: 'OBJECT',
         properties: concernProps,

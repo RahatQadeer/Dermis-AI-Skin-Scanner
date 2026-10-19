@@ -107,8 +107,14 @@ async function runAnalyzeAndPersist(
   },
 ): Promise<{ scan: ScanRecordRow; replayed: boolean }> {
   const analysis = await analyzeOrThrow(deps, ctx);
+  // Trust faceClear only — models sometimes set a leftover faceIssue with faceClear=true.
+  // Never persist unclear faces — reject before quota consume / insert.
   if (!analysis.faceClear) {
-    throw new HttpError(422, faceIssueToErrorCode(analysis.faceIssue));
+    const code = faceIssueToErrorCode(
+      analysis.faceIssue && analysis.faceIssue !== 'none' ? analysis.faceIssue : 'face_not_clear',
+    );
+    const detail = sanitizeFaceGuidance(analysis.faceGuidance);
+    throw new HttpError(422, code, detail);
   }
 
   const profile = await deps.profiles.findByUserId(ctx.input.userId);
@@ -215,9 +221,23 @@ function faceIssueToErrorCode(issue: string | undefined): string {
       return 'face_poor_lighting';
     case 'obstructed':
       return 'face_obstructed';
+    case 'glasses':
+      return 'face_glasses';
     case 'not_front_facing':
       return 'face_not_front';
     default:
       return 'face_not_clear';
   }
+}
+
+/** Keep model tips short and safe for toast UI. */
+function sanitizeFaceGuidance(raw: string | undefined): string | undefined {
+  if (!raw) {
+    return undefined;
+  }
+  const trimmed = raw.replace(/\s+/g, ' ').trim();
+  if (trimmed.length < 8) {
+    return undefined;
+  }
+  return trimmed.slice(0, 160);
 }

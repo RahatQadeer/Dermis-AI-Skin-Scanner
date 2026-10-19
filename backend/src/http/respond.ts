@@ -9,7 +9,11 @@ export function json(body: unknown, status = 200): Response {
 
 export function errorResponse(error: unknown): Response {
   if (isHttpError(error)) {
-    return json({ error: error.code }, error.status);
+    const body =
+      error.detail && error.detail !== error.code
+        ? { error: error.code, message: error.detail }
+        : { error: error.code };
+    return json(body, error.status);
   }
   const detail = error instanceof Error ? error.message : String(error);
   console.error('[api]', detail);

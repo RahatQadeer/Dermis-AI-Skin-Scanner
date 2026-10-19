@@ -9,6 +9,7 @@ import { createMemoryDeletionRequestStore } from './repositories/memoryAccountRe
 import { createMemoryQuotaRepository } from './repositories/memoryQuotaRepository';
 import { createMemoryRoutineRepository } from './repositories/memoryRoutineRepository';
 import { createMemoryScanRepository } from './repositories/memoryScanRepository';
+import type { ScanRepository } from './repositories/scanTypes';
 import { createRoutineService } from './services/routineService';
 import { createScanPipelineService } from './services/scanPipelineService';
 import { createSettingsService } from './services/settingsService';
@@ -20,6 +21,7 @@ import { createSupabaseConsentRepository } from './repositories/supabaseConsentR
 import { createSupabaseEntitlementRepository } from './repositories/supabaseEntitlementRepository';
 import { createSupabaseProfileRepository } from './repositories/supabaseProfileRepository';
 import { createSupabaseQuotaRepository } from './repositories/supabaseQuotaRepository';
+import { createSupabaseScanRepository } from './repositories/supabaseScanRepository';
 import { createSupabaseWebhookEventRepository } from './repositories/supabaseWebhookEventRepository';
 import { createAccountService } from './services/accountService';
 import { createConsentService } from './services/consentService';
@@ -29,7 +31,7 @@ import { createQuotaService } from './services/quotaService';
 import type { BackendEnv } from './backendEnv';
 
 type LiveStores = {
-  scans: ReturnType<typeof createMemoryScanRepository>;
+  scans: ScanRepository;
   routine: ReturnType<typeof createMemoryRoutineRepository>;
   quota: ReturnType<typeof createQuotaService>;
 };
@@ -65,15 +67,38 @@ function createLiveSupabaseBackend(
     anonKey: env.supabaseAnonKey!,
   });
   const stores: LiveStores = {
-    scans: createMemoryScanRepository(),
+    scans: resolveScanRepository(env),
     routine: createMemoryRoutineRepository(),
-    quota: createQuotaService(createMemoryQuotaRepository()),
+    quota: resolveQuotaService(env),
   };
   const deps = buildLiveDeps(env, auth, stores);
   if (env.supabaseServiceRoleKey) {
-    wireServiceRoleFeatures(deps, env);
+    wireServiceRoleFeatures(deps, env, stores);
   }
   return createApp(deps);
+}
+
+function resolveQuotaService(env: BackendEnv): ReturnType<typeof createQuotaService> {
+  if (env.supabaseUrl && env.supabaseServiceRoleKey) {
+    return createQuotaService(
+      createSupabaseQuotaRepository({
+        supabaseUrl: env.supabaseUrl,
+        serviceRoleKey: env.supabaseServiceRoleKey,
+      }),
+    );
+  }
+  return createQuotaService(createMemoryQuotaRepository());
+}
+
+function resolveScanRepository(env: BackendEnv): ScanRepository {
+  if (env.supabaseUrl && env.supabaseServiceRoleKey) {
+    return createSupabaseScanRepository({
+      supabaseUrl: env.supabaseUrl,
+      serviceRoleKey: env.supabaseServiceRoleKey,
+    });
+  }
+  // Without service role, RLS blocks inserts — memory only (lost on restart).
+  return createMemoryScanRepository();
 }
 
 function buildLiveDeps(env: BackendEnv, auth: AuthPort, stores: LiveStores): AppDeps {
@@ -131,15 +156,14 @@ function liveScanPipeline(opts: {
   });
 }
 
-function wireServiceRoleFeatures(deps: AppDeps, env: BackendEnv): void {
-  const quota = createQuotaService(
-    createSupabaseQuotaRepository({
-      supabaseUrl: env.supabaseUrl!,
-      serviceRoleKey: env.supabaseServiceRoleKey!,
-    }),
-  );
-  deps.quotaFor = () => quota;
+function wireServiceRoleFeatures(deps: AppDeps, env: BackendEnv, stores: LiveStores): void {
+  // Keep HTTP quota + scan pipeline on the same Supabase-backed service.
+  stores.quota = resolveQuotaService(env);
+  deps.quotaFor = () => stores.quota;
+  wireEntitlementsAndAccount(deps, env);
+}
 
+function wireEntitlementsAndAccount(deps: AppDeps, env: BackendEnv): void {
   const entitlements = createEntitlementService({
     entitlements: createSupabaseEntitlementRepository({
       supabaseUrl: env.supabaseUrl!,

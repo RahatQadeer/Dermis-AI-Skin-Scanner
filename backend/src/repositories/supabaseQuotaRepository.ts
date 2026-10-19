@@ -47,6 +47,7 @@ export function createSupabaseQuotaRepository(config: SupabaseQuotaConfig): Quot
 
   return {
     async getStatus(userId) {
+      await ensureBillingRows(fetchImpl, root, headers, userId);
       const [plan, usage] = await Promise.all([
         fetchPlan(fetchImpl, root, headers, userId),
         fetchUsage(fetchImpl, root, headers, userId),
@@ -57,6 +58,7 @@ export function createSupabaseQuotaRepository(config: SupabaseQuotaConfig): Quot
       return toStatus(plan, usage);
     },
     async consume(userId) {
+      await ensureBillingRows(fetchImpl, root, headers, userId);
       if (isRelaxedQuotaPath()) {
         return consumeRelaxed(fetchImpl, root, headers, userId);
       }
@@ -82,6 +84,86 @@ export function createSupabaseQuotaRepository(config: SupabaseQuotaConfig): Quot
   };
 }
 
+/** Signup trigger can miss rows (admin create / older accounts) — heal on first use. */
+async function ensureBillingRows(
+  fetchImpl: typeof fetch,
+  root: string,
+  headers: () => HeadersInit,
+  userId: string,
+): Promise<void> {
+  const [plan, usage] = await Promise.all([
+    fetchPlan(fetchImpl, root, headers, userId),
+    fetchUsage(fetchImpl, root, headers, userId),
+  ]);
+  if (!plan) {
+    await upsertEntitlement(fetchImpl, root, headers, userId);
+  }
+  if (!usage) {
+    const lifetime = await countScans(fetchImpl, root, headers, userId);
+    await upsertUsage({ fetchImpl, root, headers, userId, lifetimeScanCount: lifetime });
+  }
+}
+
+type QuotaRestCtx = {
+  fetchImpl: typeof fetch;
+  root: string;
+  headers: () => HeadersInit;
+  userId: string;
+};
+
+async function upsertEntitlement(
+  fetchImpl: typeof fetch,
+  root: string,
+  headers: () => HeadersInit,
+  userId: string,
+): Promise<void> {
+  await fetchImpl(`${root}/rest/v1/entitlements`, {
+    method: 'POST',
+    headers: { ...headers(), prefer: 'resolution=ignore-duplicates,return=minimal' },
+    body: JSON.stringify({ user_id: userId, plan: 'free' }),
+  });
+}
+
+async function upsertUsage(
+  ctx: QuotaRestCtx & { lifetimeScanCount: number },
+): Promise<void> {
+  await ctx.fetchImpl(`${ctx.root}/rest/v1/scan_usage`, {
+    method: 'POST',
+    headers: { ...ctx.headers(), prefer: 'resolution=ignore-duplicates,return=minimal' },
+    body: JSON.stringify({
+      user_id: ctx.userId,
+      lifetime_scan_count: ctx.lifetimeScanCount,
+      daily_scan_count: 0,
+      daily_window_date: null,
+    }),
+  });
+}
+
+async function countScans(
+  fetchImpl: typeof fetch,
+  root: string,
+  headers: () => HeadersInit,
+  userId: string,
+): Promise<number> {
+  const url =
+    `${root}/rest/v1/scans?user_id=eq.${encodeURIComponent(userId)}` +
+    `&select=id`;
+  const response = await fetchImpl(url, {
+    headers: { ...headers(), prefer: 'count=exact' },
+  });
+  if (!response.ok) {
+    return 0;
+  }
+  const contentRange = response.headers.get('content-range');
+  const total = contentRange?.split('/')[1];
+  if (total && total !== '*') {
+    const n = Number(total);
+    return Number.isFinite(n) ? n : 0;
+  }
+  const rows = (await response.json()) as unknown[];
+  return Array.isArray(rows) ? rows.length : 0;
+}
+
 async function consumeRelaxed(
   fetchImpl: typeof fetch,
   root: string,
@@ -98,39 +180,59 @@ async function consumeRelaxed(
   if (!usage) {
     return { allowed: false, remaining: 0, reason: 'no_usage_row' };
   }
-  const effectivePlan: Plan = isUnlockAllFeatures() ? 'pro' : plan;
+  const unlocked = isUnlockAllFeatures();
+  const effectivePlan: Plan = unlocked ? 'pro' : plan;
   const decision = canConsumeScan({
     plan: effectivePlan,
     lifetimeScanCount: usage.lifetime_scan_count,
     dailyScanCount: usage.daily_scan_count,
   });
-  if (!decision.allowed) {
+  if (!unlocked && !decision.allowed) {
     return { allowed: false, remaining: 0, reason: decision.reason };
   }
+  await patchUsageIncrement({
+    fetchImpl,
+    root,
+    headers,
+    userId,
+    effectivePlan,
+    usage,
+  });
+  if (unlocked) {
+    return { allowed: true, remaining: 9999 };
+  }
+  return { allowed: true, remaining: Math.max(0, decision.remaining - 1) };
+}
 
+async function patchUsageIncrement(ctx: {
+  fetchImpl: typeof fetch;
+  root: string;
+  headers: () => HeadersInit;
+  userId: string;
+  effectivePlan: Plan;
+  usage: UsageRow;
+}): Promise<void> {
   const today = new Date().toISOString().slice(0, 10);
   const nextUsage =
-    effectivePlan === 'pro'
+    ctx.effectivePlan === 'pro'
       ? {
-          lifetime_scan_count: usage.lifetime_scan_count + 1,
+          lifetime_scan_count: ctx.usage.lifetime_scan_count + 1,
           daily_scan_count:
-            usage.daily_window_date === today ? usage.daily_scan_count + 1 : 1,
+            ctx.usage.daily_window_date === today ? ctx.usage.daily_scan_count + 1 : 1,
           daily_window_date: today,
         }
-      : {
-          lifetime_scan_count: usage.lifetime_scan_count + 1,
-        };
-
-  const patchUrl = `${root}/rest/v1/scan_usage?user_id=eq.${encodeURIComponent(userId)}`;
-  const patch = await fetchImpl(patchUrl, {
-    method: 'PATCH',
-    headers: { ...headers(), prefer: 'return=minimal' },
-    body: JSON.stringify(nextUsage),
-  });
+      : { lifetime_scan_count: ctx.usage.lifetime_scan_count + 1 };
+  const patch = await ctx.fetchImpl(
+    `${ctx.root}/rest/v1/scan_usage?user_id=eq.${encodeURIComponent(ctx.userId)}`,
+    {
+      method: 'PATCH',
+      headers: { ...ctx.headers(), prefer: 'return=minimal' },
+      body: JSON.stringify(nextUsage),
+    },
+  );
   if (!patch.ok) {
     throw new Error('quota_consume_failed');
   }
-  return { allowed: true, remaining: Math.max(0, decision.remaining - 1) };
 }
 
 async function fetchPlan(
