@@ -26,34 +26,55 @@ export async function loadLiveHomeSnapshot(lastScan: ScanDto | null): Promise<{
   scan: HomeScanSnapshot | null;
   routine: HomeRoutineProgress;
 }> {
-  const [quotaRes, scans, routineRes] = await Promise.all([
+  // Load independently — a quota blip must not hide the user's scan history.
+  const [quotaSettled, scansSettled, routineSettled] = await Promise.allSettled([
     fetchQuota(),
     listScans(),
-    fetchRoutine().catch(() => null),
+    fetchRoutine(),
   ]);
-  const quota = {
-    plan: resolveEffectivePlan(quotaRes.plan),
-    lifetimeScanCount: quotaRes.lifetimeScanCount,
-    dailyScanCount: quotaRes.dailyScanCount,
-  };
+
+  const scans = scansSettled.status === 'fulfilled' ? scansSettled.value : [];
   const newest =
     lastScan && !scans.some((s) => s.id === lastScan.id) ? [lastScan, ...scans] : scans;
   const current = newest[0] ?? null;
   const previous = newest[1] ?? null;
   const scan = current ? scanDtoToHomeScan(current, previous) : null;
-  if (!routineRes) {
-    return { quota, scan, routine: EMPTY_ROUTINE };
+
+  const quota = resolveHomeQuota(quotaSettled, newest.length);
+  const routine = resolveHomeRoutine(routineSettled);
+
+  return { quota, scan, routine };
+}
+
+function resolveHomeQuota(
+  settled: PromiseSettledResult<Awaited<ReturnType<typeof fetchQuota>>>,
+  scanCountFallback: number,
+): HomeSnapshot['quota'] {
+  if (settled.status === 'fulfilled') {
+    return {
+      plan: resolveEffectivePlan(settled.value.plan),
+      lifetimeScanCount: Math.max(settled.value.lifetimeScanCount, scanCountFallback),
+      dailyScanCount: settled.value.dailyScanCount,
+    };
   }
-  const am = routineRes.state.am;
-  const pm = routineRes.state.pm;
   return {
-    quota,
-    scan,
-    routine: {
-      amDone: am.filter((s) => s.done).length,
-      amTotal: am.length,
-      pmDone: pm.filter((s) => s.done).length,
-      pmTotal: pm.length,
-    },
+    ...EMPTY_QUOTA,
+    lifetimeScanCount: scanCountFallback,
+  };
+}
+
+function resolveHomeRoutine(
+  settled: PromiseSettledResult<Awaited<ReturnType<typeof fetchRoutine>>>,
+): HomeRoutineProgress {
+  if (settled.status !== 'fulfilled' || !settled.value) {
+    return EMPTY_ROUTINE;
+  }
+  const am = settled.value.state.am;
+  const pm = settled.value.state.pm;
+  return {
+    amDone: am.filter((s) => s.done).length,
+    amTotal: am.length,
+    pmDone: pm.filter((s) => s.done).length,
+    pmTotal: pm.length,
   };
 }

@@ -8,6 +8,7 @@ import { getCopy } from '@/src/copy';
 import { scoreTokenToColor } from '@/src/lib/scoreTokenToColor';
 import { colors, radii, spacing, textStyles } from '@/src/theme';
 
+import { formatLastScanLabel } from '../lib/formatLastScanLabel';
 import type { HomeScanSnapshot } from '../mock/homeMockScenarios';
 
 export type HomeHeroCardProps = {
@@ -64,7 +65,7 @@ export function HomeHeroCard({ scan, onViewReport }: HomeHeroCardProps) {
         </AppText>
       </Pressable>
       <AppText variant="caption" color={colors.muteSoft}>
-        {h.lastScan}
+        {formatLastScanLabel(scan.takenAt, h)}
       </AppText>
       <View style={styles.sheep} pointerEvents="none">
         <Mascot mood="happy" size={SHEEP_SIZE} showBubble={false} />

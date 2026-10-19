@@ -7,7 +7,7 @@ import { scanDtoToHomeScan } from '../lib/scanDtoToHomeScan';
 import type { HomeRoutineProgress, HomeScanSnapshot, HomeSnapshot } from '../mock/homeMockScenarios';
 import { applyGuestHomeSnapshot, refreshHomeSnapshot } from './refreshHomeSnapshot';
 
-export function useHomeSnapshotFocus(ctx: {
+type HomeFocusCtx = {
   live: boolean;
   accessToken: string | null;
   quotaRefreshVersion: number;
@@ -17,7 +17,18 @@ export function useHomeSnapshotFocus(ctx: {
   setScan: (s: HomeScanSnapshot | null) => void;
   setRoutine: (r: HomeRoutineProgress) => void;
   setLoading: (v: boolean) => void;
-}): void {
+};
+
+function applyLastScanFallback(ctx: HomeFocusCtx): void {
+  if (!ctx.lastScan) {
+    return;
+  }
+  ctx.setScan(scanDtoToHomeScan(ctx.lastScan, null));
+  ctx.setQuota({ plan: 'free', lifetimeScanCount: 1, dailyScanCount: 0 });
+  ctx.readyRef.current = true;
+}
+
+export function useHomeSnapshotFocus(ctx: HomeFocusCtx): void {
   useFocusEffect(
     useCallback(() => {
       void ctx.quotaRefreshVersion;
@@ -42,9 +53,8 @@ export function useHomeSnapshotFocus(ctx: {
           ctx.setRoutine(next.routine);
           ctx.readyRef.current = true;
         } catch {
-          if (!cancelled && ctx.lastScan) {
-            ctx.setScan(scanDtoToHomeScan(ctx.lastScan, null));
-            ctx.readyRef.current = true;
+          if (!cancelled) {
+            applyLastScanFallback(ctx);
           }
         } finally {
           if (!cancelled) {

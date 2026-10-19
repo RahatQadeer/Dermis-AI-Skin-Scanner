@@ -5,6 +5,8 @@ export type HomeScanSnapshot = {
   indexScore: number;
   /** Change since the previous scan (points). Optional for report-derived snapshots. */
   indexDelta?: number;
+  /** ISO timestamp of the scan (`takenAt`) for relative “Last scan …” copy. */
+  takenAt?: string;
   concernScores: Record<ConcernId, number>;
   priorities: ConcernId[];
 };

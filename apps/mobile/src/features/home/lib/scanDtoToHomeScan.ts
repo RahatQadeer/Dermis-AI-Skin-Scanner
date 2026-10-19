@@ -24,6 +24,7 @@ export function scanDtoToHomeScan(
   return {
     indexScore: scan.indexScore,
     indexDelta,
+    takenAt: scan.takenAt,
     concernScores,
     priorities,
   };
