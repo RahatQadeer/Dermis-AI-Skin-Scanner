@@ -13,8 +13,7 @@ export const summaryCopy = {
   ctaArrow: '→',
   skipHome: commonCopy.skipForNow,
   sensitivityNotes: {
-    rarely:
-      'Standard-strength actives are unlocked. We will still ramp retinol over four weeks.',
+    rarely: 'Standard-strength actives are unlocked. We will still ramp retinol over four weeks.',
     sometimes:
       'Actives will be introduced one at a time, alternating nights, so any reaction can be traced.',
     easily:

@@ -124,9 +124,7 @@ async function upsertEntitlement(
   });
 }
 
-async function upsertUsage(
-  ctx: QuotaRestCtx & { lifetimeScanCount: number },
-): Promise<void> {
+async function upsertUsage(ctx: QuotaRestCtx & { lifetimeScanCount: number }): Promise<void> {
   await ctx.fetchImpl(`${ctx.root}/rest/v1/scan_usage`, {
     method: 'POST',
     headers: { ...ctx.headers(), prefer: 'resolution=ignore-duplicates,return=minimal' },
@@ -145,9 +143,7 @@ async function countScans(
   headers: () => HeadersInit,
   userId: string,
 ): Promise<number> {
-  const url =
-    `${root}/rest/v1/scans?user_id=eq.${encodeURIComponent(userId)}` +
-    `&select=id`;
+  const url = `${root}/rest/v1/scans?user_id=eq.${encodeURIComponent(userId)}` + `&select=id`;
   const response = await fetchImpl(url, {
     headers: { ...headers(), prefer: 'count=exact' },
   });

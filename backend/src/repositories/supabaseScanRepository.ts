@@ -1,8 +1,4 @@
-import {
-  concernScoresSchema,
-  concernWeightsSchema,
-  zoneScoresSchema,
-} from '@dermis/domain/server';
+import { concernScoresSchema, concernWeightsSchema, zoneScoresSchema } from '@dermis/domain/server';
 import { z } from 'zod';
 
 import type { ScanInsert, ScanRecordRow, ScanRepository } from './scanTypes';
@@ -108,8 +104,7 @@ async function deleteById(client: RestClient, id: string): Promise<void> {
 
 async function listByUser(client: RestClient, userId: string): Promise<ScanRecordRow[]> {
   const url =
-    `${client.base}?user_id=eq.${encodeURIComponent(userId)}` +
-    `&select=*&order=taken_at.desc`;
+    `${client.base}?user_id=eq.${encodeURIComponent(userId)}` + `&select=*&order=taken_at.desc`;
   const response = await client.fetchImpl(url, { headers: client.headers });
   if (!response.ok) {
     throw new Error('scan_list_failed');

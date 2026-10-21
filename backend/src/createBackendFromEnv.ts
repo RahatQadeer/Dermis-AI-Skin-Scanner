@@ -36,18 +36,14 @@ type LiveStores = {
   quota: ReturnType<typeof createQuotaService>;
 };
 
-export function createBackendFromEnv(
-  env: BackendEnv,
-): (request: Request) => Promise<Response> {
+export function createBackendFromEnv(env: BackendEnv): (request: Request) => Promise<Response> {
   if (env.useMemory || !env.supabaseUrl || !env.supabaseAnonKey) {
     return createMemoryOrHybridBackend(env);
   }
   return createLiveSupabaseBackend(env);
 }
 
-function createMemoryOrHybridBackend(
-  env: BackendEnv,
-): (request: Request) => Promise<Response> {
+function createMemoryOrHybridBackend(env: BackendEnv): (request: Request) => Promise<Response> {
   const deps = buildMemoryBackendDeps(env);
   if (env.supabaseUrl && env.supabaseAnonKey) {
     deps.credentials = createSupabaseCredentialsPort({
@@ -59,9 +55,7 @@ function createMemoryOrHybridBackend(
   return createApp(deps);
 }
 
-function createLiveSupabaseBackend(
-  env: BackendEnv,
-): (request: Request) => Promise<Response> {
+function createLiveSupabaseBackend(env: BackendEnv): (request: Request) => Promise<Response> {
   const auth: AuthPort = createSupabaseAuthPort({
     supabaseUrl: env.supabaseUrl!,
     anonKey: env.supabaseAnonKey!,
@@ -126,8 +120,7 @@ function buildLiveDeps(env: BackendEnv, auth: AuthPort, stores: LiveStores): App
       ),
     }),
     quotaFor: () => stores.quota,
-    scanPipelineFor: ({ accessToken }) =>
-      liveScanPipeline({ env, url, anon, stores, accessToken }),
+    scanPipelineFor: ({ accessToken }) => liveScanPipeline({ env, url, anon, stores, accessToken }),
   };
 }
 

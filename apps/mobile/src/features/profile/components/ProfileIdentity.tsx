@@ -37,7 +37,10 @@ export function ProfileIdentity({ displayName, email, scanCount }: ProfileIdenti
 
 function toInitials(name: string): string {
   const clean = name.includes('@') ? (name.split('@')[0] ?? name) : name;
-  const parts = clean.trim().split(/[\s._-]+/).filter(Boolean);
+  const parts = clean
+    .trim()
+    .split(/[\s._-]+/)
+    .filter(Boolean);
   const chars = parts
     .slice(0, 2)
     .map((word) => word[0] ?? '')

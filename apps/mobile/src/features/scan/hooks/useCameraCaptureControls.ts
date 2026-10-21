@@ -14,9 +14,7 @@ function coachMessage(issue: LiveScanIssue | null): string {
   return issue ? messageForLiveIssue(issue) : getCopy().screens.camera.needReadyToast;
 }
 
-export function useCameraCaptureControls(
-  cameraRef: RefObject<CameraPreviewLiveHandle | null>,
-) {
+export function useCameraCaptureControls(cameraRef: RefObject<CameraPreviewLiveHandle | null>) {
   const [flashing, setFlashing] = useState(false);
   const [coachToast, setCoachToast] = useState<string | null>(null);
   const capture = useScanCaptureFlow(cameraRef);

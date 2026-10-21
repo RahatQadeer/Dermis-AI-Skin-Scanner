@@ -62,13 +62,7 @@ export function RoutineTabIcon({ color, active = false, size = 22 }: TabBarIconP
         strokeWidth={1.7}
         strokeLinejoin="round"
       />
-      <Path
-        d="M9.2 6.3h5.6"
-        fill="none"
-        stroke={color}
-        strokeWidth={1.7}
-        strokeLinecap="round"
-      />
+      <Path d="M9.2 6.3h5.6" fill="none" stroke={color} strokeWidth={1.7} strokeLinecap="round" />
     </Svg>
   );
 }

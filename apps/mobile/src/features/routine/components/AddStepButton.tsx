@@ -18,10 +18,7 @@ export function AddStepButton({ onPress, disabled = false }: AddStepButtonProps)
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.button,
-        { opacity: disabled ? 0.45 : pressed ? 0.85 : 1 },
-      ]}
+      style={({ pressed }) => [styles.button, { opacity: disabled ? 0.45 : pressed ? 0.85 : 1 }]}
     >
       <View style={styles.plus}>
         <AppText variant="bodyStrong" color={colors.surface}>

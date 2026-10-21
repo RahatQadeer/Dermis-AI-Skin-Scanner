@@ -1,10 +1,6 @@
 import { useCallback } from 'react';
 
-import {
-  clearStoredSession,
-  saveOnboardingComplete,
-  saveStoredSession,
-} from './sessionStorage';
+import { clearStoredSession, saveOnboardingComplete, saveStoredSession } from './sessionStorage';
 
 export function useSessionActions(ctx: {
   persistSession: (next: {

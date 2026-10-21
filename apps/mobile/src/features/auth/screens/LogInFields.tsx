@@ -11,29 +11,17 @@ import { AuthPrimaryButton } from '../components/AuthPrimaryButton';
 import { SocialAuthButtons } from '../components/SocialAuthButtons';
 import type { useLogInForm } from '../hooks/useAuthForms';
 
-export function LogInFields({ form }: { form: ReturnType<typeof useLogInForm> }) {
-  const auth = getCopy().auth;
+type LogInForm = ReturnType<typeof useLogInForm>;
+
+function LogInFooter({
+  form,
+  auth,
+}: {
+  form: LogInForm;
+  auth: ReturnType<typeof getCopy>['auth'];
+}) {
   return (
     <>
-      <SocialAuthButtons mode="logIn" onApple={form.continueSocial} onGoogle={form.continueSocial} />
-      <AuthDivider />
-      <TextField
-        label={auth.emailLabel}
-        placeholder={auth.emailPlaceholder}
-        value={form.email}
-        onChangeText={form.setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        textContentType="emailAddress"
-        error={form.errors.email}
-      />
-      <AuthPasswordField
-        label={auth.passwordLabel}
-        placeholder={auth.passwordPlaceholder}
-        value={form.password}
-        onChangeText={form.setPassword}
-        error={form.errors.password}
-      />
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={auth.forgotLink}
@@ -56,7 +44,41 @@ export function LogInFields({ form }: { form: ReturnType<typeof useLogInForm> })
         disabled={!form.canSubmit}
         loading={form.submitting}
       />
-      <AppText variant="caption" color={colors.muteFoot} align="center">{auth.logInFootnote}</AppText>
+      <AppText variant="caption" color={colors.muteFoot} align="center">
+        {auth.logInFootnote}
+      </AppText>
+    </>
+  );
+}
+
+export function LogInFields({ form }: { form: LogInForm }) {
+  const auth = getCopy().auth;
+  return (
+    <>
+      <SocialAuthButtons
+        mode="logIn"
+        onApple={form.continueSocial}
+        onGoogle={form.continueSocial}
+      />
+      <AuthDivider />
+      <TextField
+        label={auth.emailLabel}
+        placeholder={auth.emailPlaceholder}
+        value={form.email}
+        onChangeText={form.setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        textContentType="emailAddress"
+        error={form.errors.email}
+      />
+      <AuthPasswordField
+        label={auth.passwordLabel}
+        placeholder={auth.passwordPlaceholder}
+        value={form.password}
+        onChangeText={form.setPassword}
+        error={form.errors.password}
+      />
+      <LogInFooter form={form} auth={auth} />
     </>
   );
 }

@@ -6,7 +6,11 @@ import type { ScanDto } from '@/src/features/scan/api/scanApi';
 
 import { fetchQuota } from '../api/quotaApi';
 import { scanDtoToHomeScan } from '../lib/scanDtoToHomeScan';
-import type { HomeRoutineProgress, HomeScanSnapshot, HomeSnapshot } from '../mock/homeMockScenarios';
+import type {
+  HomeRoutineProgress,
+  HomeScanSnapshot,
+  HomeSnapshot,
+} from '../mock/homeMockScenarios';
 
 export const EMPTY_ROUTINE: HomeRoutineProgress = {
   amDone: 0,

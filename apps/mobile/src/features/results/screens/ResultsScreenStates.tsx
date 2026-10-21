@@ -45,7 +45,12 @@ export function ResultsScreenEmpty({
         title={r.title}
         onBack={router.canGoBack() ? () => router.back() : () => router.replace('/(tabs)/home')}
       />
-      <EmptyState title={r.emptyTitle} body={r.emptyBody} actionLabel={r.emptyCta} onAction={goScan} />
+      <EmptyState
+        title={r.emptyTitle}
+        body={r.emptyBody}
+        actionLabel={r.emptyCta}
+        onAction={goScan}
+      />
     </Screen>
   );
 }

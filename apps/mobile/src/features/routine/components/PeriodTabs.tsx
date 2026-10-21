@@ -37,7 +37,11 @@ export function PeriodTabs({ value, onChange, disabled = false }: PeriodTabsProp
             onPress={() => onChange(tab.value)}
             style={[styles.tab, selected ? styles.tabSelected : null]}
           >
-            <AppText variant="bodyStrong" align="center" color={selected ? colors.surface : colors.ink}>
+            <AppText
+              variant="bodyStrong"
+              align="center"
+              color={selected ? colors.surface : colors.ink}
+            >
               {tab.label}
             </AppText>
           </Pressable>

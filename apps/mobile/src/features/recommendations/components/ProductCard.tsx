@@ -9,12 +9,7 @@ import { colors, radii, spacing } from '@/src/theme';
 
 import type { PlaceholderProduct } from '../types/productTypes';
 
-const IMAGE_TINTS = [
-  colors.noteSoft,
-  colors.greenSoft,
-  colors.amberSoft,
-  colors.confettiSky,
-];
+const IMAGE_TINTS = [colors.noteSoft, colors.greenSoft, colors.amberSoft, colors.confettiSky];
 
 export type ProductCardProps = {
   product: PlaceholderProduct;

@@ -49,6 +49,9 @@ describe('routineLogic', () => {
 
   it('finds and removes by id', () => {
     assert.equal(findStepByLabel(sample, 'Cleanse')?.id, 'a');
-    assert.deepEqual(removeStep(sample, 'a').map((s) => s.id), ['b']);
+    assert.deepEqual(
+      removeStep(sample, 'a').map((s) => s.id),
+      ['b'],
+    );
   });
 });

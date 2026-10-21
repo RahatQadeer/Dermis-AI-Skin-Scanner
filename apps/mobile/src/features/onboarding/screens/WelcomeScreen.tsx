@@ -34,11 +34,7 @@ export function WelcomeScreen() {
           { paddingBottom: Math.max(38, 12 + insets.bottom) },
         ]}
       >
-        <Text
-          style={styles.headline}
-          accessibilityRole="header"
-          maxFontSizeMultiplier={1}
-        >
+        <Text style={styles.headline} accessibilityRole="header" maxFontSizeMultiplier={1}>
           {w.headlineKnow}
           {w.headlineMid}
           <Text style={styles.accent}>{w.headlineAccentLead}</Text>

@@ -16,7 +16,7 @@ import { ResultsReportMain } from './ResultsReportMain';
 
 type PdfState = ReturnType<typeof useExportReportPdf>;
 
-export function ResultsReportScroll(props: {
+export type ResultsReportScrollProps = {
   router: ReturnType<typeof useRouter>;
   report: ResultsReport;
   reportWhen: string;
@@ -28,19 +28,30 @@ export function ResultsReportScroll(props: {
   onSelectZone: (zoneId: ZoneId) => void;
   goPaywall: () => void;
   pdf: PdfState;
-}) {
+};
+
+export function ResultsReportScroll(props: ResultsReportScrollProps) {
   const r = getCopy().screens.results;
   const back = props.router.canGoBack()
     ? () => props.router.back()
     : () => props.router.replace('/(tabs)/home');
 
   return (
-    <Screen scroll padded edges={['top', 'left', 'right']} style={styles.screen} contentStyle={styles.content}>
+    <Screen
+      scroll
+      padded
+      edges={['top', 'left', 'right']}
+      style={styles.screen}
+      contentStyle={styles.content}
+    >
       <Header
         title={r.reportTitle(props.reportWhen)}
         onBack={back}
         right={
-          <ResultsShareButton busy={props.pdf.busy} onPress={() => void props.pdf.onExportPress()} />
+          <ResultsShareButton
+            busy={props.pdf.busy}
+            onPress={() => void props.pdf.onExportPress()}
+          />
         }
       />
       <ResultsReportMain

@@ -3,11 +3,7 @@ import { useCallback, useState } from 'react';
 import { getCopy } from '@/src/copy';
 import type { SessionState } from '@/src/features/session/SessionContext';
 
-import {
-  runDeleteAccount,
-  runDeleteScans,
-  runExportAccount,
-} from './accountActionHandlers';
+import { runDeleteAccount, runDeleteScans, runExportAccount } from './accountActionHandlers';
 
 type ProfileCopy = ReturnType<typeof getCopy>['screens']['profile'];
 

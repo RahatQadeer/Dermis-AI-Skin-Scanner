@@ -21,10 +21,7 @@ export function HomePrioritiesCard({ scan }: HomePrioritiesCardProps) {
       </AppText>
       <Card style={styles.card}>
         {scan.priorities.map((id, index) => (
-          <View
-            key={id}
-            style={[styles.row, index > 0 ? styles.rowDivider : null]}
-          >
+          <View key={id} style={[styles.row, index > 0 ? styles.rowDivider : null]}>
             <AppText variant="bodyStrong">{concernLabel(id)}</AppText>
             <AppText variant="bodyStrong" color={colors.mute}>
               {String(scan.concernScores[id])}

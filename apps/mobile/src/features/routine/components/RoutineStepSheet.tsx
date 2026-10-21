@@ -6,10 +6,7 @@ import { getCopy } from '@/src/copy';
 import type { RoutineSheetMode } from '../hooks/routineSheetTypes';
 import { buildRoutineSuggestions } from '../lib/routineSuggestions';
 import type { RoutinePeriod } from '../types/routineTypes';
-import {
-  RoutineStepSheetAddBody,
-  RoutineStepSheetEditBody,
-} from './RoutineStepSheetBodies';
+import { RoutineStepSheetAddBody, RoutineStepSheetEditBody } from './RoutineStepSheetBodies';
 import { RoutineStepSheetHeader } from './RoutineStepSheetHeader';
 
 export type RoutineStepSheetProps = {
@@ -46,7 +43,11 @@ export function RoutineStepSheet(props: RoutineStepSheetProps) {
         <PartyConfetti active={props.doneSparkle} burstKey={props.doneSparkle ? 'sheet-done' : 0} />
       }
     >
-      <RoutineStepSheetHeader title={title} doneSparkle={props.doneSparkle} onClose={props.onClose} />
+      <RoutineStepSheetHeader
+        title={title}
+        doneSparkle={props.doneSparkle}
+        onClose={props.onClose}
+      />
       {isEdit ? (
         <RoutineStepSheetEditBody
           draftLabel={props.draftLabel}

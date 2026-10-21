@@ -49,13 +49,7 @@ export function ScanDetailHero({
   );
 }
 
-function ScanDetailDeltaChips({
-  delta,
-  capturedAt,
-}: {
-  delta: number | null;
-  capturedAt: string;
-}) {
+function ScanDetailDeltaChips({ delta, capturedAt }: { delta: number | null; capturedAt: string }) {
   const p = getCopy().screens.progress;
   return (
     <View style={styles.chipRow}>

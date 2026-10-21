@@ -5,11 +5,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export type AuthFieldKey = 'name' | 'email' | 'password';
 
 export type AuthErrorCode =
-  | 'nameRequired'
-  | 'emailInvalid'
-  | 'emailTaken'
-  | 'passwordWeak'
-  | 'passwordTooShort';
+  'nameRequired' | 'emailInvalid' | 'emailTaken' | 'passwordWeak' | 'passwordTooShort';
 
 export type FieldErrors = Partial<Record<AuthFieldKey, AuthErrorCode>>;
 

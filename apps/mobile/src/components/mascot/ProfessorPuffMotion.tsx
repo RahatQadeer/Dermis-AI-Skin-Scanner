@@ -46,6 +46,25 @@ const EAR = {
   },
 } as const;
 
+type EarCfg = (typeof EAR)[EarSide];
+
+function EarGraphics({ cfg, pivotY }: { cfg: EarCfg; pivotY: number }) {
+  return (
+    <G rotation={cfg.baseRot} origin={`${cfg.cx}, ${pivotY}`}>
+      <Ellipse
+        cx={cfg.cx}
+        cy={pivotY}
+        rx={13}
+        ry={6.5}
+        fill={P.face}
+        stroke={P.outline}
+        strokeWidth={3}
+      />
+      <Ellipse cx={cfg.innerX} cy={pivotY} rx={7} ry={3} fill={P.ear} />
+    </G>
+  );
+}
+
 /**
  * Exact prototype earL / earR:
  *   earL 3.8s: 0 → −12° at 86%; earR 4.4s: 0 → +12° at 80%
@@ -63,33 +82,30 @@ export function AnimatedEar({ side }: { side: EarSide }) {
 
   useEffect(() => {
     rotate.setValue(0);
-    if (reduceMotion || IS_WEB) {
-      return;
-    }
+    if (reduceMotion || IS_WEB) return;
     const loop = Animated.loop(
       Animated.sequence([
         Animated.delay(stillMs),
-        Animated.timing(rotate, { toValue: cfg.peak, duration: toPeakMs, easing: SMOOTH, useNativeDriver: false }),
-        Animated.timing(rotate, { toValue: 0, duration: backMs, easing: SMOOTH, useNativeDriver: false }),
+        Animated.timing(rotate, {
+          toValue: cfg.peak,
+          duration: toPeakMs,
+          easing: SMOOTH,
+          useNativeDriver: false,
+        }),
+        Animated.timing(rotate, {
+          toValue: 0,
+          duration: backMs,
+          easing: SMOOTH,
+          useNativeDriver: false,
+        }),
       ]),
     );
     loop.start();
-    return () => {
-      loop.stop();
-    };
+    return () => loop.stop();
   }, [backMs, cfg.peak, reduceMotion, rotate, stillMs, toPeakMs]);
 
-  const ear = (
-    <G rotation={cfg.baseRot} origin={`${cfg.cx}, ${pivotY}`}>
-      <Ellipse cx={cfg.cx} cy={pivotY} rx={13} ry={6.5} fill={P.face} stroke={P.outline} strokeWidth={3} />
-      <Ellipse cx={cfg.innerX} cy={pivotY} rx={7} ry={3} fill={P.ear} />
-    </G>
-  );
-
-  if (IS_WEB || reduceMotion) {
-    return ear;
-  }
-
+  const ear = <EarGraphics cfg={cfg} pivotY={pivotY} />;
+  if (IS_WEB || reduceMotion) return ear;
   return (
     <G x={pivotX} y={pivotY}>
       <AnimatedG rotation={rotate}>
@@ -101,29 +117,8 @@ export function AnimatedEar({ side }: { side: EarSide }) {
   );
 }
 
-/** Prototype book arm `float 3s` — translateY 0 ↔ -6. */
-export function AnimatedBookArm() {
-  const reduceMotion = useReduceMotion();
-  const ty = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    ty.setValue(0);
-    if (reduceMotion || IS_WEB) {
-      return;
-    }
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(ty, { toValue: -6, duration: 1500, easing: SMOOTH, useNativeDriver: false }),
-        Animated.timing(ty, { toValue: 0, duration: 1500, easing: SMOOTH, useNativeDriver: false }),
-      ]),
-    );
-    loop.start();
-    return () => {
-      loop.stop();
-    };
-  }, [reduceMotion, ty]);
-
-  const bookArm = (
+function BookArmGraphics() {
+  return (
     <>
       <Limb d="M120 128 Q132 138 134 150" color={P.cardigan} width={13} />
       <G rotation={12} origin="138, 150">
@@ -137,7 +132,15 @@ export function AnimatedBookArm() {
           stroke={P.outline}
           strokeWidth={3}
         />
-        <Rect x={128} y={155} width={22} height={4.5} fill={P.bookPage} stroke={P.outline} strokeWidth={2} />
+        <Rect
+          x={128}
+          y={155}
+          width={22}
+          height={4.5}
+          fill={P.bookPage}
+          stroke={P.outline}
+          strokeWidth={2}
+        />
         <Path
           d="M130 143 h14 M130 148 h9"
           stroke={P.bookPage}
@@ -148,11 +151,38 @@ export function AnimatedBookArm() {
       <Circle cx={134} cy={152} r={7} fill={P.skin} stroke={P.outline} strokeWidth={3} />
     </>
   );
+}
 
-  if (IS_WEB || reduceMotion) {
-    return <G>{bookArm}</G>;
-  }
+/** Prototype book arm `float 3s` — translateY 0 ↔ -6. */
+export function AnimatedBookArm() {
+  const reduceMotion = useReduceMotion();
+  const ty = useRef(new Animated.Value(0)).current;
 
+  useEffect(() => {
+    ty.setValue(0);
+    if (reduceMotion || IS_WEB) return;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(ty, {
+          toValue: -6,
+          duration: 1500,
+          easing: SMOOTH,
+          useNativeDriver: false,
+        }),
+        Animated.timing(ty, {
+          toValue: 0,
+          duration: 1500,
+          easing: SMOOTH,
+          useNativeDriver: false,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [reduceMotion, ty]);
+
+  const bookArm = <BookArmGraphics />;
+  if (IS_WEB || reduceMotion) return <G>{bookArm}</G>;
   return <AnimatedG translateY={ty}>{bookArm}</AnimatedG>;
 }
 
@@ -164,25 +194,30 @@ export function AnimatedHappyStar() {
 
   useEffect(() => {
     opacity.setValue(0.35);
-    if (reduceMotion || IS_WEB) {
-      return;
-    }
+    if (reduceMotion || IS_WEB) return;
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(opacity, { toValue: 1, duration: 800, easing: SMOOTH, useNativeDriver: false }),
-        Animated.timing(opacity, { toValue: 0.35, duration: 800, easing: SMOOTH, useNativeDriver: false }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 800,
+          easing: SMOOTH,
+          useNativeDriver: false,
+        }),
+        Animated.timing(opacity, {
+          toValue: 0.35,
+          duration: 800,
+          easing: SMOOTH,
+          useNativeDriver: false,
+        }),
       ]),
     );
     loop.start();
-    return () => {
-      loop.stop();
-    };
+    return () => loop.stop();
   }, [opacity, reduceMotion]);
 
   if (IS_WEB || reduceMotion) {
     return <Path d={starPath} fill={P.blush} opacity={0.7} />;
   }
-
   return <AnimatedPath d={starPath} fill={P.blush} opacity={opacity} />;
 }
 

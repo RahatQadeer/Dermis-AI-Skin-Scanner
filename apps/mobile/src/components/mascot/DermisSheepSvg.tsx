@@ -75,7 +75,16 @@ function SheepLegs({ outline }: { outline: string }) {
     <>
       {[72, 90, 110, 128].map((x) => (
         <G key={x}>
-          <Rect x={x - 6} y={160} width={12} height={26} rx={6} fill={C.face} stroke={outline} strokeWidth={3} />
+          <Rect
+            x={x - 6}
+            y={160}
+            width={12}
+            height={26}
+            rx={6}
+            fill={C.face}
+            stroke={outline}
+            strokeWidth={3}
+          />
           <Rect x={x - 6} y={178} width={12} height={8} rx={4} fill={C.hoof} />
         </G>
       ))}

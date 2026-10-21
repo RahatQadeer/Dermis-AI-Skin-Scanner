@@ -5,7 +5,11 @@ import { useScanCapture } from '@/src/features/scan/context/ScanCaptureContext';
 import { resolveAccountDisplayName } from '@/src/features/session/accountDisplayName';
 import { useSession } from '@/src/features/session/SessionContext';
 
-import type { HomeRoutineProgress, HomeScanSnapshot, HomeSnapshot } from '../mock/homeMockScenarios';
+import type {
+  HomeRoutineProgress,
+  HomeScanSnapshot,
+  HomeSnapshot,
+} from '../mock/homeMockScenarios';
 import { EMPTY_QUOTA, EMPTY_ROUTINE } from './loadHomeSnapshot';
 import { useHomeSnapshotFocus } from './useHomeSnapshotFocus';
 

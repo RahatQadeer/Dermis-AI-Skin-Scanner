@@ -34,7 +34,11 @@ export function RoutineScreenBody(props: {
         <AppText variant="display" color={colors.ink}>
           {nav.routine}
         </AppText>
-        <EditButton active={props.editing} disabled={props.editDoneSparkle} onPress={props.onEditPress} />
+        <EditButton
+          active={props.editing}
+          disabled={props.editDoneSparkle}
+          onPress={props.onEditPress}
+        />
       </View>
       <LockedOverlay
         locked={!props.unlocked}

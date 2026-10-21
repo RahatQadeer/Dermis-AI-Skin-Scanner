@@ -19,8 +19,7 @@ export function scanDtoToHomeScan(
   const priorities = [...CONCERN_IDS]
     .sort((a, b) => concernScores[a] - concernScores[b])
     .slice(0, 3);
-  const indexDelta =
-    previous != null ? scan.indexScore - previous.indexScore : undefined;
+  const indexDelta = previous != null ? scan.indexScore - previous.indexScore : undefined;
   return {
     indexScore: scan.indexScore,
     indexDelta,

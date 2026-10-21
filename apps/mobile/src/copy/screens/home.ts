@@ -42,9 +42,7 @@ export const homeCopy = {
   routineSubtitle: (amDone: number, amTotal: number, pmDone: number, pmTotal: number) =>
     `AM ${String(amDone)}/${String(amTotal)} · PM ${String(pmDone)}/${String(pmTotal)}`,
   routineStepsToGo: (n: number) =>
-    n === 0
-      ? 'All morning steps done'
-      : `${String(n)} morning step${n === 1 ? '' : 's'} to go`,
+    n === 0 ? 'All morning steps done' : `${String(n)} morning step${n === 1 ? '' : 's'} to go`,
   routineLockedHint: 'Full routine tracking is a Pro feature',
   metricsTitle: 'Concern scores',
   metricsEmpty: 'Complete a scan to see scores for six skin concerns.',

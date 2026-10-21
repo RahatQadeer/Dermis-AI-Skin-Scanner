@@ -15,10 +15,7 @@ describe('accountDisplayName', () => {
   });
 
   it('does not fall back to email', () => {
-    assert.equal(
-      resolveAccountDisplayName({ email: 'rahatkadir.bhatti@gmail.com' }),
-      null,
-    );
+    assert.equal(resolveAccountDisplayName({ email: 'rahatkadir.bhatti@gmail.com' }), null);
   });
 
   it('formats email local-part helper when needed elsewhere', () => {

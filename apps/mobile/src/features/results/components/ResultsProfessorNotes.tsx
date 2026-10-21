@@ -1,9 +1,5 @@
 import { CONCERN_IDS, type ConcernId } from '@dermis/domain';
-import {
-  isElementUnlocked,
-  resolveFreePreviewConcernId,
-  type Plan,
-} from '@dermis/domain/server';
+import { isElementUnlocked, resolveFreePreviewConcernId, type Plan } from '@dermis/domain/server';
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 

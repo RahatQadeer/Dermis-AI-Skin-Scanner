@@ -17,6 +17,31 @@ export type RoutineCompleteBannerProps = {
   durationMs?: number;
 };
 
+function CompletePill({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+  const c = getCopy().feedback;
+  return (
+    <View style={styles.pill} accessibilityRole="alert">
+      <View style={styles.sheep}>
+        <Mascot character="dermis" mood="happy" size={36} showBubble={false} />
+      </View>
+      <AppText variant="bodyStrong" color={colors.surface} style={styles.message}>
+        {message}
+      </AppText>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={c.toastDismissA11y}
+        onPress={onDismiss}
+        hitSlop={spacing.sm}
+        style={styles.dismiss}
+      >
+        <AppText variant="caption" color={colors.surface} style={styles.dismissLabel}>
+          {getCopy().common.close}
+        </AppText>
+      </Pressable>
+    </View>
+  );
+}
+
 /** Celebration pill when every step in the period is done — sits above the tab bar. */
 export function RoutineCompleteBanner({
   message,
@@ -26,7 +51,6 @@ export function RoutineCompleteBanner({
 }: RoutineCompleteBannerProps) {
   const insets = useSafeAreaInsets();
   const r = getCopy().screens.routine;
-  const c = getCopy().feedback;
   const bottom = TAB_BAR_SCROLL_PAD + (insets.bottom > 0 ? spacing.sm : spacing.md);
   const animatedStyle = useFloatingBannerMotion({
     visible,
@@ -34,11 +58,7 @@ export function RoutineCompleteBanner({
     onDismiss,
     hiddenOffsetY: 20,
   });
-
-  if (!visible) {
-    return null;
-  }
-
+  if (!visible) return null;
   return (
     <View pointerEvents="box-none" style={styles.layer}>
       <PartyConfetti active burstKey={message} />
@@ -48,23 +68,7 @@ export function RoutineCompleteBanner({
         accessibilityLiveRegion="polite"
         accessibilityLabel={r.toastRoutineCompleteA11y}
       >
-        <View style={styles.pill} accessibilityRole="alert">
-          <View style={styles.sheep}>
-            <Mascot character="dermis" mood="happy" size={36} showBubble={false} />
-          </View>
-          <AppText variant="bodyStrong" color={colors.surface} style={styles.message}>{message}</AppText>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={c.toastDismissA11y}
-            onPress={onDismiss}
-            hitSlop={spacing.sm}
-            style={styles.dismiss}
-          >
-            <AppText variant="caption" color={colors.surface} style={styles.dismissLabel}>
-              {getCopy().common.close}
-            </AppText>
-          </Pressable>
-        </View>
+        <CompletePill message={message} onDismiss={onDismiss} />
       </Animated.View>
     </View>
   );

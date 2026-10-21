@@ -61,7 +61,7 @@ export function useRoutineDoneSparkle(closeSheet: () => void) {
   return { doneSparkle, onDoneSheet };
 }
 
-export function useRoutineSheetHandlers(opts: {
+type SheetHandlerOpts = {
   live: boolean;
   stateRef: { current: RoutineState };
   periodRef: { current: RoutinePeriod };
@@ -69,7 +69,9 @@ export function useRoutineSheetHandlers(opts: {
   setState: (s: RoutineState) => void;
   sheetDraft: SheetDraft;
   toast: ToastApi;
-}) {
+};
+
+export function useRoutineSheetHandlers(opts: SheetHandlerOpts) {
   const persistSheet = useCallback(
     (draftLabel: string, closeAfter: boolean) => {
       void persistRoutineSheet({
@@ -90,21 +92,22 @@ export function useRoutineSheetHandlers(opts: {
 
   const onSaveSheet = useCallback(() => {
     persistSheet(opts.sheetDraft.draftLabel, opts.sheetDraft.sheet.kind !== 'add');
-    if (opts.sheetDraft.sheet.kind === 'add') {
-      opts.sheetDraft.setDraftLabel('');
-    }
+    if (opts.sheetDraft.sheet.kind === 'add') opts.sheetDraft.setDraftLabel('');
   }, [opts, persistSheet]);
 
-  const onToggleSuggestion = useCallback((label: string) => {
-    void persistToggleSuggestion({
-      apiLive: opts.live,
-      period: opts.periodRef.current,
-      getState: () => opts.stateRef.current,
-      setState: opts.setState,
-      label,
-      showToast: opts.toast.showToast,
-    });
-  }, [opts]);
+  const onToggleSuggestion = useCallback(
+    (label: string) => {
+      void persistToggleSuggestion({
+        apiLive: opts.live,
+        period: opts.periodRef.current,
+        getState: () => opts.stateRef.current,
+        setState: opts.setState,
+        label,
+        showToast: opts.toast.showToast,
+      });
+    },
+    [opts],
+  );
 
   const isSuggestionAdded = useCallback(
     (label: string) => Boolean(findStepByLabel(opts.steps, label)),

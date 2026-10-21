@@ -195,7 +195,10 @@ function mapPipelineError(error: unknown): unknown {
     return error;
   }
   if (error instanceof Error) {
-    if (error.message === 'quota_consume_failed' || error.message === 'quota_consume_invalid_response') {
+    if (
+      error.message === 'quota_consume_failed' ||
+      error.message === 'quota_consume_invalid_response'
+    ) {
       return new HttpError(502, 'quota_unavailable');
     }
     if (error.message.startsWith('gemini_') || error.name === 'ZodError') {

@@ -62,8 +62,7 @@ export function buildResultsPresentation(
   }
 
   const usePrototypeExtras = Boolean(report && !currentScan);
-  const indexDelta =
-    previous && report ? report.scan.indexScore - previous.indexScore : null;
+  const indexDelta = previous && report ? report.scan.indexScore - previous.indexScore : null;
   const priorWhen = previous ? formatPriorWhen(previous.takenAt) : null;
 
   return {

@@ -30,7 +30,9 @@ export type ProgressSummary = {
 };
 
 /** Derives the headline figures + chart series from newest-first scans. */
-export function buildProgressSummary(scansNewestFirst: readonly ProgressScan[]): ProgressSummary | null {
+export function buildProgressSummary(
+  scansNewestFirst: readonly ProgressScan[],
+): ProgressSummary | null {
   if (scansNewestFirst.length === 0) {
     return null;
   }

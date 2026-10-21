@@ -1,12 +1,14 @@
 import type { ScanDto } from '@/src/features/scan/api/scanApi';
 
 import { scanDtoToHomeScan } from '../lib/scanDtoToHomeScan';
-import type { HomeRoutineProgress, HomeScanSnapshot, HomeSnapshot } from '../mock/homeMockScenarios';
+import type {
+  HomeRoutineProgress,
+  HomeScanSnapshot,
+  HomeSnapshot,
+} from '../mock/homeMockScenarios';
 import { EMPTY_QUOTA, EMPTY_ROUTINE, loadLiveHomeSnapshot } from './loadHomeSnapshot';
 
-export async function refreshHomeSnapshot(
-  lastScan: ScanDto | null,
-): Promise<{
+export async function refreshHomeSnapshot(lastScan: ScanDto | null): Promise<{
   quota: HomeSnapshot['quota'];
   scan: HomeScanSnapshot | null;
   routine: HomeRoutineProgress;

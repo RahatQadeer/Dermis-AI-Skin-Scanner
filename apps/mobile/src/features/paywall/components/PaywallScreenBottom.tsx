@@ -33,7 +33,12 @@ export function PaywallScreenBottom({ flow }: { flow: PaywallFlow }) {
         monthlyPriceLabel={flow.monthlyPriceLabel}
       />
       <View style={styles.bottomBlock}>
-        <AppText variant="caption" color={paywallDark.textMuted} align="center" style={styles.charge}>
+        <AppText
+          variant="caption"
+          color={paywallDark.textMuted}
+          align="center"
+          style={styles.charge}
+        >
           {p.chargeToAccount}
         </AppText>
         <PaywallLegalFooter onLegalUnavailable={() => flow.showToast(p.legalUnavailableToast)} />

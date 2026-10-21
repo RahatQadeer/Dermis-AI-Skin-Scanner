@@ -258,9 +258,7 @@ function nameFromGoTrueUser(user: GoTrueTokenBody['user']): string | null {
   if (!user) {
     return null;
   }
-  return (
-    readMetaName(user.user_metadata) ?? readMetaName(user.raw_user_meta_data) ?? null
-  );
+  return readMetaName(user.user_metadata) ?? readMetaName(user.raw_user_meta_data) ?? null;
 }
 
 function readMetaName(meta: GoTrueUserMeta | null | undefined): string | null {

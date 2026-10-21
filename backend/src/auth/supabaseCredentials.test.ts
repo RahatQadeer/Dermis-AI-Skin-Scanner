@@ -53,10 +53,13 @@ test('signIn maps invalid login to invalid_credentials', async () => {
       }),
   });
 
-  await assert.rejects(() => port.signIn({ email: 'a@b.c', password: 'wrong' }), (error) => {
-    assert.equal((error as { code?: string }).code, 'invalid_credentials');
-    return true;
-  });
+  await assert.rejects(
+    () => port.signIn({ email: 'a@b.c', password: 'wrong' }),
+    (error) => {
+      assert.equal((error as { code?: string }).code, 'invalid_credentials');
+      return true;
+    },
+  );
 });
 
 test('signUp rejects weak password before calling Supabase', async () => {
@@ -70,9 +73,12 @@ test('signUp rejects weak password before calling Supabase', async () => {
     },
   });
 
-  await assert.rejects(() => port.signUp({ email: 'a@b.c', password: 'short' }), (error) => {
-    assert.equal((error as { code?: string }).code, 'weak_password');
-    return true;
-  });
+  await assert.rejects(
+    () => port.signUp({ email: 'a@b.c', password: 'short' }),
+    (error) => {
+      assert.equal((error as { code?: string }).code, 'weak_password');
+      return true;
+    },
+  );
   assert.equal(called, false);
 });

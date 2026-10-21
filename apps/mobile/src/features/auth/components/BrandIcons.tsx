@@ -2,7 +2,13 @@ import Svg, { Path } from 'react-native-svg';
 
 import { colors } from '@/src/theme';
 
-export function AppleIcon({ size = 18, color = colors.surface }: { size?: number; color?: string }) {
+export function AppleIcon({
+  size = 18,
+  color = colors.surface,
+}: {
+  size?: number;
+  color?: string;
+}) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" accessibilityRole="image">
       <Path

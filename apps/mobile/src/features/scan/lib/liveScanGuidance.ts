@@ -6,14 +6,9 @@ import type { ScanQualityIssue } from './evaluateScanQuality';
  * Face issues are preferred over lighting/blur when both fail.
  */
 export type LiveScanIssue =
-  | FaceFramingIssue
-  | ScanQualityIssue
-  | 'detector_loading'
-  | 'detector_unavailable';
+  FaceFramingIssue | ScanQualityIssue | 'detector_loading' | 'detector_unavailable';
 
-export type LiveScanAssessment =
-  | { ok: true }
-  | { ok: false; issue: LiveScanIssue };
+export type LiveScanAssessment = { ok: true } | { ok: false; issue: LiveScanIssue };
 
 /** Face framing first, then image quality. Never claim OK without a face pass. */
 export function combineLiveAssessment(

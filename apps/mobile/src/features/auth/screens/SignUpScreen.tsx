@@ -38,7 +38,11 @@ function SignUpFields({ form }: { form: ReturnType<typeof useSignUpForm> }) {
   const auth = getCopy().auth;
   return (
     <>
-      <SocialAuthButtons mode="signUp" onApple={form.continueSocial} onGoogle={form.continueSocial} />
+      <SocialAuthButtons
+        mode="signUp"
+        onApple={form.continueSocial}
+        onGoogle={form.continueSocial}
+      />
       <AuthDivider />
       <TextField
         label={auth.firstNameLabel}

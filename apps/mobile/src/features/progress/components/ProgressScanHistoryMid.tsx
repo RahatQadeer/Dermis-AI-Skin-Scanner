@@ -43,7 +43,10 @@ export function ProgressScanHistoryMid({
         {SEGMENT_CONCERN_ORDER.map((id) => (
           <View
             key={id}
-            style={[styles.segment, { backgroundColor: segmentColorForScore(scan.concernScores[id]) }]}
+            style={[
+              styles.segment,
+              { backgroundColor: segmentColorForScore(scan.concernScores[id]) },
+            ]}
           />
         ))}
       </View>

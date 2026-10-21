@@ -20,11 +20,7 @@ import {
 import { handleGetQuota } from '../handlers/quotaHandlers';
 import { handleDevGrantPro } from '../handlers/devEntitlementHandlers';
 import { handleRevenueCatWebhook } from '../handlers/revenueCatWebhookHandler';
-import {
-  handleCreateScan,
-  handleDeleteAllScans,
-  handleListScans,
-} from '../handlers/scanHandlers';
+import { handleCreateScan, handleDeleteAllScans, handleListScans } from '../handlers/scanHandlers';
 import { DELETE_ACCOUNT_HTML } from './deleteAccountPage';
 import { json } from './respond';
 import { routeRoutineAndSettings } from './routineRoutes';
@@ -214,11 +210,7 @@ async function handleQuotaRoute(request: Request, deps: AppDeps): Promise<Respon
   return handleGetQuota(quota, user.id);
 }
 
-async function handleScanRoute(
-  request: Request,
-  method: string,
-  deps: AppDeps,
-): Promise<Response> {
+async function handleScanRoute(request: Request, method: string, deps: AppDeps): Promise<Response> {
   if (!deps.scanPipelineFor) {
     return json({ error: 'scan_pipeline_not_configured' }, 503);
   }

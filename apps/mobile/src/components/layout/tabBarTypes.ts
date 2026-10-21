@@ -2,13 +2,7 @@ export const TAB_IDS = ['home', 'progress', 'scan', 'routine', 'profile'] as con
 export type TabId = (typeof TAB_IDS)[number];
 
 /** Prototype order: Home · Progress · centre scan · Routine · Profile. */
-export const TAB_BAR_ORDER: readonly TabId[] = [
-  'home',
-  'progress',
-  'scan',
-  'routine',
-  'profile',
-];
+export const TAB_BAR_ORDER: readonly TabId[] = ['home', 'progress', 'scan', 'routine', 'profile'];
 
 export function isCentreScanTab(id: TabId): boolean {
   return id === 'scan';

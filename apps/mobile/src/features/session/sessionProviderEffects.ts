@@ -5,11 +5,7 @@ import { getApiClient } from '@/src/lib/api/client';
 import { isApiEnabled } from '@/src/lib/api/config';
 
 import { parseMemoryAccessToken } from './parseMemoryAccessToken';
-import {
-  loadOnboardingComplete,
-  loadStoredSession,
-  saveStoredSession,
-} from './sessionStorage';
+import { loadOnboardingComplete, loadStoredSession, saveStoredSession } from './sessionStorage';
 
 type AuthMeUser = {
   id: string;

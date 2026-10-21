@@ -45,10 +45,7 @@ export function usePurchasesPackages(
   return { packages, reloadPackages };
 }
 
-async function syncSessionUser(
-  accessToken: string | null,
-  userId: string | null,
-): Promise<void> {
+async function syncSessionUser(accessToken: string | null, userId: string | null): Promise<void> {
   if (!accessToken) {
     await logOutRevenueCat();
     return;

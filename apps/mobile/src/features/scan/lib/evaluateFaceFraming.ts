@@ -32,8 +32,7 @@ export type FaceFramingIssue =
   | 'obstructed';
 
 export type FaceFramingResult =
-  | { ok: true; face: DetectedFace }
-  | { ok: false; issue: FaceFramingIssue };
+  { ok: true; face: DetectedFace } | { ok: false; issue: FaceFramingIssue };
 
 export const FACE_FRAMING_THRESHOLDS = {
   minFaceHeightRatio: 0.28,
@@ -147,10 +146,7 @@ function eyesSkewed(
   return Boolean(leftEye && rightEye && Math.abs(leftEye.y - rightEye.y) / faceH > maxSkew);
 }
 
-function mouthAboveNose(
-  nose: FaceKeypoint | undefined,
-  mouth: FaceKeypoint | undefined,
-): boolean {
+function mouthAboveNose(nose: FaceKeypoint | undefined, mouth: FaceKeypoint | undefined): boolean {
   return Boolean(nose && mouth && mouth.y <= nose.y);
 }
 

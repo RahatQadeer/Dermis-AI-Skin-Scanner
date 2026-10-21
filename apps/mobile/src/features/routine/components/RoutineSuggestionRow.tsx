@@ -35,7 +35,10 @@ export function RoutineSuggestionRow({ item, added, onToggle }: RoutineSuggestio
           added ? r.removeSuggestionA11y(item.label) : r.addSuggestionA11y(item.label)
         }
         onPress={() => onToggle(item.label)}
-        style={({ pressed }) => [added ? styles.addedBtn : styles.plusBtn, pressed && styles.pressed]}
+        style={({ pressed }) => [
+          added ? styles.addedBtn : styles.plusBtn,
+          pressed && styles.pressed,
+        ]}
       >
         {added ? (
           <AppText variant="caption" color={colors.greenDeep} style={styles.addedText}>

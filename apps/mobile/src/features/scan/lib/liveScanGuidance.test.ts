@@ -13,10 +13,10 @@ describe('combineLiveAssessment', () => {
   });
 
   it('requires face ok before lighting can pass overall', () => {
-    assert.deepEqual(
-      combineLiveAssessment({ status: 'ok' }, { ok: false, issue: 'blurry' }),
-      { ok: false, issue: 'blurry' },
-    );
+    assert.deepEqual(combineLiveAssessment({ status: 'ok' }, { ok: false, issue: 'blurry' }), {
+      ok: false,
+      issue: 'blurry',
+    });
     assert.deepEqual(combineLiveAssessment({ status: 'ok' }, { ok: true }), { ok: true });
   });
 

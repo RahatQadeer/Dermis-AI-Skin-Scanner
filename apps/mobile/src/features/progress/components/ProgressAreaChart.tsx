@@ -32,7 +32,9 @@ export function ProgressAreaChart({
   const floor = height - PAD;
   const first = xForIndex(0, points.length, WIDTH, PAD);
   const last = xForIndex(points.length - 1, points.length, WIDTH, PAD);
-  const area = points.length ? `${line} L ${String(last)} ${String(floor)} L ${String(first)} ${String(floor)} Z` : '';
+  const area = points.length
+    ? `${line} L ${String(last)} ${String(floor)} L ${String(first)} ${String(floor)} Z`
+    : '';
   const lastValue = points[points.length - 1] ?? 0;
 
   return (

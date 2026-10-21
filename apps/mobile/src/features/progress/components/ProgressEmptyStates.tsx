@@ -37,6 +37,11 @@ export function ProgressEmptyStates({ loadError }: { loadError: ProgressLoadErro
     );
   }
   return (
-    <EmptyState title={p.emptyTitle} body={p.emptyBody} actionLabel={p.emptyCta} onAction={goScan} />
+    <EmptyState
+      title={p.emptyTitle}
+      body={p.emptyBody}
+      actionLabel={p.emptyCta}
+      onAction={goScan}
+    />
   );
 }

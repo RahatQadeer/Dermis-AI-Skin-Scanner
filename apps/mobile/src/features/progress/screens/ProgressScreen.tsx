@@ -39,7 +39,11 @@ export function ProgressScreen() {
         </AppText>
         <ProgressWindowToggle value={window} onChange={setWindow} disabled={!unlocked} />
       </View>
-      <LockedOverlay locked={!unlocked} onUnlock={() => router.push('/paywall')} hint={p.lockedHint}>
+      <LockedOverlay
+        locked={!unlocked}
+        onUnlock={() => router.push('/paywall')}
+        hint={p.lockedHint}
+      >
         {loading ? (
           <ActivityIndicator color={colors.ink} style={styles.loader} />
         ) : (

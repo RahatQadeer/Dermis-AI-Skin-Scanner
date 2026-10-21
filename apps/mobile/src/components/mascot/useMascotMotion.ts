@@ -27,7 +27,10 @@ type MotionValues = {
 function runBob(values: MotionValues) {
   const half = 1600;
   values.translateY.value = withRepeat(
-    withSequence(withTiming(-6, { duration: half, easing: EASE }), withTiming(0, { duration: half, easing: EASE })),
+    withSequence(
+      withTiming(-6, { duration: half, easing: EASE }),
+      withTiming(0, { duration: half, easing: EASE }),
+    ),
     -1,
     false,
   );

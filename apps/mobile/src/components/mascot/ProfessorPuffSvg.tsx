@@ -2,11 +2,7 @@ import Svg, { Circle, Ellipse, G, Path } from 'react-native-svg';
 
 import { colors } from '@/src/theme';
 
-import {
-  AnimatedBookArm,
-  AnimatedEar,
-  AnimatedHappyStar,
-} from './ProfessorPuffMotion';
+import { AnimatedBookArm, AnimatedEar, AnimatedHappyStar } from './ProfessorPuffMotion';
 import type { MascotMood } from './mascotTypes';
 
 export type ProfessorPuffSvgProps = {

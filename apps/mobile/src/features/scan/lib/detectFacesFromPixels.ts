@@ -15,9 +15,7 @@ export type PixelBuffer = {
  * Run MediaPipe Face Detector on decoded pixels.
  * Returns null when the model is unavailable (caller must not claim “face OK”).
  */
-export async function detectFacesFromPixels(
-  image: PixelBuffer,
-): Promise<DetectedFace[] | null> {
+export async function detectFacesFromPixels(image: PixelBuffer): Promise<DetectedFace[] | null> {
   const detector = await getFaceDetector();
   if (!detector) {
     return null;

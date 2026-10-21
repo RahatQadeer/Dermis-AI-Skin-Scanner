@@ -66,10 +66,7 @@ export function concernDeltaLabels(
   return out;
 }
 
-export function pickPreviousScan(
-  scans: readonly ScanDto[],
-  currentId: string,
-): ScanDto | null {
+export function pickPreviousScan(scans: readonly ScanDto[], currentId: string): ScanDto | null {
   const idx = scans.findIndex((s) => s.id === currentId);
   if (idx >= 0) {
     return scans[idx + 1] ?? null;

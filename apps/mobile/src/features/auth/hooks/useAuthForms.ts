@@ -12,11 +12,7 @@ import {
   type FieldErrors,
 } from '../lib/authValidation';
 import { resolveAuthFieldErrors } from '../lib/resolveAuthErrors';
-import {
-  signUpMascotTone,
-  submitLogInRequest,
-  submitSignUpRequest,
-} from './submitAuthForms';
+import { signUpMascotTone, submitLogInRequest, submitSignUpRequest } from './submitAuthForms';
 
 export function useSignUpForm() {
   const router = useRouter();
@@ -30,8 +26,7 @@ export function useSignUpForm() {
   const [submitting, setSubmitting] = useState(false);
 
   const mascotTone = useMemo(
-    (): AuthMascotTone =>
-      signUpMascotTone({ errors, formError, firstName, email, password }),
+    (): AuthMascotTone => signUpMascotTone({ errors, formError, firstName, email, password }),
     [email, errors, firstName, formError, password],
   );
 

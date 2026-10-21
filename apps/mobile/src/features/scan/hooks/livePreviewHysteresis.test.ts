@@ -32,4 +32,3 @@ describe('livePreviewHysteresis', () => {
     assert.equal(s.issue, null);
   });
 });
-

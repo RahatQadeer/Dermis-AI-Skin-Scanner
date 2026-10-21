@@ -24,14 +24,20 @@ export function RoutineProgressCard({
   const r = getCopy().screens.routine;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   const allDone = total > 0 && done === total;
-  const title = editing && allDone ? r.allDoneTitle : period === 'am' ? r.routineTitleAm : r.routineTitlePm;
+  const title =
+    editing && allDone ? r.allDoneTitle : period === 'am' ? r.routineTitleAm : r.routineTitlePm;
   const subtitle = editing
     ? r.editRemoveHint
     : `${r.toGo(total - done)} · ${period === 'am' ? r.focusAm : r.focusPm}`;
 
   return (
     <View style={styles.card}>
-      <ProgressRing progress={pct} label={`${String(done)}/${String(total)}`} size={72} strokeWidth={7} />
+      <ProgressRing
+        progress={pct}
+        label={`${String(done)}/${String(total)}`}
+        size={72}
+        strokeWidth={7}
+      />
       <View style={styles.text}>
         <AppText variant="bodyStrong" color={colors.ink}>
           {title}

@@ -39,10 +39,7 @@ export type DecodedRgba = {
 };
 
 /** Resize + JPEG-decode a local image URI to RGBA pixels. */
-export async function decodeJpegPixels(
-  uri: string,
-  widthPx: number,
-): Promise<DecodedRgba | null> {
+export async function decodeJpegPixels(uri: string, widthPx: number): Promise<DecodedRgba | null> {
   try {
     const small = await manipulateAsync(uri, [{ resize: { width: widthPx } }], {
       compress: 0.92,

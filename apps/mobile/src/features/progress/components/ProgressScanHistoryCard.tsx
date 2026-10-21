@@ -24,10 +24,15 @@ export function ProgressScanHistoryCard({
 }: ProgressScanHistoryCardProps) {
   const p = getCopy().screens.progress;
   const dateLabel = formatShortDate(scan.capturedAt);
-  const deltaLabel =
-    delta === null ? p.baseDelta : (formatIndexDelta(delta, p) ?? p.deltaFlat);
+  const deltaLabel = delta === null ? p.baseDelta : (formatIndexDelta(delta, p) ?? p.deltaFlat);
   const deltaColor =
-    delta === null ? colors.muteFoot : delta > 0 ? colors.green : delta < 0 ? colors.red : colors.mute;
+    delta === null
+      ? colors.muteFoot
+      : delta > 0
+        ? colors.green
+        : delta < 0
+          ? colors.red
+          : colors.mute;
 
   return (
     <Pressable

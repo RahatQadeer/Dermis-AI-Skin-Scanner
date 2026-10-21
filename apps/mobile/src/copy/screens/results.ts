@@ -9,8 +9,7 @@ export const resultsCopy = {
     delta >= 0
       ? `Up ${String(delta)} since ${when}. Texture improved the most!`
       : `Down ${String(Math.abs(delta))} since ${when}. Soft light and gentle care help the next scan.`,
-  deltaVs: (delta: number, when: string) =>
-    `${delta >= 0 ? '+' : ''}${String(delta)} vs ${when}`,
+  deltaVs: (delta: number, when: string) => `${delta >= 0 ? '+' : ''}${String(delta)} vs ${when}`,
   /** Must keep “estimate” — D4 bans bare “skin age”. */
   skinAgeEstimate: (age: number) => `Skin age estimate ${String(age)}`,
   zonesTitle: 'Zone map',

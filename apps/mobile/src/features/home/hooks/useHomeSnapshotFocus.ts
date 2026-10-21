@@ -4,7 +4,11 @@ import { useCallback } from 'react';
 import type { ScanDto } from '@/src/features/scan/api/scanApi';
 
 import { scanDtoToHomeScan } from '../lib/scanDtoToHomeScan';
-import type { HomeRoutineProgress, HomeScanSnapshot, HomeSnapshot } from '../mock/homeMockScenarios';
+import type {
+  HomeRoutineProgress,
+  HomeScanSnapshot,
+  HomeSnapshot,
+} from '../mock/homeMockScenarios';
 import { applyGuestHomeSnapshot, refreshHomeSnapshot } from './refreshHomeSnapshot';
 
 type HomeFocusCtx = {

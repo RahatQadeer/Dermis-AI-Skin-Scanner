@@ -27,15 +27,11 @@ export async function prepareScanImage(uri: string): Promise<PreparedScanImage> 
 
   for (let attempt = 0; attempt < 4; attempt += 1) {
     try {
-      const result = await manipulateAsync(
-        uri,
-        [{ resize: { width: TARGET_SCAN_WIDTH_PX } }],
-        {
-          compress: quality,
-          format: SaveFormat.JPEG,
-          base64: true,
-        },
-      );
+      const result = await manipulateAsync(uri, [{ resize: { width: TARGET_SCAN_WIDTH_PX } }], {
+        compress: quality,
+        format: SaveFormat.JPEG,
+        base64: true,
+      });
       lastWidth = result.width;
       lastHeight = result.height;
       base64 = result.base64 ?? '';

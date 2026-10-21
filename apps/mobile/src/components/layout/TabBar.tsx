@@ -7,12 +7,7 @@ import { getCopy } from '@/src/copy';
 import { colors, fontFamilies, radii, shadows, spacing } from '@/src/theme';
 
 import { isCentreScanTab, TAB_BAR_ORDER, type TabId } from './tabBarTypes';
-import {
-  HomeTabIcon,
-  ProfileTabIcon,
-  ProgressTabIcon,
-  RoutineTabIcon,
-} from './TabBarIcons';
+import { HomeTabIcon, ProfileTabIcon, ProgressTabIcon, RoutineTabIcon } from './TabBarIcons';
 
 export type TabBarProps = {
   active: TabId;
