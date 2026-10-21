@@ -69,7 +69,8 @@ export const paywallCopy = {
   /** Layout-only reference until RevenueCat provides localized prices. */
   mockPriceAnnual: '$49.99',
   mockPriceMonthly: '$9.99',
-  billingUnavailable: 'Could not unlock Pro. Sign in and try again.',
+  billingUnavailable:
+    'Store billing is not connected yet. Sign in with email, or use a preview build with testing unlock enabled.',
   offeringsUnavailable: 'Plans are unavailable right now. Try again in a moment.',
   purchaseError: 'Purchase could not be completed. Try again or use Restore Purchases.',
   purchaseSuccess: 'Pro unlocked — enjoy your plan.',

@@ -6,11 +6,17 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_UNLOCK_ALL_FEATURES": "1"
+      }
     },
     "preview": {
       "distribution": "internal",
       "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_UNLOCK_ALL_FEATURES": "1"
+      },
       "ios": {
         "simulator": false
       }

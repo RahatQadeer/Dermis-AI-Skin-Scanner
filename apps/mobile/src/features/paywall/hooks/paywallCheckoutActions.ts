@@ -1,3 +1,5 @@
+import { isUnlockAllFeatures } from '@dermis/domain';
+
 import {
   packageForPlan,
   type PaywallPackageMap,
@@ -9,14 +11,7 @@ import {
 } from '@/src/features/purchases/revenueCat/revenueCatApi';
 import type { PlanKind } from '@/src/components/PlanCard';
 
-function isDevRuntime(): boolean {
-  return typeof __DEV__ !== 'undefined' && __DEV__ === true;
-}
-
-async function tryDevProUnlock(): Promise<boolean> {
-  if (!isDevRuntime()) {
-    return false;
-  }
+async function tryGrantDevPro(): Promise<boolean> {
   try {
     await grantDevProEntitlement();
     return true;
@@ -25,25 +20,32 @@ async function tryDevProUnlock(): Promise<boolean> {
   }
 }
 
+/**
+ * Testing / preview: unlock-all always succeeds.
+ * No RevenueCat key: try staging POST /v1/dev/entitlements/pro when signed in.
+ */
 export async function runPaywallPurchase(
   billingEnabled: boolean,
   packages: PaywallPackageMap,
   plan: PlanKind,
 ): Promise<'billing_off' | 'no_package' | 'cancelled' | 'error' | 'success'> {
+  if (isUnlockAllFeatures()) {
+    await tryGrantDevPro();
+    return 'success';
+  }
   if (!billingEnabled) {
-    return (await tryDevProUnlock()) ? 'success' : 'billing_off';
+    return (await tryGrantDevPro()) ? 'success' : 'billing_off';
   }
   const pkg = packageForPlan(packages, plan);
   if (!pkg) {
-    // Misconfigured offerings / Expo Go — unlock Pro locally in __DEV__ only.
-    return (await tryDevProUnlock()) ? 'success' : 'no_package';
+    return (await tryGrantDevPro()) ? 'success' : 'no_package';
   }
   const outcome = await purchaseStorePackage(pkg.identifier);
   if (outcome === 'cancelled') {
     return 'cancelled';
   }
   if (outcome === 'error') {
-    return 'error';
+    return (await tryGrantDevPro()) ? 'success' : 'error';
   }
   return 'success';
 }
@@ -51,8 +53,12 @@ export async function runPaywallPurchase(
 export async function runPaywallRestore(
   billingEnabled: boolean,
 ): Promise<'billing_off' | 'restored' | 'none' | 'error'> {
+  if (isUnlockAllFeatures()) {
+    await tryGrantDevPro();
+    return 'restored';
+  }
   if (!billingEnabled) {
-    return (await tryDevProUnlock()) ? 'restored' : 'billing_off';
+    return (await tryGrantDevPro()) ? 'restored' : 'billing_off';
   }
   return restoreRevenueCatPurchases();
 }

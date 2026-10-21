@@ -196,8 +196,12 @@ function wireEntitlementsAndAccount(deps: AppDeps, env: BackendEnv): void {
 }
 
 function shouldExposeDevEntitlements(env: BackendEnv): boolean {
+  // Explicit staging flag may stay on for preview hosts (Render) even when NODE_ENV=production.
+  if (env.allowDevEntitlement === true) {
+    return true;
+  }
   if (process.env.NODE_ENV === 'production') {
     return false;
   }
-  return env.allowDevEntitlement === true || env.useMemory === true;
+  return env.useMemory === true;
 }

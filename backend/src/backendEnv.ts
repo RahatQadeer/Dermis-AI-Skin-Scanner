@@ -9,7 +9,7 @@ export type BackendEnv = {
   preferFakeAnalyzer?: boolean;
   scanPipelineDisabled?: boolean;
   useMemory?: boolean;
-  /** When true (and not production), POST /v1/dev/entitlements/pro unlocks Pro. */
+  /** When true, POST /v1/dev/entitlements/pro unlocks Pro (allowed on preview hosts). */
   allowDevEntitlement?: boolean;
 };
 

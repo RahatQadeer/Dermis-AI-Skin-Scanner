@@ -16,7 +16,8 @@ export const authCopy = {
   rateLimited: 'Too many attempts. Wait a moment and try again.',
   apiNotConfigured:
     'Cannot reach the server. Confirm EXPO_PUBLIC_API_URL and that the backend is running.',
-  socialNotAvailable: 'Apple and Google sign-in are not available yet. Use email instead.',
+  socialNotAvailable:
+    'Apple and Google need store OAuth keys (next). For this test build, create or log in with email — Pro features are unlocked for testing.',
   resetSent: 'If that email exists, we sent reset instructions.',
 
   // Headlines + subcopy

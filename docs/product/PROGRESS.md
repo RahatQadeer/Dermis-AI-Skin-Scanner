@@ -1,7 +1,7 @@
 # Dermis — progress handoff
 
 **Last updated:** 2026-10-21  
-**Current focus:** Render HTTPS API + EAS preview builds; auto-deploy after CI
+**Current focus:** Testing unlock-all (preview IPA + Render FORCE_PRO); real Google/Apple OAuth later
 
 **GitHub:** https://github.com/RahatQadeer/Dermis-AI-Skin-Scanner.git (you commit/push)
 
@@ -78,10 +78,12 @@ cd apps/mobile && npx expo start -c --lan
 
 ## Hosting (live)
 
-- Render Web Service: `https://dermis-ai-skin-scanner.onrender.com` — check `GET /` or `GET /health` (root used to look like a failure because only `/health` existed).
+- Render Web Service: `https://dermis-ai-skin-scanner.onrender.com` — check `GET /` or `GET /health`.
 - `render.yaml` Blueprint; GitHub Actions `deploy-render` job POSTs `RENDER_DEPLOY_HOOK_URL` after CI on `main`.
-- EAS `EXPO_PUBLIC_API_URL` must be that HTTPS URL (not LAN `http://`).
+- EAS `EXPO_PUBLIC_API_URL` = Render HTTPS (not LAN `http://`).
+- **Testing unlock:** preview/dev EAS sets `EXPO_PUBLIC_UNLOCK_ALL_FEATURES=1`; Render sets `DERMIS_FORCE_PRO=1` + `DERMIS_ALLOW_DEV_ENTITLEMENT=1`. Paywall Subscribe succeeds without RevenueCat. Remove before store billing.
+- Google/Apple social buttons still need OAuth client IDs — use **email** for now.
 
 ## Next chat starts at
 
-Add GitHub secret `RENDER_DEPLOY_HOOK_URL` from Render Deploy Hook. Point EAS preview `EXPO_PUBLIC_API_URL` at Render HTTPS. Rebuild IPA. Then RevenueCat sandbox + webhook, **or** store copy audit (DERM-061).
+On Render dashboard: set `DERMIS_FORCE_PRO=1` and `DERMIS_ALLOW_DEV_ENTITLEMENT=1`, rebuild API. Rebuild iOS preview so unlock flag is baked in. Then Google OAuth + RevenueCat sandbox, **or** store copy audit (DERM-061).
