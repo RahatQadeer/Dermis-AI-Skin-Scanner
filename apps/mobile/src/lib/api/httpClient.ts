@@ -17,7 +17,8 @@ export type ApiClient = {
   postPublic: <T>(path: string, body?: unknown, opts?: RequestOptions) => Promise<T>;
   patch: <T>(path: string, body?: unknown, opts?: RequestOptions) => Promise<T>;
   put: <T>(path: string, body?: unknown, opts?: RequestOptions) => Promise<T>;
-  delete: <T>(path: string, opts?: RequestOptions) => Promise<T>;
+  /** DELETE may include a JSON body (e.g. account confirmation). */
+  delete: <T>(path: string, body?: unknown, opts?: RequestOptions) => Promise<T>;
 };
 
 export type ApiClientOptions = {
@@ -66,7 +67,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     postPublic: (path, body, opts) => sendPublic('POST', path, body, opts),
     patch: (path, body, opts) => send('PATCH', path, body, opts),
     put: (path, body, opts) => send('PUT', path, body, opts),
-    delete: (path, opts) => send('DELETE', path, undefined, opts),
+    delete: (path, body, opts) => send('DELETE', path, body, opts),
   };
 }
 

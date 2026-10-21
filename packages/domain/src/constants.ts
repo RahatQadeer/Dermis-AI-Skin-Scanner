@@ -1,3 +1,5 @@
+import { readProcessEnv } from './readProcessEnv';
+
 /** Product limits — authoritative values for server enforcement. */
 export const FORMULA_VERSION = 'index-v1' as const;
 
@@ -19,10 +21,7 @@ export const SCORE_BAND = {
 
 /** Server/local testing: raise free scans without changing the product constant. */
 export function resolveFreeLifetimeScans(): number {
-  const raw =
-    typeof process !== 'undefined' && process.env
-      ? (process.env.DERMIS_FREE_LIFETIME_SCANS ?? '').trim()
-      : '';
+  const raw = readProcessEnv('DERMIS_FREE_LIFETIME_SCANS');
   if (!raw) {
     return FREE_LIFETIME_SCANS;
   }
