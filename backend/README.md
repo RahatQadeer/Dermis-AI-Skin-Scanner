@@ -8,6 +8,7 @@ Layering: **handlers → services → repositories** (+ **AuthPort** / webhook s
 
 | Route                              | Method       | Auth                     | Notes                                          |
 | ---------------------------------- | ------------ | ------------------------ | ---------------------------------------------- |
+| `/`                                | GET          | no                       | Service info (Render root check)               |
 | `/health`                          | GET          | no                       | Liveness                                       |
 | `/v1/auth/me`                      | GET          | user Bearer              | Validates access token                         |
 | `/v1/profile`                      | GET          | user Bearer              | Read profile (creates empty row if needed)     |

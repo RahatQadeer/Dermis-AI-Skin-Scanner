@@ -29,6 +29,7 @@ import type { AppDeps } from './createApp';
 type RouteHandler = (request: Request, deps: AppDeps) => Promise<Response> | Response;
 
 const PUBLIC_ROUTES: Record<string, RouteHandler> = {
+  'GET /': () => json({ ok: true, service: 'dermis-api', health: '/health' }),
   'GET /health': () => json({ ok: true }),
   'GET /delete-account': () =>
     new Response(DELETE_ACCOUNT_HTML, {

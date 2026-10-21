@@ -1,0 +1,41 @@
+# Render Blueprint — Dermis API only (not Expo web, not Vercel).
+# Dashboard overrides: Build must be install-only; Start must run the backend workspace.
+#
+# After first deploy: Settings → Deploy Hook → add GitHub secret RENDER_DEPLOY_HOOK_URL
+# so CI on main triggers redeploy (autoDeployTrigger is off so broken builds don't ship).
+
+services:
+  - type: web
+    name: dermis-ai-skin-scanner
+    runtime: node
+    plan: free
+    region: oregon
+    branch: main
+    # Never use `npm run build` here — that exports Expo web and will fail/wrong.
+    buildCommand: npm ci
+    startCommand: npm run start --workspace=@dermis/backend
+    healthCheckPath: /health
+    autoDeployTrigger: 'off'
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: '22'
+      - key: RENDER
+        value: 'true'
+      - key: HUSKY
+        value: '0'
+      - key: DERMIS_BACKEND_MEMORY
+        value: '0'
+      - key: DERMIS_FAKE_ANALYZER
+        value: '0'
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        sync: false

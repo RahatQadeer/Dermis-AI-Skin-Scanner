@@ -44,3 +44,22 @@ jobs:
 
       - name: Build (Expo web export)
         run: npm run build
+
+  # After CI is green on main, tell Render to pull and redeploy the API.
+  # Secret: Render → Service → Settings → Deploy Hook → GitHub Actions secret
+  # RENDER_DEPLOY_HOOK_URL. Leave unset to skip (local forks).
+  deploy-render:
+    needs: quality
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy hook
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "${RENDER_DEPLOY_HOOK_URL}" ]; then
+            echo "RENDER_DEPLOY_HOOK_URL secret not set — skipping Render deploy."
+            exit 0
+          fi
+          curl -fsS -X POST "${RENDER_DEPLOY_HOOK_URL}"
+          echo "Render deploy triggered."

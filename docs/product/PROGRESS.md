@@ -1,7 +1,7 @@
 # Dermis — progress handoff
 
-**Last updated:** 2026-10-19  
-**Current focus:** Account scan history always loads (Home / Progress) from Supabase
+**Last updated:** 2026-10-21  
+**Current focus:** Render HTTPS API + EAS preview builds; auto-deploy after CI
 
 **GitHub:** https://github.com/RahatQadeer/Dermis-AI-Skin-Scanner.git (you commit/push)
 
@@ -76,6 +76,12 @@ cd apps/mobile && npx expo start -c --lan
 
 - Floating white pill: Home · Progress · pink sheep scan · Routine · Profile (icons + labels; active = ink/bold).
 
+## Hosting (live)
+
+- Render Web Service: `https://dermis-ai-skin-scanner.onrender.com` — check `GET /` or `GET /health` (root used to look like a failure because only `/health` existed).
+- `render.yaml` Blueprint; GitHub Actions `deploy-render` job POSTs `RENDER_DEPLOY_HOOK_URL` after CI on `main`.
+- EAS `EXPO_PUBLIC_API_URL` must be that HTTPS URL (not LAN `http://`).
+
 ## Next chat starts at
 
-Retry a full scan on iPhone after Metro reload (auto-take → analysing → results). Restart backend so Gemini prompt v7 is live. Then RevenueCat sandbox + webhook, **or** store copy audit (DERM-061).
+Add GitHub secret `RENDER_DEPLOY_HOOK_URL` from Render Deploy Hook. Point EAS preview `EXPO_PUBLIC_API_URL` at Render HTTPS. Rebuild IPA. Then RevenueCat sandbox + webhook, **or** store copy audit (DERM-061).

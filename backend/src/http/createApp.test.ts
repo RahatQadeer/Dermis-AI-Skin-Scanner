@@ -29,6 +29,20 @@ function authHeaders(): HeadersInit {
   return { authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json' };
 }
 
+test('GET / and GET /health are public liveness routes', async () => {
+  const app = buildApp();
+  const root = await app(new Request('http://local/'));
+  assert.equal(root.status, 200);
+  assert.deepEqual(await root.json(), {
+    ok: true,
+    service: 'dermis-api',
+    health: '/health',
+  });
+  const health = await app(new Request('http://local/health'));
+  assert.equal(health.status, 200);
+  assert.deepEqual(await health.json(), { ok: true });
+});
+
 test('POST /v1/auth/sign-up returns 503 without credentials port', async () => {
   const app = buildApp();
   const res = await app(

@@ -16,7 +16,7 @@
     "build": "npm run build --workspace=@dermis/mobile",
     "ci": "npm run format:check && npm run lint && npm run typecheck && npm run verify:max-lines && npm test && npm run build",
     "mobile": "npm run start --workspace=@dermis/mobile",
-    "prepare": "husky"
+    "prepare": "node -e \"if(!process.env.CI&&!process.env.RENDER){require('child_process').execSync('husky',{stdio:'inherit'})}\""
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
