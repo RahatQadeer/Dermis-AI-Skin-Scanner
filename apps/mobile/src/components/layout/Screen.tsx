@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ScrollView, StyleSheet, View, type ViewStyle } from 'react-native';
+import { ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { colors, spacing } from '@/src/theme';
@@ -11,8 +11,8 @@ export type ScreenProps = {
   /** Horizontal + vertical content padding (default true). */
   padded?: boolean;
   edges?: Edge[];
-  style?: ViewStyle;
-  contentStyle?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
+  contentStyle?: StyleProp<ViewStyle>;
   testID?: string;
 };
 
@@ -29,11 +29,16 @@ export function Screen({
 }: ScreenProps) {
   const padStyle = padded ? styles.padded : undefined;
 
+  // RN 0.88 ColorValue typing diverges from safe-area-context; cast keeps callers typed.
+  const rootStyle = [styles.root, style] as StyleProp<ViewStyle>;
+  const bodyStyle = [styles.body, padStyle, contentStyle] as StyleProp<ViewStyle>;
+  const scrollStyle = [styles.scrollContent, padStyle, contentStyle] as StyleProp<ViewStyle>;
+
   return (
-    <SafeAreaView edges={edges} style={[styles.root, style]} testID={testID}>
+    <SafeAreaView edges={edges} style={rootStyle} testID={testID}>
       {scroll ? (
         <ScrollView
-          contentContainerStyle={[styles.scrollContent, padStyle, contentStyle]}
+          contentContainerStyle={scrollStyle}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           showsHorizontalScrollIndicator={false}
@@ -46,7 +51,7 @@ export function Screen({
           {children}
         </ScrollView>
       ) : (
-        <View style={[styles.body, padStyle, contentStyle]}>{children}</View>
+        <View style={bodyStyle}>{children}</View>
       )}
     </SafeAreaView>
   );

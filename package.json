@@ -37,5 +37,10 @@
     "*.{json,md,yml,yaml}": [
       "prettier --write"
     ]
+  },
+  "overrides": {
+    "react-native": "0.88.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   }
 }
