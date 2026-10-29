@@ -46,6 +46,7 @@ export async function signInWithProviderIdToken(
   });
   const body = (await response.json()) as GoTrueTokenBody;
   if (!response.ok || !body.access_token || !body.user?.id) {
+    logIdTokenFailure(input.provider, response.status, body, Boolean(nonce));
     throw mapGoTrueError(response.status, body);
   }
   const session = toSession(body);
@@ -53,6 +54,25 @@ export async function signInWithProviderIdToken(
     return session;
   }
   return maybeApplyAppleFirstName(ctx, session, input.firstName);
+}
+
+function logIdTokenFailure(
+  provider: IdTokenProvider,
+  status: number,
+  body: GoTrueTokenBody,
+  noncePresent: boolean,
+): void {
+  const safeDetail = `${body.error ?? ''}:${body.error_description ?? body.msg ?? ''}`.slice(
+    0,
+    160,
+  );
+  console.warn(
+    '[auth] id_token exchange failed',
+    provider,
+    status,
+    safeDetail,
+    noncePresent ? 'nonce=present' : 'nonce=absent',
+  );
 }
 
 async function maybeApplyAppleFirstName(

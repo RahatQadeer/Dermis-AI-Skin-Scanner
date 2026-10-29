@@ -14,6 +14,9 @@ export const authCopy = {
   emailTaken: 'That email already has an account. Try logging in.',
   emailConfirmationRequired: 'Confirm your email, then log in.',
   rateLimited: 'Too many attempts. Wait a moment and try again.',
+  authProviderError: 'Sign-in could not be completed. Try again, or use email.',
+  appleSignInFailed:
+    'Apple Sign-In could not be completed. Confirm Apple is enabled for this app, then try again.',
   apiNotConfigured:
     'Cannot reach the server. Confirm EXPO_PUBLIC_API_URL and that the backend is running.',
   socialNotAvailable:

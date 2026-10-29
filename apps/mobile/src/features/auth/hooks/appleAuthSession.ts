@@ -1,6 +1,7 @@
 import { isUnlockAllFeatures } from '@dermis/domain';
 
 import type { SessionState } from '@/src/features/session/SessionContext';
+import { isApiError } from '@/src/lib/api/errors';
 
 import { signInWithAppleIdToken } from '../api/authApi';
 import { mapAuthApiError } from '../lib/mapAuthApiError';
@@ -28,6 +29,9 @@ export async function completeAppleSignIn(
     });
   } catch (error) {
     const mapped = mapAuthApiError(error, 'logIn');
+    if (isApiError(error)) {
+      console.warn('[auth/apple] exchange failed', error.status, error.code);
+    }
     callbacks.onFormError(mapped.formError);
   } finally {
     done();

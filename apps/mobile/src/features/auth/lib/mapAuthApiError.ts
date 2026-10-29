@@ -8,6 +8,8 @@ export type MappedAuthError = {
   formError: string;
 };
 
+type AuthCopy = ReturnType<typeof getCopy>['auth'];
+
 /** Map backend auth error codes onto fields + a form message. */
 export function mapAuthApiError(error: unknown, mode: 'signUp' | 'logIn'): MappedAuthError {
   const auth = getCopy().auth;
@@ -15,21 +17,37 @@ export function mapAuthApiError(error: unknown, mode: 'signUp' | 'logIn'): Mappe
   if (!isApiError(error)) {
     return { fieldErrors: {}, formError: fallback };
   }
+  return resolveAuthErrorCode(auth, error.code, fallback);
+}
 
-  switch (error.code) {
-    case 'email_taken':
-      return { fieldErrors: { email: 'emailTaken' }, formError: auth.emailTaken };
-    case 'invalid_email':
-      return { fieldErrors: { email: 'emailInvalid' }, formError: auth.emailInvalid };
-    case 'weak_password':
-      return { fieldErrors: { password: 'passwordWeak' }, formError: auth.passwordWeak };
-    case 'invalid_credentials':
-      return { fieldErrors: {}, formError: auth.signInFailed };
-    case 'email_confirmation_required':
-      return { fieldErrors: {}, formError: auth.emailConfirmationRequired };
-    case 'rate_limited':
-      return { fieldErrors: {}, formError: auth.rateLimited };
-    default:
-      return { fieldErrors: {}, formError: fallback };
-  }
+function resolveAuthErrorCode(auth: AuthCopy, code: string, fallback: string): MappedAuthError {
+  const fieldMap: Record<string, keyof FieldErrors> = {
+    email_taken: 'email',
+    invalid_email: 'email',
+    weak_password: 'password',
+  };
+  const messageByCode: Record<string, string> = {
+    email_taken: auth.emailTaken,
+    invalid_email: auth.emailInvalid,
+    weak_password: auth.passwordWeak,
+    invalid_credentials: auth.signInFailed,
+    auth_nonce_mismatch: auth.appleSignInFailed,
+    auth_provider_error: auth.authProviderError,
+    email_confirmation_required: auth.emailConfirmationRequired,
+    rate_limited: auth.rateLimited,
+  };
+  const formError = messageByCode[code] ?? fallback;
+  const field = fieldMap[code];
+  const fieldKey =
+    field === 'email'
+      ? code === 'email_taken'
+        ? 'emailTaken'
+        : 'emailInvalid'
+      : field === 'password'
+        ? 'passwordWeak'
+        : undefined;
+  return {
+    fieldErrors: field && fieldKey ? { [field]: fieldKey } : {},
+    formError,
+  };
 }

@@ -56,7 +56,10 @@ export function mapGoTrueError(status: number, body: GoTrueTokenBody): HttpError
   if (isEmailTakenMessage(msg, status)) {
     return new HttpError(409, 'email_taken');
   }
-  if (isInvalidCredentialsMessage(msg, status)) {
+  if (isNonceMismatchMessage(msg)) {
+    return new HttpError(401, 'auth_nonce_mismatch');
+  }
+  if (isInvalidCredentialsMessage(msg)) {
     return new HttpError(401, 'invalid_credentials');
   }
   if (status === 429) {
@@ -69,8 +72,18 @@ function isEmailTakenMessage(msg: string, status: number): boolean {
   return msg.includes('already') || msg.includes('registered') || status === 422;
 }
 
-function isInvalidCredentialsMessage(msg: string, status: number): boolean {
-  return msg.includes('invalid login') || msg.includes('invalid_credentials') || status === 400;
+function isNonceMismatchMessage(msg: string): boolean {
+  return msg.includes('nonce');
+}
+
+/** Do not treat every HTTP 400 as bad password — Apple/OIDC uses 400 for nonce/audience too. */
+function isInvalidCredentialsMessage(msg: string): boolean {
+  return (
+    msg.includes('invalid login') ||
+    msg.includes('invalid_credentials') ||
+    msg.includes('invalid id token') ||
+    msg.includes('bad_jwt')
+  );
 }
 
 function nameFromGoTrueUser(user: GoTrueTokenBody['user']): string | null {

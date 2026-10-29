@@ -38,49 +38,70 @@ async function runAppleSignIn(input: {
   setSubmitting: (value: boolean) => void;
 }): Promise<void> {
   const { callbacks, setSubmitting } = input;
-  if (Platform.OS !== 'ios') {
-    callbacks.onFormError(getCopy().auth.appleUnavailable);
-    return;
-  }
-  if (!callbacks.session.apiEnabled) {
-    callbacks.onFormError(getCopy().auth.apiNotConfigured);
+  const blocked = appleSignInBlockReason(callbacks);
+  if (blocked) {
+    callbacks.onFormError(blocked);
     return;
   }
 
   setSubmitting(true);
   try {
-    const available = await AppleAuthentication.isAvailableAsync();
-    if (!available) {
-      callbacks.onFormError(getCopy().auth.appleUnavailable);
-      return;
-    }
-    const { rawNonce, hashedNonce } = await createAppleAuthNonce();
-    const credential = await AppleAuthentication.signInAsync({
-      requestedScopes: [
-        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-        AppleAuthentication.AppleAuthenticationScope.EMAIL,
-      ],
-      nonce: hashedNonce,
-    });
-    const idToken = trimAppleIdentityToken(credential.identityToken);
-    if (!idToken) {
-      callbacks.onFormError(getCopy().auth.signInFailed);
-      return;
-    }
-    await completeAppleSignIn(
-      callbacks,
-      {
-        idToken,
-        nonce: rawNonce,
-        firstName: firstNameFromAppleFullName(credential.fullName),
-      },
-      () => undefined,
-    );
+    await performAppleCredentialExchange(callbacks);
   } catch (error) {
     if (!isAppleCancelError(error)) {
+      console.warn('[auth/apple] native sign-in failed', errorCodeOf(error));
       callbacks.onFormError(getCopy().auth.signInFailed);
     }
   } finally {
     setSubmitting(false);
   }
+}
+
+function appleSignInBlockReason(callbacks: AppleAuthCallbacks): string | undefined {
+  if (Platform.OS !== 'ios') {
+    return getCopy().auth.appleUnavailable;
+  }
+  if (!callbacks.session.apiEnabled) {
+    return getCopy().auth.apiNotConfigured;
+  }
+  return undefined;
+}
+
+async function performAppleCredentialExchange(callbacks: AppleAuthCallbacks): Promise<void> {
+  const available = await AppleAuthentication.isAvailableAsync();
+  if (!available) {
+    callbacks.onFormError(getCopy().auth.appleUnavailable);
+    return;
+  }
+  const { rawNonce } = await createAppleAuthNonce();
+  const credential = await AppleAuthentication.signInAsync({
+    requestedScopes: [
+      AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+      AppleAuthentication.AppleAuthenticationScope.EMAIL,
+    ],
+    // Pass raw nonce — Apple hashes once into the identity token claim.
+    nonce: rawNonce,
+  });
+  const idToken = trimAppleIdentityToken(credential.identityToken);
+  if (!idToken) {
+    callbacks.onFormError(getCopy().auth.signInFailed);
+    return;
+  }
+  await completeAppleSignIn(
+    callbacks,
+    {
+      idToken,
+      nonce: rawNonce,
+      firstName: firstNameFromAppleFullName(credential.fullName),
+    },
+    () => undefined,
+  );
+}
+
+function errorCodeOf(error: unknown): string {
+  if (error && typeof error === 'object' && 'code' in error) {
+    const code = (error as { code?: unknown }).code;
+    return typeof code === 'string' ? code : 'unknown';
+  }
+  return 'unknown';
 }
