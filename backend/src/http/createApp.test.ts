@@ -56,19 +56,32 @@ test('POST /v1/auth/sign-up returns 503 without credentials port', async () => {
   assert.deepEqual(await res.json(), { error: 'auth_credentials_not_configured' });
 });
 
+const unusedCredentials = {
+  async signUp() {
+    throw new Error('unused');
+  },
+  async signIn() {
+    throw new Error('unused');
+  },
+  async signInWithGoogleIdToken(_idToken: string) {
+    throw new Error('unused');
+  },
+  async refresh() {
+    throw new Error('unused');
+  },
+};
+
 test('POST /v1/auth/sign-in returns session via credentials port', async () => {
   const app = createApp({
     auth: createMemoryAuthPort(),
     profilesFor: () => createProfileService(createMemoryProfileRepository()),
     credentials: {
-      async signUp() {
-        throw new Error('unused');
-      },
+      ...unusedCredentials,
       async signIn() {
         return {
           accessToken: 'at',
           refreshToken: 'rt',
-          user: { id: USER_ID, email: 'a@b.c' },
+          user: { id: USER_ID, email: 'a@b.c', firstName: null },
         };
       },
     },
@@ -85,9 +98,97 @@ test('POST /v1/auth/sign-in returns session via credentials port', async () => {
     session: {
       accessToken: 'at',
       refreshToken: 'rt',
-      user: { id: USER_ID, email: 'a@b.c' },
+      user: { id: USER_ID, email: 'a@b.c', firstName: null },
     },
   });
+});
+
+test('POST /v1/auth/google returns 503 without credentials port', async () => {
+  const app = buildApp();
+  const res = await app(
+    new Request('http://local/v1/auth/google', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ idToken: 'google-id-token' }),
+    }),
+  );
+  assert.equal(res.status, 503);
+  assert.deepEqual(await res.json(), { error: 'auth_credentials_not_configured' });
+});
+
+test('POST /v1/auth/google rejects missing idToken', async () => {
+  const app = createApp({
+    auth: createMemoryAuthPort(),
+    profilesFor: () => createProfileService(createMemoryProfileRepository()),
+    credentials: unusedCredentials,
+  });
+  const res = await app(
+    new Request('http://local/v1/auth/google', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({}),
+    }),
+  );
+  assert.equal(res.status, 400);
+  assert.deepEqual(await res.json(), { error: 'invalid_body' });
+});
+
+test('POST /v1/auth/google returns session from Google id token exchange', async () => {
+  let receivedToken = '';
+  const app = createApp({
+    auth: createMemoryAuthPort(),
+    profilesFor: () => createProfileService(createMemoryProfileRepository()),
+    credentials: {
+      ...unusedCredentials,
+      async signInWithGoogleIdToken(idToken: string) {
+        receivedToken = idToken;
+        return {
+          accessToken: 'google-at',
+          refreshToken: 'google-rt',
+          user: { id: USER_ID, email: 'g@example.com', firstName: 'G' },
+        };
+      },
+    },
+  });
+  const res = await app(
+    new Request('http://local/v1/auth/google', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ idToken: '  ya29.example  ' }),
+    }),
+  );
+  assert.equal(res.status, 200);
+  assert.equal(receivedToken, 'ya29.example');
+  assert.deepEqual(await res.json(), {
+    session: {
+      accessToken: 'google-at',
+      refreshToken: 'google-rt',
+      user: { id: USER_ID, email: 'g@example.com', firstName: 'G' },
+    },
+  });
+});
+
+test('POST /v1/auth/google maps credential failures to auth error codes', async () => {
+  const { HttpError } = await import('./HttpError');
+  const app = createApp({
+    auth: createMemoryAuthPort(),
+    profilesFor: () => createProfileService(createMemoryProfileRepository()),
+    credentials: {
+      ...unusedCredentials,
+      async signInWithGoogleIdToken() {
+        throw new HttpError(401, 'invalid_credentials');
+      },
+    },
+  });
+  const res = await app(
+    new Request('http://local/v1/auth/google', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ idToken: 'bad-token' }),
+    }),
+  );
+  assert.equal(res.status, 401);
+  assert.deepEqual(await res.json(), { error: 'invalid_credentials' });
 });
 
 test('GET /v1/auth/me rejects missing token', async () => {

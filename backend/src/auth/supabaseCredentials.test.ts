@@ -82,3 +82,76 @@ test('signUp rejects weak password before calling Supabase', async () => {
   );
   assert.equal(called, false);
 });
+
+test('signInWithGoogleIdToken exchanges id_token via GoTrue grant', async () => {
+  let requestBody = '';
+  const port = createSupabaseCredentialsPort({
+    supabaseUrl: 'https://example.supabase.co',
+    anonKey: 'anon',
+    fetchImpl: async (input, init) => {
+      assert.equal(String(input), 'https://example.supabase.co/auth/v1/token?grant_type=id_token');
+      assert.equal(init?.method, 'POST');
+      requestBody = String(init?.body ?? '');
+      return new Response(
+        JSON.stringify({
+          access_token: 'gat',
+          refresh_token: 'grt',
+          user: {
+            id: 'gu1',
+            email: 'g@example.com',
+            user_metadata: { full_name: 'G User' },
+          },
+        }),
+        { status: 200 },
+      );
+    },
+  });
+
+  const session = await port.signInWithGoogleIdToken('  google-jwt  ');
+  assert.deepEqual(JSON.parse(requestBody), { provider: 'google', id_token: 'google-jwt' });
+  assert.deepEqual(session, {
+    accessToken: 'gat',
+    refreshToken: 'grt',
+    user: { id: 'gu1', email: 'g@example.com', firstName: 'G User' },
+  });
+});
+
+test('signInWithGoogleIdToken rejects empty token before calling Supabase', async () => {
+  let called = false;
+  const port = createSupabaseCredentialsPort({
+    supabaseUrl: 'https://example.supabase.co',
+    anonKey: 'anon',
+    fetchImpl: async () => {
+      called = true;
+      return new Response('{}', { status: 200 });
+    },
+  });
+
+  await assert.rejects(
+    () => port.signInWithGoogleIdToken('   '),
+    (error) => {
+      assert.equal((error as { code?: string }).code, 'invalid_body');
+      return true;
+    },
+  );
+  assert.equal(called, false);
+});
+
+test('signInWithGoogleIdToken maps GoTrue failures', async () => {
+  const port = createSupabaseCredentialsPort({
+    supabaseUrl: 'https://example.supabase.co',
+    anonKey: 'anon',
+    fetchImpl: async () =>
+      new Response(JSON.stringify({ error_description: 'Invalid login credentials' }), {
+        status: 400,
+      }),
+  });
+
+  await assert.rejects(
+    () => port.signInWithGoogleIdToken('bad'),
+    (error) => {
+      assert.equal((error as { code?: string }).code, 'invalid_credentials');
+      return true;
+    },
+  );
+});

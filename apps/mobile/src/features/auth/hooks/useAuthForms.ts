@@ -12,32 +12,59 @@ import {
   type FieldErrors,
 } from '../lib/authValidation';
 import { resolveAuthFieldErrors } from '../lib/resolveAuthErrors';
+import { useGoogleAuth } from './useGoogleAuth';
 import { signUpMascotTone, submitLogInRequest, submitSignUpRequest } from './submitAuthForms';
+
+function useAuthFormShell() {
+  const session = useSession();
+  const auth = getCopy().auth;
+  const [formError, setFormError] = useState<string | undefined>();
+  const [submitting, setSubmitting] = useState(false);
+  const google = useGoogleAuth({
+    session,
+    onFormError: setFormError,
+    onSubmittingChange: setSubmitting,
+  });
+  return {
+    session,
+    auth,
+    formError,
+    setFormError,
+    submitting: submitting || google.googleBusy,
+    setSubmitting,
+    continueApple: () => setFormError(auth.socialNotAvailable),
+    continueGoogle: google.continueGoogle,
+  };
+}
 
 export function useSignUpForm() {
   const router = useRouter();
-  const session = useSession();
-  const auth = getCopy().auth;
+  const shell = useAuthFormShell();
   const [firstName, setFirstName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<FieldErrors>({});
-  const [formError, setFormError] = useState<string | undefined>();
-  const [submitting, setSubmitting] = useState(false);
 
   const mascotTone = useMemo(
-    (): AuthMascotTone => signUpMascotTone({ errors, formError, firstName, email, password }),
-    [email, errors, firstName, formError, password],
+    (): AuthMascotTone =>
+      signUpMascotTone({
+        errors,
+        formError: shell.formError,
+        firstName,
+        email,
+        password,
+      }),
+    [email, errors, firstName, password, shell.formError],
   );
 
   const submit = () => {
-    setFormError(undefined);
+    shell.setFormError(undefined);
     void (async () => {
-      setSubmitting(true);
-      const result = await submitSignUpRequest(session, firstName, email, password);
+      shell.setSubmitting(true);
+      const result = await submitSignUpRequest(shell.session, firstName, email, password);
       setErrors(result.errors);
-      setFormError(result.formError);
-      setSubmitting(false);
+      shell.setFormError(result.formError);
+      shell.setSubmitting(false);
     })();
   };
 
@@ -49,46 +76,44 @@ export function useSignUpForm() {
     password,
     setPassword,
     errors: resolveAuthFieldErrors(errors),
-    formError,
-    submitting,
+    formError: shell.formError,
+    submitting: shell.submitting,
     mascotTone,
     submit,
     goLogIn: () => router.replace('/log-in'),
-    continueSocial: () => setFormError(auth.socialNotAvailable),
+    continueApple: shell.continueApple,
+    continueGoogle: shell.continueGoogle,
     goBack: () => router.replace('/log-in'),
   };
 }
 
 export function useLogInForm() {
   const router = useRouter();
-  const session = useSession();
-  const auth = getCopy().auth;
+  const shell = useAuthFormShell();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<FieldErrors>({});
-  const [formError, setFormError] = useState<string | undefined>();
-  const [submitting, setSubmitting] = useState(false);
 
   const canSubmit = isValidEmail(email) && password.length > 0;
 
   const mascotTone = useMemo((): AuthMascotTone => {
-    if (hasFieldErrors(errors) || formError) {
+    if (hasFieldErrors(errors) || shell.formError) {
       return 'invalid';
     }
     if (email && password) {
       return 'ready';
     }
     return 'idle';
-  }, [email, errors, formError, password]);
+  }, [email, errors, password, shell.formError]);
 
   const submit = () => {
-    setFormError(undefined);
+    shell.setFormError(undefined);
     void (async () => {
-      setSubmitting(true);
-      const result = await submitLogInRequest(session, email, password);
+      shell.setSubmitting(true);
+      const result = await submitLogInRequest(shell.session, email, password);
       setErrors(result.errors);
-      setFormError(result.formError);
-      setSubmitting(false);
+      shell.setFormError(result.formError);
+      shell.setSubmitting(false);
     })();
   };
 
@@ -98,14 +123,15 @@ export function useLogInForm() {
     password,
     setPassword,
     errors: resolveAuthFieldErrors(errors),
-    formError,
-    submitting,
+    formError: shell.formError,
+    submitting: shell.submitting,
     canSubmit,
     mascotTone,
     submit,
     goSignUp: () => router.replace('/sign-up'),
     goForgot: () => router.push('/forgot-password'),
-    continueSocial: () => setFormError(auth.socialNotAvailable),
+    continueApple: shell.continueApple,
+    continueGoogle: shell.continueGoogle,
     goBack: () => {
       if (router.canGoBack()) {
         router.back();

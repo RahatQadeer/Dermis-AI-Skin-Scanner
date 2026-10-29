@@ -40,6 +40,15 @@ export async function handleRefresh(
   return json({ session });
 }
 
+export async function handleGoogleSignIn(
+  credentials: AuthCredentialsPort,
+  body: unknown,
+): Promise<Response> {
+  const idToken = parseGoogleIdToken(body);
+  const session = await credentials.signInWithGoogleIdToken(idToken);
+  return json({ session });
+}
+
 function parseSignUp(body: unknown): {
   email: string;
   password: string;
@@ -68,6 +77,17 @@ function parseSignIn(body: unknown): { email: string; password: string } {
     throw new HttpError(400, 'invalid_body');
   }
   return { email: raw.email, password: raw.password };
+}
+
+function parseGoogleIdToken(body: unknown): string {
+  if (!body || typeof body !== 'object') {
+    throw new HttpError(400, 'invalid_body');
+  }
+  const idToken = (body as { idToken?: unknown }).idToken;
+  if (typeof idToken !== 'string' || idToken.trim().length === 0) {
+    throw new HttpError(400, 'invalid_body');
+  }
+  return idToken.trim();
 }
 
 function parseRefresh(body: unknown): string {
