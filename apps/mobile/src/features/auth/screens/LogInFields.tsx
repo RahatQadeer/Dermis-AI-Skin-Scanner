@@ -55,11 +55,7 @@ export function LogInFields({ form }: { form: LogInForm }) {
   const auth = getCopy().auth;
   return (
     <>
-      <SocialAuthButtons
-        mode="logIn"
-        onApple={form.continueApple}
-        onGoogle={form.continueGoogle}
-      />
+      <SocialAuthButtons mode="logIn" onApple={form.continueApple} onGoogle={form.continueGoogle} />
       <AuthDivider />
       <TextField
         label={auth.emailLabel}

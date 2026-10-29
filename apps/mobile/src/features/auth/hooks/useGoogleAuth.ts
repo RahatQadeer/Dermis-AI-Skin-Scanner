@@ -6,10 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { getCopy } from '@/src/copy';
 
 import { getGoogleAuthClientIds } from '../lib/googleAuthConfig';
-import {
-  handleGoogleAuthResponse,
-  type GoogleAuthCallbacks,
-} from './googleAuthSession';
+import { handleGoogleAuthResponse, type GoogleAuthCallbacks } from './googleAuthSession';
 
 WebBrowser.maybeCompleteAuthSession();
 
