@@ -34,17 +34,19 @@ describe('Android compliance (DERM-067)', () => {
     assert.equal(app.expo.android?.predictiveBackGestureEnabled, true);
   });
 
-  it('ships Expo 57 + RN 0.86 (API 36 toolchain path)', () => {
+  it('ships Expo 58 + RN 0.88 (API 36+ toolchain path)', () => {
     const pkg = JSON.parse(readFileSync(mobilePkgPath, 'utf8')) as MobilePkg;
     const expo = pkg.dependencies?.expo ?? '';
     const rn = pkg.dependencies?.['react-native'] ?? '';
-    assert.match(expo, /(?:~|\^)?57\./);
-    assert.match(rn, /0\.86\./);
+    assert.match(expo, /(?:~|\^)?58\./);
+    assert.match(rn, /0\.88\./);
   });
 
-  it('RN gradle catalog targets compile/target SDK 36', () => {
+  it('RN gradle catalog targets compile/target SDK 36+', () => {
     const toml = readFileSync(rnVersionsPath, 'utf8');
-    assert.equal(parseTomlVersion(toml, 'targetSdk'), '36');
-    assert.equal(parseTomlVersion(toml, 'compileSdk'), '36');
+    const targetSdk = Number(parseTomlVersion(toml, 'targetSdk'));
+    const compileSdk = Number(parseTomlVersion(toml, 'compileSdk'));
+    assert.ok(Number.isFinite(targetSdk) && targetSdk >= 36, `targetSdk=${targetSdk}`);
+    assert.ok(Number.isFinite(compileSdk) && compileSdk >= 36, `compileSdk=${compileSdk}`);
   });
 });

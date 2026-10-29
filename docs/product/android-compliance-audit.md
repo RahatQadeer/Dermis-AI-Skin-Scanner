@@ -2,15 +2,15 @@
 
 **Date:** 2026-10-05  
 **Policy:** target API 36+, predictive back, 16 KB page size **[verify]** with Expo SDK (`.cursor/rules/compliance.mdc`).  
-**Stack:** Expo `~57.0.26`, React Native `0.86.3`, CNG (no committed `android/`).
+**Stack:** Expo `^58.0.0`, React Native `^0.88.0`, CNG (no committed `android/`).
 
 ## Inventory
 
 | Item                        | Value / status                                                           |
 | --------------------------- | ------------------------------------------------------------------------ |
-| Expo                        | `~57.0.26` (`apps/mobile/package.json`)                                  |
-| React Native                | `0.86.3`                                                                 |
-| Effective `compileSdk`      | **36** (`node_modules/react-native/gradle/libs.versions.toml`)           |
+| Expo                        | `^58.0.0` (`apps/mobile/package.json`)                                   |
+| React Native                | `^0.88.0`                                                                |
+| Effective `compileSdk`      | **37** (`node_modules/react-native/gradle/libs.versions.toml`)           |
 | Effective `targetSdk`       | **36**                                                                   |
 | Effective `minSdk`          | 24                                                                       |
 | AGP                         | 8.12.0 (via RN catalog)                                                  |
@@ -49,8 +49,8 @@ Cannot fully prove 16 KB from lockfile alone — document as submission gate wit
 `apps/mobile/src/lib/androidCompliance.test.ts`:
 
 1. Predictive back must stay `true` in `app.json`.
-2. Expo 57 + RN 0.86 dependency range.
-3. RN gradle catalog `targetSdk` / `compileSdk` === `36`.
+2. Expo 58 + RN 0.88 dependency range.
+3. RN gradle catalog `targetSdk` / `compileSdk` ≥ `36`.
 
 ## Remaining `[verify]` / follow-ups
 
