@@ -65,6 +65,7 @@ function RoutineOverlays({
 /** Sheet/Modal must sit outside ScrollView — nesting breaks presentation on device. */
 export function RoutineScreen() {
   const snapshot = useHomeSnapshot();
+  const planReady = !snapshot.loading;
   const unlocked = isElementUnlocked(snapshot.quota.plan, 'routine');
   const edit = useRoutineEditMode();
   const initial = useMemo(() => buildInitialRoutineState(snapshot.routine), [snapshot.routine]);
@@ -73,7 +74,7 @@ export function RoutineScreen() {
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.root}>
       <StatusBar style="dark" />
-      {flow.loading ? (
+      {flow.loading || !planReady ? (
         <RoutineLoadingView />
       ) : (
         <>

@@ -21,6 +21,7 @@ import type { ProgressWindow } from '../types/progressTypes';
 export function ProgressScreen() {
   const router = useRouter();
   const snapshot = useHomeSnapshot();
+  const planReady = !snapshot.loading;
   const unlocked = isElementUnlocked(snapshot.quota.plan, 'progressAnalytics');
   const p = getCopy().screens.progress;
   const [window, setWindow] = useState<ProgressWindow>('90');
@@ -37,19 +38,27 @@ export function ProgressScreen() {
         <AppText variant="title" color={colors.ink}>
           {getCopy().nav.progress}
         </AppText>
-        <ProgressWindowToggle value={window} onChange={setWindow} disabled={!unlocked} />
+        <ProgressWindowToggle
+          value={window}
+          onChange={setWindow}
+          disabled={!planReady || !unlocked}
+        />
       </View>
-      <LockedOverlay
-        locked={!unlocked}
-        onUnlock={() => router.push('/paywall')}
-        hint={p.lockedHint}
-      >
-        {loading ? (
-          <ActivityIndicator color={colors.ink} style={styles.loader} />
-        ) : (
-          <ProgressBody window={window} scans={scans} loadError={error} />
-        )}
-      </LockedOverlay>
+      {!planReady ? (
+        <ActivityIndicator color={colors.ink} style={styles.loader} />
+      ) : (
+        <LockedOverlay
+          locked={!unlocked}
+          onUnlock={() => router.push('/paywall')}
+          hint={p.lockedHint}
+        >
+          {loading ? (
+            <ActivityIndicator color={colors.ink} style={styles.loader} />
+          ) : (
+            <ProgressBody window={window} scans={scans} loadError={error} />
+          )}
+        </LockedOverlay>
+      )}
     </Screen>
   );
 }

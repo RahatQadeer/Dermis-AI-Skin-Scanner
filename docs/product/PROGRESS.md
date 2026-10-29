@@ -1,7 +1,7 @@
 # Dermis — progress handoff
 
 **Last updated:** 2026-10-29  
-**Current focus:** Email + Google + Apple Sign-In wired; preview unlock-all for testing
+**Current focus:** Auth (email/Google/Apple); preview unlock-all; refreshed cute icon/splash
 
 **GitHub:** https://github.com/RahatQadeer/Dermis-AI-Skin-Scanner.git (you commit/push)
 

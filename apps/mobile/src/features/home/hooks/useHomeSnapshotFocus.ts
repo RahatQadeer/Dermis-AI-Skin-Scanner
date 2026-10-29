@@ -1,3 +1,4 @@
+import { resolveEffectivePlan } from '@dermis/domain';
 import { useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
 
@@ -28,7 +29,11 @@ function applyLastScanFallback(ctx: HomeFocusCtx): void {
     return;
   }
   ctx.setScan(scanDtoToHomeScan(ctx.lastScan, null));
-  ctx.setQuota({ plan: 'free', lifetimeScanCount: 1, dailyScanCount: 0 });
+  ctx.setQuota({
+    plan: resolveEffectivePlan('free'),
+    lifetimeScanCount: 1,
+    dailyScanCount: 0,
+  });
   ctx.readyRef.current = true;
 }
 

@@ -20,7 +20,8 @@ export const EMPTY_ROUTINE: HomeRoutineProgress = {
 };
 
 export const EMPTY_QUOTA: HomeSnapshot['quota'] = {
-  plan: 'free',
+  // Prefer unlock-all / effective plan so Progress/Routine never flash LockedOverlay.
+  plan: resolveEffectivePlan('free'),
   lifetimeScanCount: 0,
   dailyScanCount: 0,
 };
