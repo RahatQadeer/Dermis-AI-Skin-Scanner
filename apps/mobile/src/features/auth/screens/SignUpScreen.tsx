@@ -42,6 +42,7 @@ function SignUpFields({ form }: { form: ReturnType<typeof useSignUpForm> }) {
         mode="signUp"
         onApple={form.continueApple}
         onGoogle={form.continueGoogle}
+        disabled={form.submitting}
       />
       <AuthDivider />
       <TextField

@@ -11,6 +11,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.righttail.dermis",
       "appleTeamId": "447FVLNAL3",
+      "usesAppleSignIn": true,
       "infoPlist": {
         "NSCameraUsageDescription": "Dermis uses the camera to take a wellness selfie for analysis on our servers.",
         "ITSAppUsesNonExemptEncryption": false
@@ -65,7 +66,8 @@
       ],
       "expo-sharing",
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-apple-authentication"
     ],
     "experiments": {
       "typedRoutes": true

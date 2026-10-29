@@ -1,7 +1,7 @@
 # Dermis — progress handoff
 
-**Last updated:** 2026-10-26  
-**Current focus:** Email auth + unlock-all for testing; Google OAuth wired (needs client IDs); Apple still stub
+**Last updated:** 2026-10-29  
+**Current focus:** Email + Google + Apple Sign-In wired; preview unlock-all for testing
 
 **GitHub:** https://github.com/RahatQadeer/Dermis-AI-Skin-Scanner.git (you commit/push)
 
@@ -82,11 +82,12 @@ cd apps/mobile && npx expo start -c --lan
 - `render.yaml` Blueprint; GitHub Actions `deploy-render` job POSTs `RENDER_DEPLOY_HOOK_URL` after CI on `main`.
 - EAS `EXPO_PUBLIC_API_URL` = Render HTTPS (not LAN `http://`).
 - **Testing unlock:** preview/dev EAS sets `EXPO_PUBLIC_UNLOCK_ALL_FEATURES=1`; Render sets `DERMIS_FORCE_PRO=1` + `DERMIS_ALLOW_DEV_ENTITLEMENT=1`. Paywall Subscribe succeeds without RevenueCat. Remove before store billing.
-- **This test build:** use **email** sign-up / log-in. Apple still stub. Google works only when `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` + `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` are set and Supabase Google provider is enabled; otherwise the social button shows the email/Pro-unlock message.
-- Backend: `POST /v1/auth/google` exchanges Google `id_token` via GoTrue.
+- **This test build:** email works. Google works when `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` + `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` are set and Supabase Google is enabled. Apple (iOS) uses `expo-apple-authentication` → `POST /v1/auth/apple` → GoTrue `provider=apple`; requires App ID Sign in with Apple + Supabase Apple Client IDs including `com.righttail.dermis`, then a **new EAS preview/dev build** (native module + `usesAppleSignIn`).
+- Backend: `POST /v1/auth/google` and `POST /v1/auth/apple` exchange provider `id_token` via GoTrue. Native Apple does **not** need a Services ID / `.p8` secret.
 
 ## Next chat starts at
 
-1. Confirm Render has `DERMIS_FORCE_PRO=1` + `DERMIS_ALLOW_DEV_ENTITLEMENT=1`.
-2. Add Google OAuth client IDs (EAS env + Supabase Auth → Google) then rebuild preview — **or** keep email-only for testing.
-3. Apple Sign In / RevenueCat sandbox / store copy audit (DERM-061).
+1. Supabase Auth → Apple: enable provider; Client IDs = `com.righttail.dermis` (and `host.exp.Exponent` only if testing in Expo Go).
+2. Rebuild iOS preview: `cd apps/mobile && eas build --profile preview --platform ios` — install IPA, test Continue with Apple on a real device.
+3. Deploy backend with `/v1/auth/apple` to Render (after approve/push). Confirm Google still works.
+4. RevenueCat sandbox / store copy audit (DERM-061).

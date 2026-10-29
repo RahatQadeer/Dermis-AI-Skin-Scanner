@@ -5,6 +5,7 @@ import {
   handlePublicDeletionRequest,
 } from '../handlers/accountHandlers';
 import {
+  handleAppleSignIn,
   handleGoogleSignIn,
   handleRefresh,
   handleSignIn,
@@ -46,6 +47,7 @@ const PUBLIC_ROUTES: Record<string, RouteHandler> = {
   'POST /v1/auth/sign-up': handlePublicSignUp,
   'POST /v1/auth/sign-in': handlePublicSignIn,
   'POST /v1/auth/google': handlePublicGoogle,
+  'POST /v1/auth/apple': handlePublicApple,
   'POST /v1/auth/refresh': handlePublicRefresh,
 };
 
@@ -172,6 +174,13 @@ async function handlePublicGoogle(request: Request, deps: AppDeps): Promise<Resp
     return json({ error: 'auth_credentials_not_configured' }, 503);
   }
   return handleGoogleSignIn(deps.credentials, await request.json());
+}
+
+async function handlePublicApple(request: Request, deps: AppDeps): Promise<Response> {
+  if (!deps.credentials) {
+    return json({ error: 'auth_credentials_not_configured' }, 503);
+  }
+  return handleAppleSignIn(deps.credentials, await request.json());
 }
 
 async function handlePublicRefresh(request: Request, deps: AppDeps): Promise<Response> {

@@ -155,3 +155,113 @@ test('signInWithGoogleIdToken maps GoTrue failures', async () => {
     },
   );
 });
+
+test('signInWithAppleIdToken exchanges id_token with nonce via GoTrue grant', async () => {
+  let requestBody = '';
+  const port = createSupabaseCredentialsPort({
+    supabaseUrl: 'https://example.supabase.co',
+    anonKey: 'anon',
+    fetchImpl: async (input, init) => {
+      assert.equal(String(input), 'https://example.supabase.co/auth/v1/token?grant_type=id_token');
+      requestBody = String(init?.body ?? '');
+      return new Response(
+        JSON.stringify({
+          access_token: 'aat',
+          refresh_token: 'art',
+          user: {
+            id: 'au1',
+            email: 'a@privaterelay.appleid.com',
+          },
+        }),
+        { status: 200 },
+      );
+    },
+  });
+
+  const session = await port.signInWithAppleIdToken('  apple-jwt  ', { nonce: 'raw-nonce' });
+  assert.deepEqual(JSON.parse(requestBody), {
+    provider: 'apple',
+    id_token: 'apple-jwt',
+    nonce: 'raw-nonce',
+  });
+  assert.deepEqual(session, {
+    accessToken: 'aat',
+    refreshToken: 'art',
+    user: { id: 'au1', email: 'a@privaterelay.appleid.com', firstName: null },
+  });
+});
+
+test('signInWithAppleIdToken persists firstName after exchange when missing on user', async () => {
+  const calls: { url: string; body: string }[] = [];
+  const port = createSupabaseCredentialsPort({
+    supabaseUrl: 'https://example.supabase.co',
+    anonKey: 'anon',
+    fetchImpl: async (input, init) => {
+      const url = String(input);
+      calls.push({ url, body: String(init?.body ?? '') });
+      if (url.includes('/auth/v1/token')) {
+        return new Response(
+          JSON.stringify({
+            access_token: 'aat',
+            refresh_token: 'art',
+            user: { id: 'au1', email: 'a@privaterelay.appleid.com' },
+          }),
+          { status: 200 },
+        );
+      }
+      assert.equal(url, 'https://example.supabase.co/auth/v1/user');
+      assert.equal(init?.method, 'PUT');
+      return new Response(JSON.stringify({ id: 'au1' }), { status: 200 });
+    },
+  });
+
+  const session = await port.signInWithAppleIdToken('apple-jwt', {
+    nonce: 'raw-nonce',
+    firstName: 'Ada',
+  });
+  assert.equal(calls.length, 2);
+  assert.deepEqual(JSON.parse(calls[1]!.body), {
+    data: { first_name: 'Ada', full_name: 'Ada' },
+  });
+  assert.equal(session.user.firstName, 'Ada');
+});
+
+test('signInWithAppleIdToken rejects empty token before calling Supabase', async () => {
+  let called = false;
+  const port = createSupabaseCredentialsPort({
+    supabaseUrl: 'https://example.supabase.co',
+    anonKey: 'anon',
+    fetchImpl: async () => {
+      called = true;
+      return new Response('{}', { status: 200 });
+    },
+  });
+
+  await assert.rejects(
+    () => port.signInWithAppleIdToken('   '),
+    (error) => {
+      assert.equal((error as { code?: string }).code, 'invalid_body');
+      return true;
+    },
+  );
+  assert.equal(called, false);
+});
+
+test('signInWithAppleIdToken maps GoTrue failures', async () => {
+  const port = createSupabaseCredentialsPort({
+    supabaseUrl: 'https://example.supabase.co',
+    anonKey: 'anon',
+    fetchImpl: async () =>
+      new Response(JSON.stringify({ error_description: 'Invalid login credentials' }), {
+        status: 400,
+      }),
+  });
+
+  await assert.rejects(
+    () => port.signInWithAppleIdToken('bad', { nonce: 'n' }),
+    (error) => {
+      assert.equal((error as { code?: string }).code, 'invalid_credentials');
+      return true;
+    },
+  );
+});

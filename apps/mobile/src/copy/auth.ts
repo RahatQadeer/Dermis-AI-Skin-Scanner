@@ -17,7 +17,8 @@ export const authCopy = {
   apiNotConfigured:
     'Cannot reach the server. Confirm EXPO_PUBLIC_API_URL and that the backend is running.',
   socialNotAvailable:
-    'Apple and Google need store OAuth keys (next). For this test build, create or log in with email — Pro features are unlocked for testing.',
+    'Google Sign-In needs OAuth client IDs in this build. For now, create or log in with email — Pro features are unlocked for testing.',
+  appleUnavailable: 'Sign in with Apple is not available on this device.',
   googleNeedsDevBuild:
     'Google Sign-In needs a development or preview build (not Expo Go). Install the EAS preview IPA, or use email for now.',
   resetSent: 'If that email exists, we sent reset instructions.',

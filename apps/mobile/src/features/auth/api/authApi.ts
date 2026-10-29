@@ -55,6 +55,19 @@ export async function signInWithGoogleIdToken(idToken: string): Promise<AuthSess
   return normalizeSession(res.session);
 }
 
+export async function signInWithAppleIdToken(input: {
+  idToken: string;
+  nonce: string;
+  firstName?: string;
+}): Promise<AuthSessionDto> {
+  const res = await getApiClient().postPublic<AuthSessionResponse>('/v1/auth/apple', {
+    idToken: input.idToken.trim(),
+    nonce: input.nonce.trim(),
+    ...(input.firstName ? { firstName: input.firstName } : {}),
+  });
+  return normalizeSession(res.session);
+}
+
 export async function refreshSession(refreshToken: string): Promise<AuthSessionDto> {
   const res = await getApiClient().postPublic<AuthSessionResponse>('/v1/auth/refresh', {
     refreshToken,

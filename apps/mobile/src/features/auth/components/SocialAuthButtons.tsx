@@ -1,4 +1,12 @@
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import type { ReactNode } from 'react';
+import {
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 
 import { AppText } from '@/src/components/text/AppText';
 import { getCopy } from '@/src/copy';
@@ -11,9 +19,15 @@ export type SocialAuthButtonsProps = {
   mode: AuthMode;
   onApple: () => void;
   onGoogle: () => void;
+  disabled?: boolean;
 };
 
-export function SocialAuthButtons({ mode, onApple, onGoogle }: SocialAuthButtonsProps) {
+export function SocialAuthButtons({
+  mode,
+  onApple,
+  onGoogle,
+  disabled = false,
+}: SocialAuthButtonsProps) {
   const auth = getCopy().auth;
   const appleLabel = mode === 'signUp' ? auth.signUpApple : auth.logInApple;
   const googleLabel = mode === 'signUp' ? auth.signUpGoogle : auth.logInGoogle;
@@ -21,30 +35,62 @@ export function SocialAuthButtons({ mode, onApple, onGoogle }: SocialAuthButtons
   return (
     <View style={styles.wrap}>
       {Platform.OS === 'ios' ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={appleLabel}
+        <SocialPressable
+          label={appleLabel}
+          disabled={disabled}
           onPress={onApple}
-          style={(state) => [styles.button, styles.apple, state.pressed ? styles.pressed : null]}
-        >
-          <AppleIcon size={18} color={colors.surface} />
-          <AppText variant="bodyStrong" color={colors.surface}>
-            {appleLabel}
-          </AppText>
-        </Pressable>
+          tone="apple"
+          icon={<AppleIcon size={18} color={colors.surface} />}
+          labelColor={colors.surface}
+        />
       ) : null}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={googleLabel}
+      <SocialPressable
+        label={googleLabel}
+        disabled={disabled}
         onPress={onGoogle}
-        style={(state) => [styles.button, styles.google, state.pressed ? styles.pressed : null]}
-      >
-        <GoogleIcon size={18} />
-        <AppText variant="bodyStrong" color={colors.ink}>
-          {googleLabel}
-        </AppText>
-      </Pressable>
+        tone="google"
+        icon={<GoogleIcon size={18} />}
+        labelColor={colors.ink}
+      />
     </View>
+  );
+}
+
+function SocialPressable({
+  label,
+  disabled,
+  onPress,
+  tone,
+  icon,
+  labelColor,
+}: {
+  label: string;
+  disabled: boolean;
+  onPress: () => void;
+  tone: 'apple' | 'google';
+  icon: ReactNode;
+  labelColor: string;
+}) {
+  const toneStyle: StyleProp<ViewStyle> = tone === 'apple' ? styles.apple : styles.google;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled }}
+      disabled={disabled}
+      onPress={onPress}
+      style={(state) => [
+        styles.button,
+        toneStyle,
+        state.pressed ? styles.pressed : null,
+        disabled ? styles.disabled : null,
+      ]}
+    >
+      {icon}
+      <AppText variant="bodyStrong" color={labelColor}>
+        {label}
+      </AppText>
+    </Pressable>
   );
 }
 
@@ -70,5 +116,8 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.85,
+  },
+  disabled: {
+    opacity: 0.55,
   },
 });

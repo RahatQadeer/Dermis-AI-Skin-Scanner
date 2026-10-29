@@ -44,8 +44,20 @@ export async function handleGoogleSignIn(
   credentials: AuthCredentialsPort,
   body: unknown,
 ): Promise<Response> {
-  const idToken = parseGoogleIdToken(body);
+  const idToken = parseIdTokenBody(body).idToken;
   const session = await credentials.signInWithGoogleIdToken(idToken);
+  return json({ session });
+}
+
+export async function handleAppleSignIn(
+  credentials: AuthCredentialsPort,
+  body: unknown,
+): Promise<Response> {
+  const parsed = parseIdTokenBody(body);
+  const session = await credentials.signInWithAppleIdToken(parsed.idToken, {
+    nonce: parsed.nonce,
+    firstName: parsed.firstName,
+  });
   return json({ session });
 }
 
@@ -79,15 +91,25 @@ function parseSignIn(body: unknown): { email: string; password: string } {
   return { email: raw.email, password: raw.password };
 }
 
-function parseGoogleIdToken(body: unknown): string {
+function parseIdTokenBody(body: unknown): {
+  idToken: string;
+  nonce?: string;
+  firstName?: string;
+} {
   if (!body || typeof body !== 'object') {
     throw new HttpError(400, 'invalid_body');
   }
-  const idToken = (body as { idToken?: unknown }).idToken;
-  if (typeof idToken !== 'string' || idToken.trim().length === 0) {
+  const raw = body as { idToken?: unknown; nonce?: unknown; firstName?: unknown };
+  if (typeof raw.idToken !== 'string' || raw.idToken.trim().length === 0) {
     throw new HttpError(400, 'invalid_body');
   }
-  return idToken.trim();
+  const nonce =
+    typeof raw.nonce === 'string' && raw.nonce.trim().length > 0 ? raw.nonce.trim() : undefined;
+  const firstName =
+    typeof raw.firstName === 'string' && raw.firstName.trim().length > 0
+      ? raw.firstName.trim()
+      : undefined;
+  return { idToken: raw.idToken.trim(), nonce, firstName };
 }
 
 function parseRefresh(body: unknown): string {

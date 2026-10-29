@@ -1,12 +1,16 @@
 import { isPasswordAcceptable } from '@dermis/domain/server';
 
 import { HttpError } from '../http/HttpError';
+import {
+  mapGoTrueError,
+  toSession,
+  withSignupName,
+  type AuthSessionResult,
+  type GoTrueTokenBody,
+} from './goTrueShared';
+import { signInWithProviderIdToken } from './supabaseIdTokenSignIn';
 
-export type AuthSessionResult = {
-  accessToken: string;
-  refreshToken: string | null;
-  user: { id: string; email: string | null; firstName: string | null };
-};
+export type { AuthSessionResult } from './goTrueShared';
 
 export type SupabaseCredentialsConfig = {
   supabaseUrl: string;
@@ -15,24 +19,9 @@ export type SupabaseCredentialsConfig = {
   fetchImpl?: typeof fetch;
 };
 
-type GoTrueUserMeta = {
-  first_name?: unknown;
-  full_name?: unknown;
-  name?: unknown;
-};
-
-type GoTrueTokenBody = {
-  access_token?: string;
-  refresh_token?: string;
-  user?: {
-    id?: string;
-    email?: string | null;
-    user_metadata?: GoTrueUserMeta | null;
-    raw_user_meta_data?: GoTrueUserMeta | null;
-  };
-  error?: string;
-  error_description?: string;
-  msg?: string;
+export type AppleIdTokenOptions = {
+  nonce?: string;
+  firstName?: string;
 };
 
 /**
@@ -47,7 +36,15 @@ export function createSupabaseCredentialsPort(config: SupabaseCredentialsConfig)
     signUp: (input: { email: string; password: string; firstName?: string }) =>
       signUpWithGoTrue(ctx, input),
     signIn: (input: { email: string; password: string }) => signInWithGoTrue(ctx, input),
-    signInWithGoogleIdToken: (idToken: string) => signInWithGoogleIdToken(ctx, idToken),
+    signInWithGoogleIdToken: (idToken: string) =>
+      signInWithProviderIdToken(ctx, { provider: 'google', idToken }),
+    signInWithAppleIdToken: (idToken: string, options?: AppleIdTokenOptions) =>
+      signInWithProviderIdToken(ctx, {
+        provider: 'apple',
+        idToken,
+        nonce: options?.nonce,
+        firstName: options?.firstName,
+      }),
     refresh: (refreshToken: string) => refreshWithGoTrue(ctx, refreshToken),
   };
 }
@@ -110,28 +107,6 @@ async function refreshWithGoTrue(ctx: CredCtx, refreshToken: string): Promise<Au
     throw new HttpError(400, 'invalid_body');
   }
   return refreshGrant(ctx.fetchImpl, ctx.base, ctx.config.anonKey, refreshToken.trim());
-}
-
-/** Exchange a Google ID token for a Supabase session (provider must be enabled in Supabase). */
-async function signInWithGoogleIdToken(ctx: CredCtx, idToken: string): Promise<AuthSessionResult> {
-  const token = idToken.trim();
-  if (!token) {
-    throw new HttpError(400, 'invalid_body');
-  }
-  const response = await ctx.fetchImpl(`${ctx.base}/auth/v1/token?grant_type=id_token`, {
-    method: 'POST',
-    headers: {
-      apikey: ctx.config.anonKey,
-      authorization: `Bearer ${ctx.config.anonKey}`,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({ provider: 'google', id_token: token }),
-  });
-  const body = (await response.json()) as GoTrueTokenBody;
-  if (!response.ok || !body.access_token || !body.user?.id) {
-    throw mapGoTrueError(response.status, body);
-  }
-  return toSession(body);
 }
 
 export type AuthCredentialsPort = ReturnType<typeof createSupabaseCredentialsPort>;
@@ -253,72 +228,4 @@ async function refreshGrant(
     throw mapGoTrueError(response.status, body);
   }
   return toSession(body);
-}
-
-function toSession(body: GoTrueTokenBody): AuthSessionResult {
-  return {
-    accessToken: body.access_token as string,
-    refreshToken: body.refresh_token ?? null,
-    user: {
-      id: body.user!.id as string,
-      email: body.user?.email ?? null,
-      firstName: nameFromGoTrueUser(body.user),
-    },
-  };
-}
-
-function withSignupName(session: AuthSessionResult, signupName: string | null): AuthSessionResult {
-  if (!signupName) {
-    return session;
-  }
-  return {
-    ...session,
-    user: { ...session.user, firstName: session.user.firstName ?? signupName },
-  };
-}
-
-function nameFromGoTrueUser(user: GoTrueTokenBody['user']): string | null {
-  if (!user) {
-    return null;
-  }
-  return readMetaName(user.user_metadata) ?? readMetaName(user.raw_user_meta_data) ?? null;
-}
-
-function readMetaName(meta: GoTrueUserMeta | null | undefined): string | null {
-  if (!meta) {
-    return null;
-  }
-  for (const key of ['full_name', 'first_name', 'name'] as const) {
-    const value = meta[key];
-    if (typeof value === 'string' && value.trim().length > 0) {
-      return value.trim();
-    }
-  }
-  return null;
-}
-
-function goTrueMessage(body: GoTrueTokenBody): string {
-  return `${body.error_description ?? body.msg ?? body.error ?? ''}`.toLowerCase();
-}
-
-function mapGoTrueError(status: number, body: GoTrueTokenBody): HttpError {
-  const msg = goTrueMessage(body);
-  if (isEmailTakenMessage(msg, status)) {
-    return new HttpError(409, 'email_taken');
-  }
-  if (isInvalidCredentialsMessage(msg, status)) {
-    return new HttpError(401, 'invalid_credentials');
-  }
-  if (status === 429) {
-    return new HttpError(429, 'rate_limited');
-  }
-  return new HttpError(status >= 400 && status < 600 ? status : 502, 'auth_provider_error');
-}
-
-function isEmailTakenMessage(msg: string, status: number): boolean {
-  return msg.includes('already') || msg.includes('registered') || status === 422;
-}
-
-function isInvalidCredentialsMessage(msg: string, status: number): boolean {
-  return msg.includes('invalid login') || msg.includes('invalid_credentials') || status === 400;
 }

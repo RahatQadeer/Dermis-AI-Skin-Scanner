@@ -66,6 +66,9 @@ const unusedCredentials = {
   async signInWithGoogleIdToken(_idToken: string) {
     throw new Error('unused');
   },
+  async signInWithAppleIdToken(_idToken: string) {
+    throw new Error('unused');
+  },
   async refresh() {
     throw new Error('unused');
   },
@@ -185,6 +188,107 @@ test('POST /v1/auth/google maps credential failures to auth error codes', async 
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ idToken: 'bad-token' }),
+    }),
+  );
+  assert.equal(res.status, 401);
+  assert.deepEqual(await res.json(), { error: 'invalid_credentials' });
+});
+
+test('POST /v1/auth/apple returns 503 without credentials port', async () => {
+  const app = buildApp();
+  const res = await app(
+    new Request('http://local/v1/auth/apple', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ idToken: 'apple-id-token', nonce: 'raw-nonce' }),
+    }),
+  );
+  assert.equal(res.status, 503);
+  assert.deepEqual(await res.json(), { error: 'auth_credentials_not_configured' });
+});
+
+test('POST /v1/auth/apple rejects missing idToken', async () => {
+  const app = createApp({
+    auth: createMemoryAuthPort(),
+    profilesFor: () => createProfileService(createMemoryProfileRepository()),
+    credentials: unusedCredentials,
+  });
+  const res = await app(
+    new Request('http://local/v1/auth/apple', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ nonce: 'raw-nonce' }),
+    }),
+  );
+  assert.equal(res.status, 400);
+  assert.deepEqual(await res.json(), { error: 'invalid_body' });
+});
+
+test('POST /v1/auth/apple returns session from Apple id token exchange', async () => {
+  let receivedToken = '';
+  let receivedNonce = '';
+  let receivedFirstName: string | undefined;
+  const app = createApp({
+    auth: createMemoryAuthPort(),
+    profilesFor: () => createProfileService(createMemoryProfileRepository()),
+    credentials: {
+      ...unusedCredentials,
+      async signInWithAppleIdToken(
+        idToken: string,
+        options?: { nonce?: string; firstName?: string },
+      ) {
+        receivedToken = idToken;
+        receivedNonce = options?.nonce ?? '';
+        receivedFirstName = options?.firstName;
+        return {
+          accessToken: 'apple-at',
+          refreshToken: 'apple-rt',
+          user: { id: USER_ID, email: 'a@privaterelay.appleid.com', firstName: 'Ada' },
+        };
+      },
+    },
+  });
+  const res = await app(
+    new Request('http://local/v1/auth/apple', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        idToken: '  apple.jwt  ',
+        nonce: '  raw-nonce  ',
+        firstName: ' Ada ',
+      }),
+    }),
+  );
+  assert.equal(res.status, 200);
+  assert.equal(receivedToken, 'apple.jwt');
+  assert.equal(receivedNonce, 'raw-nonce');
+  assert.equal(receivedFirstName, 'Ada');
+  assert.deepEqual(await res.json(), {
+    session: {
+      accessToken: 'apple-at',
+      refreshToken: 'apple-rt',
+      user: { id: USER_ID, email: 'a@privaterelay.appleid.com', firstName: 'Ada' },
+    },
+  });
+});
+
+test('POST /v1/auth/apple maps credential failures to auth error codes', async () => {
+  const { HttpError } = await import('./HttpError');
+  const app = createApp({
+    auth: createMemoryAuthPort(),
+    profilesFor: () => createProfileService(createMemoryProfileRepository()),
+    credentials: {
+      ...unusedCredentials,
+      async signInWithAppleIdToken() {
+        throw new HttpError(401, 'invalid_credentials');
+      },
+    },
+  });
+  const res = await app(
+    new Request('http://local/v1/auth/apple', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ idToken: 'bad-token', nonce: 'n' }),
     }),
   );
   assert.equal(res.status, 401);

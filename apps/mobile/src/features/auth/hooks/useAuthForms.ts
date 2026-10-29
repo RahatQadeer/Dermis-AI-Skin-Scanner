@@ -12,6 +12,7 @@ import {
   type FieldErrors,
 } from '../lib/authValidation';
 import { resolveAuthFieldErrors } from '../lib/resolveAuthErrors';
+import { useAppleAuth } from './useAppleAuth';
 import { useGoogleAuth } from './useGoogleAuth';
 import { signUpMascotTone, submitLogInRequest, submitSignUpRequest } from './submitAuthForms';
 
@@ -25,14 +26,19 @@ function useAuthFormShell() {
     onFormError: setFormError,
     onSubmittingChange: setSubmitting,
   });
+  const apple = useAppleAuth({
+    session,
+    onFormError: setFormError,
+    onSubmittingChange: setSubmitting,
+  });
   return {
     session,
     auth,
     formError,
     setFormError,
-    submitting: submitting || google.googleBusy,
+    submitting: submitting || google.googleBusy || apple.appleBusy,
     setSubmitting,
-    continueApple: () => setFormError(auth.socialNotAvailable),
+    continueApple: apple.continueApple,
     continueGoogle: google.continueGoogle,
   };
 }
