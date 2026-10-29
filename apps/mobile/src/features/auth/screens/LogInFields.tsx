@@ -57,8 +57,8 @@ export function LogInFields({ form }: { form: LogInForm }) {
     <>
       <SocialAuthButtons
         mode="logIn"
-        onApple={form.continueSocial}
-        onGoogle={form.continueSocial}
+        onApple={form.continueApple}
+        onGoogle={form.continueGoogle}
       />
       <AuthDivider />
       <TextField

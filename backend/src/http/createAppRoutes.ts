@@ -4,7 +4,12 @@ import {
   handleExportAccount,
   handlePublicDeletionRequest,
 } from '../handlers/accountHandlers';
-import { handleRefresh, handleSignIn, handleSignUp } from '../handlers/authCredentialHandlers';
+import {
+  handleGoogleSignIn,
+  handleRefresh,
+  handleSignIn,
+  handleSignUp,
+} from '../handlers/authCredentialHandlers';
 import { handleAuthMe } from '../handlers/authHandlers';
 import {
   handleConsentStatus,
@@ -40,6 +45,7 @@ const PUBLIC_ROUTES: Record<string, RouteHandler> = {
   'POST /v1/webhooks/revenuecat': handleWebhook,
   'POST /v1/auth/sign-up': handlePublicSignUp,
   'POST /v1/auth/sign-in': handlePublicSignIn,
+  'POST /v1/auth/google': handlePublicGoogle,
   'POST /v1/auth/refresh': handlePublicRefresh,
 };
 
@@ -159,6 +165,13 @@ async function handlePublicSignIn(request: Request, deps: AppDeps): Promise<Resp
     return json({ error: 'auth_credentials_not_configured' }, 503);
   }
   return handleSignIn(deps.credentials, await request.json());
+}
+
+async function handlePublicGoogle(request: Request, deps: AppDeps): Promise<Response> {
+  if (!deps.credentials) {
+    return json({ error: 'auth_credentials_not_configured' }, 503);
+  }
+  return handleGoogleSignIn(deps.credentials, await request.json());
 }
 
 async function handlePublicRefresh(request: Request, deps: AppDeps): Promise<Response> {

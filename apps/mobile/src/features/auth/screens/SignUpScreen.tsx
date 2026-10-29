@@ -40,8 +40,8 @@ function SignUpFields({ form }: { form: ReturnType<typeof useSignUpForm> }) {
     <>
       <SocialAuthButtons
         mode="signUp"
-        onApple={form.continueSocial}
-        onGoogle={form.continueSocial}
+        onApple={form.continueApple}
+        onGoogle={form.continueGoogle}
       />
       <AuthDivider />
       <TextField

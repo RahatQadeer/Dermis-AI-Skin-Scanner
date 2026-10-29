@@ -48,6 +48,13 @@ export async function signInWithPassword(input: {
   return normalizeSession(res.session);
 }
 
+export async function signInWithGoogleIdToken(idToken: string): Promise<AuthSessionDto> {
+  const res = await getApiClient().postPublic<AuthSessionResponse>('/v1/auth/google', {
+    idToken: idToken.trim(),
+  });
+  return normalizeSession(res.session);
+}
+
 export async function refreshSession(refreshToken: string): Promise<AuthSessionDto> {
   const res = await getApiClient().postPublic<AuthSessionResponse>('/v1/auth/refresh', {
     refreshToken,

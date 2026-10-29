@@ -1,7 +1,7 @@
 # Dermis — progress handoff
 
-**Last updated:** 2026-10-21  
-**Current focus:** Testing unlock-all (preview IPA + Render FORCE_PRO); real Google/Apple OAuth later
+**Last updated:** 2026-10-26  
+**Current focus:** Email auth + unlock-all for testing; Google OAuth wired (needs client IDs); Apple still stub
 
 **GitHub:** https://github.com/RahatQadeer/Dermis-AI-Skin-Scanner.git (you commit/push)
 
@@ -82,8 +82,11 @@ cd apps/mobile && npx expo start -c --lan
 - `render.yaml` Blueprint; GitHub Actions `deploy-render` job POSTs `RENDER_DEPLOY_HOOK_URL` after CI on `main`.
 - EAS `EXPO_PUBLIC_API_URL` = Render HTTPS (not LAN `http://`).
 - **Testing unlock:** preview/dev EAS sets `EXPO_PUBLIC_UNLOCK_ALL_FEATURES=1`; Render sets `DERMIS_FORCE_PRO=1` + `DERMIS_ALLOW_DEV_ENTITLEMENT=1`. Paywall Subscribe succeeds without RevenueCat. Remove before store billing.
-- Google/Apple social buttons still need OAuth client IDs — use **email** for now.
+- **This test build:** use **email** sign-up / log-in. Apple still stub. Google works only when `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` + `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` are set and Supabase Google provider is enabled; otherwise the social button shows the email/Pro-unlock message.
+- Backend: `POST /v1/auth/google` exchanges Google `id_token` via GoTrue.
 
 ## Next chat starts at
 
-On Render dashboard: set `DERMIS_FORCE_PRO=1` and `DERMIS_ALLOW_DEV_ENTITLEMENT=1`, rebuild API. Rebuild iOS preview so unlock flag is baked in. Then Google OAuth + RevenueCat sandbox, **or** store copy audit (DERM-061).
+1. Confirm Render has `DERMIS_FORCE_PRO=1` + `DERMIS_ALLOW_DEV_ENTITLEMENT=1`.
+2. Add Google OAuth client IDs (EAS env + Supabase Auth → Google) then rebuild preview — **or** keep email-only for testing.
+3. Apple Sign In / RevenueCat sandbox / store copy audit (DERM-061).

@@ -47,6 +47,7 @@ export function createSupabaseCredentialsPort(config: SupabaseCredentialsConfig)
     signUp: (input: { email: string; password: string; firstName?: string }) =>
       signUpWithGoTrue(ctx, input),
     signIn: (input: { email: string; password: string }) => signInWithGoTrue(ctx, input),
+    signInWithGoogleIdToken: (idToken: string) => signInWithGoogleIdToken(ctx, idToken),
     refresh: (refreshToken: string) => refreshWithGoTrue(ctx, refreshToken),
   };
 }
@@ -109,6 +110,28 @@ async function refreshWithGoTrue(ctx: CredCtx, refreshToken: string): Promise<Au
     throw new HttpError(400, 'invalid_body');
   }
   return refreshGrant(ctx.fetchImpl, ctx.base, ctx.config.anonKey, refreshToken.trim());
+}
+
+/** Exchange a Google ID token for a Supabase session (provider must be enabled in Supabase). */
+async function signInWithGoogleIdToken(ctx: CredCtx, idToken: string): Promise<AuthSessionResult> {
+  const token = idToken.trim();
+  if (!token) {
+    throw new HttpError(400, 'invalid_body');
+  }
+  const response = await ctx.fetchImpl(`${ctx.base}/auth/v1/token?grant_type=id_token`, {
+    method: 'POST',
+    headers: {
+      apikey: ctx.config.anonKey,
+      authorization: `Bearer ${ctx.config.anonKey}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ provider: 'google', id_token: token }),
+  });
+  const body = (await response.json()) as GoTrueTokenBody;
+  if (!response.ok || !body.access_token || !body.user?.id) {
+    throw mapGoTrueError(response.status, body);
+  }
+  return toSession(body);
 }
 
 export type AuthCredentialsPort = ReturnType<typeof createSupabaseCredentialsPort>;
