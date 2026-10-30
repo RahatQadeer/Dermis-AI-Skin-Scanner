@@ -3,14 +3,18 @@ import { useCallback, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import type { RefObject } from 'react';
 
+import { useSession } from '@/src/features/session/SessionContext';
+
 import type { CameraPreviewLiveHandle } from '../components/CameraPreviewLive';
 import { useScanCapture } from '../context/ScanCaptureContext';
+import { verifyFaceIdentity } from '../lib/verifyFaceIdentity';
 import { captureScanPhoto } from './captureScanPhoto';
 import { useCameraPermissionFlow } from './useCameraPermissions';
 
 export function useScanCaptureFlow(cameraRef: RefObject<CameraPreviewLiveHandle | null>) {
   const router = useRouter();
   const { setPending, setLastScan } = useScanCapture();
+  const { userId, apiEnabled } = useSession();
   const permission = useCameraPermissionFlow();
   const [capturing, setCapturing] = useState(false);
   const [errorToast, setErrorToast] = useState<string | null>(null);
@@ -26,7 +30,10 @@ export function useScanCaptureFlow(cameraRef: RefObject<CameraPreviewLiveHandle 
     setCapturing(true);
     setErrorToast(null);
     try {
-      const pending = await captureScanPhoto(cameraRef, permission.ensureCamera);
+      // Identity gate only runs for an authenticated, API-backed session.
+      const verifyIdentity =
+        apiEnabled && userId ? (uri: string) => verifyFaceIdentity(uri, userId) : undefined;
+      const pending = await captureScanPhoto(cameraRef, permission.ensureCamera, verifyIdentity);
       // Clear any previous report so a rejected photo cannot reopen old Results.
       setLastScan(null);
       setPending(pending);
@@ -36,7 +43,7 @@ export function useScanCaptureFlow(cameraRef: RefObject<CameraPreviewLiveHandle 
     } finally {
       setCapturing(false);
     }
-  }, [cameraRef, permission.ensureCamera, router, setLastScan, setPending]);
+  }, [apiEnabled, cameraRef, permission.ensureCamera, router, setLastScan, setPending, userId]);
 
   return {
     liveCamera,

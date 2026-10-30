@@ -18,6 +18,10 @@ import {
   handleListConsents,
 } from '../handlers/consentHandlers';
 import {
+  handleGetFaceReference,
+  handleRegisterFaceReference,
+} from '../handlers/faceReferenceHandlers';
+import {
   handleCreateProfile,
   handleDeleteProfile,
   handleGetProfile,
@@ -108,7 +112,26 @@ async function matchCoreAuthed(
   if (path === '/v1/profile') {
     return handleProfileRoute(request, method, deps);
   }
+  if (path === '/v1/face-reference' && (method === 'GET' || method === 'POST')) {
+    return handleFaceReferenceRoute(request, method, deps);
+  }
   return null;
+}
+
+async function handleFaceReferenceRoute(
+  request: Request,
+  method: string,
+  deps: AppDeps,
+): Promise<Response> {
+  if (!deps.faceReferencesFor) {
+    return json({ error: 'face_reference_not_configured' }, 503);
+  }
+  const { user, accessToken } = await requireUser(request, deps.auth);
+  const service = deps.faceReferencesFor({ userId: user.id, accessToken });
+  if (method === 'GET') {
+    return handleGetFaceReference(service, user.id);
+  }
+  return handleRegisterFaceReference(service, user.id, await request.json());
 }
 
 const CORE_ROUTES: Record<string, RouteHandler> = {

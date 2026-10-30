@@ -9,6 +9,7 @@ import {
   registerMemoryEmail,
 } from './repositories/memoryAccountRepository';
 import { createMemoryConsentRepository } from './repositories/memoryConsentRepository';
+import { createMemoryFaceReferenceRepository } from './repositories/memoryFaceReferenceRepository';
 import {
   createMemoryEntitlementRepository,
   createMemoryWebhookEventRepository,
@@ -20,6 +21,7 @@ import { createMemoryScanRepository } from './repositories/memoryScanRepository'
 import { createAccountService } from './services/accountService';
 import { createConsentService } from './services/consentService';
 import { createEntitlementService } from './services/entitlementService';
+import { createFaceReferenceService } from './services/faceReferenceService';
 import { createProfileService } from './services/profileService';
 import { createQuotaService } from './services/quotaService';
 import { createRoutineService } from './services/routineService';
@@ -49,6 +51,7 @@ export function buildMemoryBackendDeps(env: MemoryEnv = {}): AppDeps {
       return services.account;
     },
     consentsFor: () => services.consents,
+    faceReferencesFor: () => services.faceReferences,
     publicAccount: services.account,
     revenueCatWebhook: {
       webhookSecret: resolveMemoryWebhookSecret(env.revenueCatWebhookSecret),
@@ -80,6 +83,7 @@ function createMemoryStores() {
     scanRepo: createMemoryScanRepository(),
     routineRepo: createMemoryRoutineRepository(),
     consentRepo: createMemoryConsentRepository(),
+    faceReferenceRepo: createMemoryFaceReferenceRepository(),
     emailIndex: new Map<string, string>(),
     deletedAuthUsers: new Set<string>(),
   };
@@ -129,6 +133,7 @@ function createMemoryServices(stores: ReturnType<typeof createMemoryStores>, env
     settings: createSettingsService(stores.profileRepo),
     account,
     consents,
+    faceReferences: createFaceReferenceService(stores.faceReferenceRepo),
   };
 }
 

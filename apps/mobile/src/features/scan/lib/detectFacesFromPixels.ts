@@ -44,7 +44,7 @@ export async function detectFacesFromPixels(image: PixelBuffer): Promise<Detecte
   }
 }
 
-function toRgbFloat32(image: PixelBuffer): Float32Array {
+export function toRgbFloat32(image: PixelBuffer): Float32Array {
   const { data, width, height, channels } = image;
   const out = new Float32Array(width * height * 3);
   let o = 0;

@@ -21,6 +21,8 @@ function newIdempotencyKey(): string {
 export async function captureScanPhoto(
   cameraRef: RefObject<CameraPreviewLiveHandle | null>,
   ensureCamera: () => Promise<boolean>,
+  /** Identity gate (approach D2). Throws to block a mismatched face. */
+  verifyIdentity?: (uri: string) => Promise<void>,
 ): Promise<PendingScanCapture> {
   const c = getCopy().screens.camera;
   const liveCamera = Platform.OS !== 'web';
@@ -48,6 +50,9 @@ export async function captureScanPhoto(
     throw new Error(messageForLiveIssue(assessment.issue));
   }
 
+  // Verify the captured face is the registered user before any analysis.
+  await verifyIdentity?.(uri);
+
   try {
     const prepared = await prepareScanImage(uri);
     return {
@@ -56,15 +61,20 @@ export async function captureScanPhoto(
       contentType: prepared.contentType,
     };
   } catch (error) {
-    if (error instanceof ScanImageError) {
-      if (error.code === 'too_small') {
-        throw new Error(c.qualityTooSmall);
-      }
-      if (error.code === 'too_large') {
-        throw new Error(c.qualityTooLarge);
-      }
-      throw new Error(c.captureFailed);
-    }
-    throw new Error(c.captureFailed);
+    throw new Error(prepareErrorMessage(error, c));
   }
+}
+
+type CameraCopy = ReturnType<typeof getCopy>['screens']['camera'];
+
+function prepareErrorMessage(error: unknown, c: CameraCopy): string {
+  if (error instanceof ScanImageError) {
+    if (error.code === 'too_small') {
+      return c.qualityTooSmall;
+    }
+    if (error.code === 'too_large') {
+      return c.qualityTooLarge;
+    }
+  }
+  return c.captureFailed;
 }

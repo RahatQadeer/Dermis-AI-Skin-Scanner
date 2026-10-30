@@ -29,8 +29,11 @@ Layering: **handlers → services → repositories** (+ **AuthPort** / webhook s
 | `/v1/public/deletion-requests`     | POST         | no                       | `{ email, confirmation: "DELETE MY ACCOUNT" }` |
 | `/v1/consents`                     | GET/POST     | user Bearer              | List / grant or revoke (`granted` bool)        |
 | `/v1/consents/status`              | GET          | user Bearer              | Face-analysis gate for scans                   |
+| `/v1/face-reference`               | GET/POST     | user Bearer              | Read / enroll face identity reference (D2)     |
 
 Scans require active `face_analysis` consent at version `face-analysis-v1` (403 `consent_required` otherwise).
+
+Face identity (D2): `face_references` stores a per-user embedding (RLS, user-JWT). Matching is on-device; `POST` is 409 `face_reference_exists` unless `replace: true`.
 
 ### Local
 

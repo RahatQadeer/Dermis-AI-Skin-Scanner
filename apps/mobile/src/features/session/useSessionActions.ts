@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 
 import { writeLocalFaceConsent } from '@/src/features/consent/localConsentStore';
 import { clearQuizDraft } from '@/src/features/onboarding/lib/quizDraftStorage';
+import { clearCachedFaceReference } from '@/src/features/scan/lib/faceReferenceCache';
 
 import { clearStoredSession, saveOnboardingComplete, saveStoredSession } from './sessionStorage';
 
@@ -36,6 +37,7 @@ function toPersistInput(session: ServerSession): PersistInput {
 function clearPerUserLocalCaches(): void {
   void clearQuizDraft();
   void writeLocalFaceConsent(false);
+  void clearCachedFaceReference();
 }
 
 export function useSessionActions(ctx: {

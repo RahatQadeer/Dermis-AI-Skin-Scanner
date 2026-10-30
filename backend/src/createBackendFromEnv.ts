@@ -19,6 +19,7 @@ import {
 } from './repositories/supabaseAccountRepository';
 import { createSupabaseConsentRepository } from './repositories/supabaseConsentRepository';
 import { createSupabaseEntitlementRepository } from './repositories/supabaseEntitlementRepository';
+import { createSupabaseFaceReferenceRepository } from './repositories/supabaseFaceReferenceRepository';
 import { createSupabaseProfileRepository } from './repositories/supabaseProfileRepository';
 import { createSupabaseQuotaRepository } from './repositories/supabaseQuotaRepository';
 import { createSupabaseScanRepository } from './repositories/supabaseScanRepository';
@@ -26,6 +27,7 @@ import { createSupabaseWebhookEventRepository } from './repositories/supabaseWeb
 import { createAccountService } from './services/accountService';
 import { createConsentService } from './services/consentService';
 import { createEntitlementService } from './services/entitlementService';
+import { createFaceReferenceService } from './services/faceReferenceService';
 import { createProfileService } from './services/profileService';
 import { createQuotaService } from './services/quotaService';
 import type { BackendEnv } from './backendEnv';
@@ -112,6 +114,10 @@ function buildLiveDeps(env: BackendEnv, auth: AuthPort, stores: LiveStores): App
     consentsFor: ({ accessToken }) =>
       createConsentService(
         createSupabaseConsentRepository({ supabaseUrl: url, anonKey: anon, accessToken }),
+      ),
+    faceReferencesFor: ({ accessToken }) =>
+      createFaceReferenceService(
+        createSupabaseFaceReferenceRepository({ supabaseUrl: url, anonKey: anon, accessToken }),
       ),
     routineSettingsFor: ({ accessToken }) => ({
       routine: createRoutineService(stores.routine),

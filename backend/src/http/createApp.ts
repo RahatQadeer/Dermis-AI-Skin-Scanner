@@ -4,6 +4,7 @@ import type { RevenueCatWebhookDeps } from '../handlers/revenueCatWebhookHandler
 import type { AccountService } from '../services/accountService';
 import type { ConsentService } from '../services/consentService';
 import type { EntitlementService } from '../services/entitlementService';
+import type { FaceReferenceService } from '../services/faceReferenceService';
 import type { ProfileService } from '../services/profileService';
 import type { QuotaService } from '../services/quotaService';
 import type { ScanPipelineService } from '../services/scanPipelineService';
@@ -38,6 +39,11 @@ export type ConsentServiceFactory = (ctx: {
   accessToken: string;
 }) => ConsentService;
 
+export type FaceReferenceServiceFactory = (ctx: {
+  userId: string;
+  accessToken: string;
+}) => FaceReferenceService;
+
 export type AppDeps = {
   auth: AuthPort;
   profilesFor: ProfileServiceFactory;
@@ -46,6 +52,7 @@ export type AppDeps = {
   routineSettingsFor?: RoutineSettingsFactory;
   accountFor?: AccountServiceFactory;
   consentsFor?: ConsentServiceFactory;
+  faceReferencesFor?: FaceReferenceServiceFactory;
   /** Shared account service for public deletion (no user context). */
   publicAccount?: AccountService;
   revenueCatWebhook?: RevenueCatWebhookDeps;
