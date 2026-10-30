@@ -14,12 +14,7 @@ import {
 
 const QUIZ_FIXTURE = {
   q1: {
-    options: [
-      { label: 'Oily' },
-      { label: 'Combination' },
-      { label: 'Dry' },
-      { label: 'Normal' },
-    ],
+    options: [{ label: 'Oily' }, { label: 'Combination' }, { label: 'Dry' }, { label: 'Normal' }],
   },
   q2: {
     options: [

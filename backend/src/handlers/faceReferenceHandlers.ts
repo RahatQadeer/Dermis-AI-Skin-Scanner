@@ -2,10 +2,7 @@ import { HttpError } from '../http/HttpError';
 import { json } from '../http/respond';
 import { faceReferenceWriteSchema } from '../schemas/faceReferenceApi';
 import type { FaceReferenceRecord } from '../repositories/faceReferenceTypes';
-import {
-  toFaceReferenceStatus,
-  type FaceReferenceService,
-} from '../services/faceReferenceService';
+import { toFaceReferenceStatus, type FaceReferenceService } from '../services/faceReferenceService';
 
 /** Full record (incl. embedding) for the authenticated owner — on-device match. */
 function toFaceReferenceDto(record: FaceReferenceRecord) {

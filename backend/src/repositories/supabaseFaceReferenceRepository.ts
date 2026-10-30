@@ -56,7 +56,9 @@ async function findByUserId(
   userId: string,
 ): Promise<FaceReferenceRecord | null> {
   const url = `${client.base}?user_id=eq.${encodeURIComponent(userId)}&select=*`;
-  const response = await client.fetchImpl(url, { headers: client.headers('return=representation') });
+  const response = await client.fetchImpl(url, {
+    headers: client.headers('return=representation'),
+  });
   if (!response.ok) {
     return null;
   }

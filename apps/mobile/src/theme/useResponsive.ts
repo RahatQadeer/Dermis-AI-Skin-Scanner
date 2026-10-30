@@ -1,10 +1,6 @@
 import { useWindowDimensions } from 'react-native';
 
-import {
-  NARROW_SCREEN_WIDTH,
-  SHORT_SCREEN_HEIGHT,
-  type Responsive,
-} from './responsive';
+import { NARROW_SCREEN_WIDTH, SHORT_SCREEN_HEIGHT, type Responsive } from './responsive';
 
 /** Live viewport descriptor used to adapt layout to small/narrow devices. */
 export function useResponsive(): Responsive {

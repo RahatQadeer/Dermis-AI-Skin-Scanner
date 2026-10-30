@@ -28,7 +28,12 @@ async function computeCurrentEmbedding(uri: string): Promise<number[] | null> {
   if (!pixels) {
     return null;
   }
-  const buffer = { data: pixels.data, width: pixels.width, height: pixels.height, channels: 4 as const };
+  const buffer = {
+    data: pixels.data,
+    width: pixels.width,
+    height: pixels.height,
+    channels: 4 as const,
+  };
   const faces = await detectFacesFromPixels(buffer);
   if (!faces || faces.length !== 1) {
     return null;
@@ -95,8 +100,6 @@ export async function verifyFaceIdentity(uri: string, userId: string): Promise<v
     return;
   }
   throw new FaceIdentityError(
-    decision.reason === 'mismatch'
-      ? FACE_IDENTITY_MISMATCH_MESSAGE
-      : FACE_IDENTITY_RETRY_MESSAGE,
+    decision.reason === 'mismatch' ? FACE_IDENTITY_MISMATCH_MESSAGE : FACE_IDENTITY_RETRY_MESSAGE,
   );
 }

@@ -24,7 +24,10 @@ export function SummaryHero() {
         {summary.eyebrow}
       </AppText>
       <AppText
-        style={[styles.headline, { fontSize: headlineSize, lineHeight: Math.round(headlineSize * 1.07) }]}
+        style={[
+          styles.headline,
+          { fontSize: headlineSize, lineHeight: Math.round(headlineSize * 1.07) },
+        ]}
         color={colors.ink}
         accessibilityRole="header"
       >

@@ -37,7 +37,8 @@ test('registering twice without replace is rejected (one-time enrollment)', asyn
   const service = createFaceReferenceService(createMemoryFaceReferenceRepository());
   await service.register(USER_A, { embedding: makeEmbedding(1), dim: 128, modelVersion: 'mfn-v1' });
   await assert.rejects(
-    () => service.register(USER_A, { embedding: makeEmbedding(9), dim: 128, modelVersion: 'mfn-v1' }),
+    () =>
+      service.register(USER_A, { embedding: makeEmbedding(9), dim: 128, modelVersion: 'mfn-v1' }),
     (err) => err instanceof HttpError && err.status === 409,
   );
 });
