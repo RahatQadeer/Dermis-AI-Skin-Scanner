@@ -1,4 +1,3 @@
-import { ASSISTANT_PATH, handleAssistantRoute } from '../assistant/assistantRoute';
 import { requireUser } from '../auth/requireUser';
 import {
   handleDeleteAccount,
@@ -19,10 +18,6 @@ import {
   handleListConsents,
 } from '../handlers/consentHandlers';
 import {
-  handleGetFaceReference,
-  handleRegisterFaceReference,
-} from '../handlers/faceReferenceHandlers';
-import {
   handleCreateProfile,
   handleDeleteProfile,
   handleGetProfile,
@@ -32,19 +27,21 @@ import { handleGetQuota } from '../handlers/quotaHandlers';
 import { handleDevGrantPro } from '../handlers/devEntitlementHandlers';
 import { handleRevenueCatWebhook } from '../handlers/revenueCatWebhookHandler';
 import { handleCreateScan, handleDeleteAllScans, handleListScans } from '../handlers/scanHandlers';
-import { serveDeleteAccountPage } from './deleteAccountPage';
+import { DELETE_ACCOUNT_HTML } from './deleteAccountPage';
 import { json } from './respond';
 import { routeRoutineAndSettings } from './routineRoutes';
 import type { AppDeps } from './createApp';
-import { PASSWORD_RESET_ROUTES } from './passwordResetRoutes';
-import { readJsonBody } from './readJsonBody';
 
 type RouteHandler = (request: Request, deps: AppDeps) => Promise<Response> | Response;
 
 const PUBLIC_ROUTES: Record<string, RouteHandler> = {
   'GET /': () => json({ ok: true, service: 'dermis-api', health: '/health' }),
   'GET /health': () => json({ ok: true }),
-  'GET /delete-account': serveDeleteAccountPage,
+  'GET /delete-account': () =>
+    new Response(DELETE_ACCOUNT_HTML, {
+      status: 200,
+      headers: { 'content-type': 'text/html; charset=utf-8' },
+    }),
   'POST /v1/public/deletion-requests': handlePublicDeletion,
   'POST /v1/webhooks/revenuecat': handleWebhook,
   'POST /v1/auth/sign-up': handlePublicSignUp,
@@ -52,7 +49,6 @@ const PUBLIC_ROUTES: Record<string, RouteHandler> = {
   'POST /v1/auth/google': handlePublicGoogle,
   'POST /v1/auth/apple': handlePublicApple,
   'POST /v1/auth/refresh': handlePublicRefresh,
-  ...PASSWORD_RESET_ROUTES,
 };
 
 export async function dispatchAuthed(
@@ -112,26 +108,7 @@ async function matchCoreAuthed(
   if (path === '/v1/profile') {
     return handleProfileRoute(request, method, deps);
   }
-  if (path === '/v1/face-reference' && (method === 'GET' || method === 'POST')) {
-    return handleFaceReferenceRoute(request, method, deps);
-  }
   return null;
-}
-
-async function handleFaceReferenceRoute(
-  request: Request,
-  method: string,
-  deps: AppDeps,
-): Promise<Response> {
-  if (!deps.faceReferencesFor) {
-    return json({ error: 'face_reference_not_configured' }, 503);
-  }
-  const { user, accessToken } = await requireUser(request, deps.auth);
-  const service = deps.faceReferencesFor({ userId: user.id, accessToken });
-  if (method === 'GET') {
-    return handleGetFaceReference(service, user.id);
-  }
-  return handleRegisterFaceReference(service, user.id, await readJsonBody(request));
 }
 
 const CORE_ROUTES: Record<string, RouteHandler> = {
@@ -145,7 +122,6 @@ const CORE_ROUTES: Record<string, RouteHandler> = {
     handleConsentRoute(request, deps, 'GET', '/v1/consents/status'),
   'POST /v1/consents': (request, deps) => handleConsentRoute(request, deps, 'POST', '/v1/consents'),
   'POST /v1/dev/entitlements/pro': handleDevEntitlementRoute,
-  [`POST ${ASSISTANT_PATH}`]: handleAssistantRoute,
 };
 
 async function handleDevEntitlementRoute(request: Request, deps: AppDeps): Promise<Response> {
@@ -174,7 +150,7 @@ async function handleConsentRoute(
     return handleConsentStatus(consents, user.id);
   }
   if (method === 'POST' && path === '/v1/consents') {
-    return handleGrantConsent(consents, user.id, await readJsonBody(request));
+    return handleGrantConsent(consents, user.id, await request.json());
   }
   return json({ error: 'method_not_allowed' }, 405);
 }
@@ -183,42 +159,42 @@ async function handlePublicSignUp(request: Request, deps: AppDeps): Promise<Resp
   if (!deps.credentials) {
     return json({ error: 'auth_credentials_not_configured' }, 503);
   }
-  return handleSignUp(deps.credentials, await readJsonBody(request));
+  return handleSignUp(deps.credentials, await request.json());
 }
 
 async function handlePublicSignIn(request: Request, deps: AppDeps): Promise<Response> {
   if (!deps.credentials) {
     return json({ error: 'auth_credentials_not_configured' }, 503);
   }
-  return handleSignIn(deps.credentials, await readJsonBody(request));
+  return handleSignIn(deps.credentials, await request.json());
 }
 
 async function handlePublicGoogle(request: Request, deps: AppDeps): Promise<Response> {
   if (!deps.credentials) {
     return json({ error: 'auth_credentials_not_configured' }, 503);
   }
-  return handleGoogleSignIn(deps.credentials, await readJsonBody(request));
+  return handleGoogleSignIn(deps.credentials, await request.json());
 }
 
 async function handlePublicApple(request: Request, deps: AppDeps): Promise<Response> {
   if (!deps.credentials) {
     return json({ error: 'auth_credentials_not_configured' }, 503);
   }
-  return handleAppleSignIn(deps.credentials, await readJsonBody(request));
+  return handleAppleSignIn(deps.credentials, await request.json());
 }
 
 async function handlePublicRefresh(request: Request, deps: AppDeps): Promise<Response> {
   if (!deps.credentials) {
     return json({ error: 'auth_credentials_not_configured' }, 503);
   }
-  return handleRefresh(deps.credentials, await readJsonBody(request));
+  return handleRefresh(deps.credentials, await request.json());
 }
 
 async function handlePublicDeletion(request: Request, deps: AppDeps): Promise<Response> {
   if (!deps.publicAccount) {
     return json({ error: 'account_deletion_not_configured' }, 503);
   }
-  return handlePublicDeletionRequest(deps.publicAccount, await readJsonBody(request));
+  return handlePublicDeletionRequest(deps.publicAccount, await request.json());
 }
 
 async function handleAccountRoute(
@@ -236,7 +212,7 @@ async function handleAccountRoute(
     return handleExportAccount(account, user.id, user.email);
   }
   if (method === 'DELETE' && path === '/v1/account') {
-    return handleDeleteAccount(account, user.id, await readJsonBody(request));
+    return handleDeleteAccount(account, user.id, await request.json());
   }
   return json({ error: 'method_not_allowed' }, 405);
 }
@@ -269,7 +245,7 @@ async function handleScanRoute(request: Request, method: string, deps: AppDeps):
   if (method === 'DELETE') {
     return handleDeleteAllScans(pipeline, user.id);
   }
-  return handleCreateScan(pipeline, user.id, await readJsonBody(request));
+  return handleCreateScan(pipeline, user.id, await request.json());
 }
 
 async function handleRoutineSettings(
@@ -305,10 +281,10 @@ async function handleProfileRoute(
     return handleGetProfile(profiles, user.id);
   }
   if (method === 'POST') {
-    return handleCreateProfile(profiles, user.id, await readJsonBody(request));
+    return handleCreateProfile(profiles, user.id, await request.json());
   }
   if (method === 'PATCH') {
-    return handlePatchProfile(profiles, user.id, await readJsonBody(request));
+    return handlePatchProfile(profiles, user.id, await request.json());
   }
   if (method === 'DELETE') {
     return handleDeleteProfile(profiles, user.id);

@@ -26,15 +26,7 @@ export const EMPTY_QUOTA: HomeSnapshot['quota'] = {
   dailyScanCount: 0,
 };
 
-/**
- * @param knownPlan The plan last confirmed by the server for this same user, kept
- *   when the quota call fails so a network blip never locks a Pro user's
- *   features (the server still enforces the real plan on every request).
- */
-export async function loadLiveHomeSnapshot(
-  lastScan: ScanDto | null,
-  knownPlan: HomeSnapshot['quota']['plan'] | null = null,
-): Promise<{
+export async function loadLiveHomeSnapshot(lastScan: ScanDto | null): Promise<{
   quota: HomeSnapshot['quota'];
   scan: HomeScanSnapshot | null;
   routine: HomeRoutineProgress;
@@ -53,7 +45,7 @@ export async function loadLiveHomeSnapshot(
   const previous = newest[1] ?? null;
   const scan = current ? scanDtoToHomeScan(current, previous) : null;
 
-  const quota = resolveHomeQuota(quotaSettled, newest.length, knownPlan);
+  const quota = resolveHomeQuota(quotaSettled, newest.length);
   const routine = resolveHomeRoutine(routineSettled);
 
   return { quota, scan, routine };
@@ -62,7 +54,6 @@ export async function loadLiveHomeSnapshot(
 function resolveHomeQuota(
   settled: PromiseSettledResult<Awaited<ReturnType<typeof fetchQuota>>>,
   scanCountFallback: number,
-  knownPlan: HomeSnapshot['quota']['plan'] | null,
 ): HomeSnapshot['quota'] {
   if (settled.status === 'fulfilled') {
     return {
@@ -73,7 +64,6 @@ function resolveHomeQuota(
   }
   return {
     ...EMPTY_QUOTA,
-    plan: knownPlan ?? EMPTY_QUOTA.plan,
     lifetimeScanCount: scanCountFallback,
   };
 }

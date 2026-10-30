@@ -24,9 +24,7 @@ export const authCopy = {
   appleUnavailable: 'Sign in with Apple is not available on this device.',
   googleNeedsDevBuild:
     'Google Sign-In needs a development or preview build (not Expo Go). Install the EAS preview IPA, or use email for now.',
-  resetSent:
-    'If an account uses that email, a reset link is on its way. Open it on this phone, set a new password, then log in.',
-  resetFailed: "We couldn't send the reset email. Check your connection and try again.",
+  resetSent: 'If that email exists, we sent reset instructions.',
 
   // Headlines + subcopy
   signUpTitle: 'Save your skin profile',
@@ -55,8 +53,7 @@ export const authCopy = {
   emailPlaceholder: 'you@example.com',
   passwordLabel: 'Password',
   passwordPlaceholder: 'At least 8 characters',
-  // Must match isPasswordAcceptable (@dermis/domain): symbol is optional.
-  passwordHint: '8+ characters with upper- and lowercase letters and a number',
+  passwordHint: '8+ characters, a number and a symbol',
   confirmPasswordLabel: 'Confirm password',
 
   // CTAs + prompts

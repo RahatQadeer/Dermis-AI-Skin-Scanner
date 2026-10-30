@@ -3,9 +3,6 @@ import { useMemo, useState } from 'react';
 
 import { getCopy } from '@/src/copy';
 import { useSession } from '@/src/features/session/SessionContext';
-import { isApiError } from '@/src/lib/api/errors';
-
-import { requestPasswordReset } from '../api/authApi';
 
 import type { AuthMascotTone } from '../components/AuthMascot';
 import {
@@ -154,8 +151,6 @@ export function useForgotPasswordForm() {
   const [email, setEmail] = useState('');
   const [errors, setErrors] = useState<FieldErrors>({});
   const [sent, setSent] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState<string | undefined>();
 
   const mascotTone = useMemo((): AuthMascotTone => {
     if (sent) {
@@ -170,47 +165,21 @@ export function useForgotPasswordForm() {
     return 'idle';
   }, [email, errors, sent]);
 
-  const submit = async () => {
+  const submit = () => {
     const nextErrors = validateForgotEmail(email);
     setErrors(nextErrors);
-    if (hasFieldErrors(nextErrors) || submitting) {
-      return;
+    if (!hasFieldErrors(nextErrors)) {
+      setSent(true);
     }
-    await sendPasswordReset(email, { setSubmitting, setFormError, setSent });
   };
 
   return {
     email,
     setEmail,
     errors: resolveAuthFieldErrors(errors),
-    formError,
-    submitting,
     sent,
     mascotTone,
-    submit: () => void submit(),
+    submit,
     goBack: () => router.back(),
   };
-}
-
-async function sendPasswordReset(
-  email: string,
-  set: {
-    setSubmitting: (v: boolean) => void;
-    setFormError: (v: string | undefined) => void;
-    setSent: (v: boolean) => void;
-  },
-): Promise<void> {
-  set.setFormError(undefined);
-  set.setSubmitting(true);
-  try {
-    await requestPasswordReset(email);
-    set.setSent(true);
-  } catch (err: unknown) {
-    const auth = getCopy().auth;
-    set.setFormError(
-      isApiError(err) && err.code === 'rate_limited' ? auth.rateLimited : auth.resetFailed,
-    );
-  } finally {
-    set.setSubmitting(false);
-  }
 }

@@ -367,24 +367,3 @@ test('GET /v1/profile requires auth', async () => {
   const res = await app(new Request('http://local/v1/profile'));
   assert.equal(res.status, 401);
 });
-
-test('malformed JSON body is a 400, not a 500', async () => {
-  const app = buildApp();
-  const res = await app(
-    new Request('http://local/v1/profile', {
-      method: 'POST',
-      headers: authHeaders(),
-      body: '{"skinType":',
-    }),
-  );
-  assert.equal(res.status, 400);
-  assert.deepEqual(await res.json(), { error: 'invalid_json' });
-});
-
-test('GET /reset-password serves a no-store page', async () => {
-  const app = buildApp();
-  const res = await app(new Request('http://local/reset-password'));
-  assert.equal(res.status, 200);
-  assert.equal(res.headers.get('cache-control'), 'no-store');
-  assert.match(await res.text(), /Choose a new password/);
-});

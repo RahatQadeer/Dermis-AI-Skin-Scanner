@@ -64,7 +64,16 @@ function SignUpFields({ form }: { form: ReturnType<typeof useSignUpForm> }) {
         textContentType="emailAddress"
         error={form.errors.email}
       />
-      <SignUpPasswordField form={form} />
+      <AuthPasswordField
+        label={auth.passwordLabel}
+        placeholder={auth.passwordPlaceholder}
+        value={form.password}
+        onChangeText={form.setPassword}
+        error={form.errors.password}
+        showMeter
+        hint={auth.passwordHint}
+        textContentType="newPassword"
+      />
       {form.formError ? (
         <AppText variant="caption" color={colors.red} accessibilityLiveRegion="polite">
           {form.formError}
@@ -73,23 +82,5 @@ function SignUpFields({ form }: { form: ReturnType<typeof useSignUpForm> }) {
       <AuthPrimaryButton label={auth.signUpCta} onPress={form.submit} loading={form.submitting} />
       <AuthLegalFooter />
     </>
-  );
-}
-
-function SignUpPasswordField({ form }: { form: ReturnType<typeof useSignUpForm> }) {
-  const auth = getCopy().auth;
-  return (
-    <AuthPasswordField
-      label={auth.passwordLabel}
-      placeholder={auth.passwordPlaceholder}
-      value={form.password}
-      onChangeText={form.setPassword}
-      error={form.errors.password}
-      showMeter
-      hint={auth.passwordHint}
-      textContentType="newPassword"
-      returnKeyType="go"
-      onSubmitEditing={form.submit}
-    />
   );
 }

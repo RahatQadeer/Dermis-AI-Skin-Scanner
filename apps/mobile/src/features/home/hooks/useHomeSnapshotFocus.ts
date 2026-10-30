@@ -18,9 +18,6 @@ type HomeFocusCtx = {
   quotaRefreshVersion: number;
   lastScan: ScanDto | null;
   readyRef: { current: boolean };
-  /** Last server-confirmed plan, tagged with its user (never reused across accounts). */
-  knownPlanRef: { current: { userId: string | null; plan: HomeSnapshot['quota']['plan'] } | null };
-  userId: string | null;
   setQuota: (q: HomeSnapshot['quota']) => void;
   setScan: (s: HomeScanSnapshot | null) => void;
   setRoutine: (r: HomeRoutineProgress) => void;
@@ -31,10 +28,9 @@ function applyLastScanFallback(ctx: HomeFocusCtx): void {
   if (!ctx.lastScan) {
     return;
   }
-  const known = ctx.knownPlanRef.current;
   ctx.setScan(scanDtoToHomeScan(ctx.lastScan, null));
   ctx.setQuota({
-    plan: known && known.userId === ctx.userId ? known.plan : resolveEffectivePlan('free'),
+    plan: resolveEffectivePlan('free'),
     lifetimeScanCount: 1,
     dailyScanCount: 0,
   });
@@ -57,15 +53,10 @@ export function useHomeSnapshotFocus(ctx: HomeFocusCtx): void {
 
       void (async () => {
         try {
-          const known = ctx.knownPlanRef.current;
-          const next = await refreshHomeSnapshot(
-            ctx.lastScan,
-            known && known.userId === ctx.userId ? known.plan : null,
-          );
+          const next = await refreshHomeSnapshot(ctx.lastScan);
           if (cancelled) {
             return;
           }
-          ctx.knownPlanRef.current = { userId: ctx.userId, plan: next.quota.plan };
           ctx.setQuota(next.quota);
           ctx.setScan(next.scan);
           ctx.setRoutine(next.routine);
