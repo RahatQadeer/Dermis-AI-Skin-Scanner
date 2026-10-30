@@ -8,7 +8,6 @@ import { buildMemoryBackendDeps } from './memoryBackend';
 import { createMemoryPhotoStorage } from './adapters/memoryPhotoStorage';
 import { resolveSkinAnalyzer } from './adapters/resolveSkinAnalyzer';
 import { createMemoryQuotaRepository } from './repositories/memoryQuotaRepository';
-import { createMemoryRoutineRepository } from './repositories/memoryRoutineRepository';
 import { createMemoryScanRepository } from './repositories/memoryScanRepository';
 import type { ScanRepository } from './repositories/scanTypes';
 import { createRoutineService } from './services/routineService';
@@ -23,6 +22,7 @@ import { createSupabaseConsentRepository } from './repositories/supabaseConsentR
 import { createSupabaseEntitlementRepository } from './repositories/supabaseEntitlementRepository';
 import { createSupabaseFaceReferenceRepository } from './repositories/supabaseFaceReferenceRepository';
 import { createSupabaseProfileRepository } from './repositories/supabaseProfileRepository';
+import { createSupabaseRoutineRepository } from './repositories/supabaseRoutineRepository';
 import { createSupabaseQuotaRepository } from './repositories/supabaseQuotaRepository';
 import { createSupabaseScanRepository } from './repositories/supabaseScanRepository';
 import { createSupabaseWebhookEventRepository } from './repositories/supabaseWebhookEventRepository';
@@ -36,7 +36,6 @@ import type { BackendEnv } from './backendEnv';
 
 type LiveStores = {
   scans: ScanRepository;
-  routine: ReturnType<typeof createMemoryRoutineRepository>;
   quota: ReturnType<typeof createQuotaService>;
 };
 
@@ -72,7 +71,6 @@ function createLiveSupabaseBackend(env: BackendEnv): (request: Request) => Promi
   });
   const stores: LiveStores = {
     scans: resolveScanRepository(env),
-    routine: createMemoryRoutineRepository(),
     quota: resolveQuotaService(env),
   };
   const deps = buildLiveDeps(env, auth, stores);
@@ -127,7 +125,11 @@ function buildLiveDeps(env: BackendEnv, auth: AuthPort, stores: LiveStores): App
         createSupabaseFaceReferenceRepository({ supabaseUrl: url, anonKey: anon, accessToken }),
       ),
     routineSettingsFor: ({ accessToken }) => ({
-      routine: createRoutineService(stores.routine),
+      // Persisted in Postgres under the user's JWT (RLS); the in-memory store
+      // lost every routine on restart/deploy.
+      routine: createRoutineService(
+        createSupabaseRoutineRepository({ supabaseUrl: url, anonKey: anon, accessToken }),
+      ),
       settings: createSettingsService(
         createSupabaseProfileRepository({ supabaseUrl: url, anonKey: anon, accessToken }),
       ),

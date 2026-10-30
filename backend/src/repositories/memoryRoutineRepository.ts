@@ -1,8 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
+import { normalizeRoutineLabel } from './routineLabel';
 import type { RoutinePeriod, RoutineRepository, RoutineStepRecord } from './routineTypes';
-
-const MAX_LABEL = 80;
 
 export function createMemoryRoutineRepository(): RoutineRepository {
   const steps = new Map<string, RoutineStepRecord>();
@@ -65,7 +64,7 @@ async function addStep(
     userId: input.userId,
     period: input.period,
     sortOrder: nextSort(steps, input.userId, input.period),
-    label: normalizeLabel(input.label),
+    label: normalizeRoutineLabel(input.label),
     createdAt: now,
     updatedAt: now,
   };
@@ -83,7 +82,7 @@ async function updateLabel(
   if (!row || row.userId !== userId) {
     return null;
   }
-  row.label = normalizeLabel(label);
+  row.label = normalizeRoutineLabel(label);
   row.updatedAt = new Date().toISOString();
   steps.set(stepId, row);
   return structuredClone(row);
@@ -127,7 +126,7 @@ async function replacePeriod(
       userId,
       period,
       sortOrder: index,
-      label: normalizeLabel(raw),
+      label: normalizeRoutineLabel(raw),
       createdAt: now,
       updatedAt: now,
     };
@@ -150,14 +149,6 @@ async function listCompletions(
     }
   }
   return ids;
-}
-
-function normalizeLabel(raw: string): string {
-  const trimmed = raw.trim();
-  if (!trimmed || trimmed.length > MAX_LABEL) {
-    throw new Error('invalid_label');
-  }
-  return trimmed;
 }
 
 function nextSort(
