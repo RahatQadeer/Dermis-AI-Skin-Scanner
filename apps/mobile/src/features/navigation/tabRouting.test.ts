@@ -10,6 +10,9 @@ test('tabIdFromPathname maps tab routes', () => {
   assert.equal(tabIdFromPathname('/progress/scan-1'), 'progress');
   assert.equal(tabIdFromPathname('/profile'), 'profile');
   assert.equal(tabIdFromPathname('/ai-consent'), 'scan');
+  assert.equal(tabIdFromPathname('/face-enroll'), 'scan');
+  assert.equal(tabIdFromPathname('/results'), 'home');
+  assert.equal(tabIdFromPathname('/assistant'), 'home');
 });
 
 test('routeForTab returns expo hrefs', () => {

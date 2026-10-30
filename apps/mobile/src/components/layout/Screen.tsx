@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 're
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { colors, spacing } from '@/src/theme';
+import { useResponsive } from '@/src/theme/useResponsive';
 
 export type ScreenProps = {
   children: ReactNode;
@@ -17,6 +18,8 @@ export type ScreenProps = {
 };
 
 const DEFAULT_EDGES: Edge[] = ['top', 'left', 'right', 'bottom'];
+/** Keep tablet/wide layouts readable instead of full-bleed stretch. */
+const CONTENT_MAX_WIDTH = 560;
 
 export function Screen({
   children,
@@ -27,12 +30,19 @@ export function Screen({
   contentStyle,
   testID,
 }: ScreenProps) {
-  const padStyle = padded ? styles.padded : undefined;
+  const { width, narrow, short } = useResponsive();
+  const padStyle = padded
+    ? [styles.padded, narrow ? styles.paddedNarrow : null, short ? styles.paddedShort : null]
+    : undefined;
+  const constrain =
+    width > CONTENT_MAX_WIDTH
+      ? ({ maxWidth: CONTENT_MAX_WIDTH, width: '100%', alignSelf: 'center' } as const)
+      : undefined;
 
   // RN 0.88 ColorValue typing diverges from safe-area-context; cast keeps callers typed.
   const rootStyle = [styles.root, style] as StyleProp<ViewStyle>;
-  const bodyStyle = [styles.body, padStyle, contentStyle] as StyleProp<ViewStyle>;
-  const scrollStyle = [styles.scrollContent, padStyle, contentStyle] as StyleProp<ViewStyle>;
+  const bodyStyle = [styles.body, padStyle, constrain, contentStyle] as StyleProp<ViewStyle>;
+  const scrollStyle = [styles.scrollContent, padStyle, constrain, contentStyle] as StyleProp<ViewStyle>;
 
   return (
     <SafeAreaView edges={edges} style={rootStyle} testID={testID}>
@@ -40,8 +50,6 @@ export function Screen({
         <ScrollView
           contentContainerStyle={scrollStyle}
           keyboardShouldPersistTaps="handled"
-          // iOS: inset content for the keyboard so focused fields and the submit
-          // button stay reachable on small screens (Android resizes the window).
           automaticallyAdjustKeyboardInsets
           keyboardDismissMode="interactive"
           showsVerticalScrollIndicator={false}
@@ -75,5 +83,11 @@ const styles = StyleSheet.create({
   padded: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
+  },
+  paddedNarrow: {
+    paddingHorizontal: spacing.md,
+  },
+  paddedShort: {
+    paddingVertical: spacing.sm,
   },
 });

@@ -10,6 +10,6 @@ export function isCentreScanTab(id: TabId): boolean {
 
 /**
  * Scroll content bottom pad so the last items clear the floating pill + scan FAB.
- * (Bar sits near the screen edge; this pad is only for scroll end, not bar position.)
+ * Bar ~64 + FAB overhang ~33 + host padding ~16 + breathing room.
  */
-export const TAB_BAR_SCROLL_PAD = 108;
+export const TAB_BAR_SCROLL_PAD = 120;

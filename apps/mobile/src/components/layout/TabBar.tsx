@@ -10,7 +10,7 @@ import { isCentreScanTab, TAB_BAR_ORDER, type TabId } from './tabBarTypes';
 import { HomeTabIcon, ProfileTabIcon, ProgressTabIcon, RoutineTabIcon } from './TabBarIcons';
 
 export type TabBarProps = {
-  active: TabId;
+  active: TabId | null;
   onSelect: (id: TabId) => void;
 };
 
@@ -20,7 +20,7 @@ function tabLabel(id: TabId): string {
 }
 
 function SideTabIcon({ id, active }: { id: TabId; active: boolean }) {
-  const color = active ? colors.ink : colors.mute;
+  const color = active ? colors.pink : colors.mute;
   if (id === 'home') {
     return <HomeTabIcon color={color} active={active} />;
   }
@@ -42,14 +42,18 @@ function SideTab({
   active: boolean;
   onSelect: (id: TabId) => void;
 }) {
-  const color = active ? colors.ink : colors.mute;
+  const color = active ? colors.pink : colors.mute;
   return (
     <Pressable
       accessibilityRole="tab"
       accessibilityState={{ selected: active }}
       accessibilityLabel={tabLabel(id)}
       onPress={() => onSelect(id)}
-      style={({ pressed }) => [styles.sideTab, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.sideTab,
+        active ? styles.sideTabActive : null,
+        pressed && styles.pressed,
+      ]}
     >
       <SideTabIcon id={id} active={active} />
       <AppText
@@ -60,22 +64,38 @@ function SideTab({
       >
         {tabLabel(id)}
       </AppText>
+      {active ? <View style={styles.activeDot} /> : <View style={styles.activeDotSpacer} />}
     </Pressable>
   );
 }
 
-function CentreScanButton({ onSelect }: { onSelect: (id: TabId) => void }) {
+function CentreScanButton({
+  active,
+  onSelect,
+}: {
+  active: boolean;
+  onSelect: (id: TabId) => void;
+}) {
   const nav = getCopy().nav;
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={nav.scanA11y}
+      accessibilityState={{ selected: active }}
       onPress={() => onSelect('scan')}
       style={({ pressed }) => [styles.scanHit, pressed && styles.pressed]}
     >
-      <View style={[styles.scanFab, styles.scanGlow]}>
+      <View style={[styles.scanFab, styles.scanGlow, active ? styles.scanFabActive : null]}>
         <SheepHeadMark size={34} />
       </View>
+      <AppText
+        variant="label"
+        color={active ? colors.pink : colors.mute}
+        align="center"
+        style={active ? styles.labelActive : styles.labelIdle}
+      >
+        {nav.scan}
+      </AppText>
     </Pressable>
   );
 }
@@ -87,7 +107,6 @@ export function TabBar({ active, onSelect }: TabBarProps) {
     <View
       style={[
         styles.host,
-        // Tiny mint gap under the pill (not a full safe-area band).
         { paddingBottom: insets.bottom > 0 ? spacing.md : spacing.sm },
       ]}
       pointerEvents="box-none"
@@ -95,7 +114,7 @@ export function TabBar({ active, onSelect }: TabBarProps) {
       <View style={[styles.bar, shadows.soft]} accessibilityRole="tablist">
         {TAB_BAR_ORDER.map((id) =>
           isCentreScanTab(id) ? (
-            <CentreScanButton key={id} onSelect={onSelect} />
+            <CentreScanButton key={id} active={active === 'scan'} onSelect={onSelect} />
           ) : (
             <SideTab key={id} id={id} active={active === id} onSelect={onSelect} />
           ),
@@ -135,8 +154,26 @@ const styles = StyleSheet.create({
     minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
+    gap: 2,
     paddingVertical: spacing.xs,
+  },
+  sideTabActive: {
+    borderRadius: radii.md,
+    backgroundColor: colors.noteSoft,
+    borderBottomWidth: 2,
+    borderBottomColor: colors.pink,
+  },
+  activeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: radii.pill,
+    backgroundColor: colors.pink,
+    marginTop: 1,
+  },
+  activeDotSpacer: {
+    width: 5,
+    height: 5,
+    marginTop: 1,
   },
   labelIdle: {
     fontFamily: fontFamilies.bodySemiBold,
@@ -147,11 +184,12 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   scanHit: {
-    width: FAB + 12,
+    width: FAB + 16,
     alignItems: 'center',
     justifyContent: 'flex-end',
     marginTop: -(FAB / 2 + 4),
     marginBottom: 2,
+    gap: 2,
   },
   scanFab: {
     width: FAB,
@@ -162,6 +200,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 3,
     borderColor: colors.surface,
+  },
+  scanFabActive: {
+    borderColor: colors.pink,
+    borderWidth: 3,
+    backgroundColor: colors.pink,
   },
   scanGlow: {
     shadowColor: colors.pink,
