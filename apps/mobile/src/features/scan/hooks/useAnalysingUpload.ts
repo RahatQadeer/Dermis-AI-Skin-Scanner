@@ -26,6 +26,11 @@ export function useAnalysingUpload(apiLive: boolean, onScanAccepted: () => void)
     [router, setRetakeMessage],
   );
 
+  // Free scan used up: the paywall explains the options (upgrade or restore).
+  const onUpgrade = useCallback(() => {
+    router.replace('/paywall');
+  }, [router]);
+
   const applyOutcome = useCallback(
     (outcome: UploadOutcome) => {
       applyUploadOutcome(outcome, {
@@ -36,9 +41,10 @@ export function useAnalysingUpload(apiLive: boolean, onScanAccepted: () => void)
         setConsentOpen,
         setErrorMessage,
         onRetake,
+        onUpgrade,
       });
     },
-    [onRetake, onScanAccepted, setLastScan, setPending],
+    [onRetake, onScanAccepted, onUpgrade, setLastScan, setPending],
   );
 
   useAutoScanUpload({ apiLive, pending, messages: copy, uploadStarted, onOutcome: applyOutcome });

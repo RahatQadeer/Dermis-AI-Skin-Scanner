@@ -2,40 +2,15 @@ import { getCopy } from '@/src/copy';
 import { isApiError } from '@/src/lib/api/errors';
 
 import { isFaceScanError, messageForFaceScanError } from './faceScanErrors';
+import { isRetakeScanCode, scanMessageKey } from './scanErrorCodes';
 
-/** Errors that should send the user back to the camera (not stay on Analysing). */
-const RETAKE_CODES = new Set([
-  'analyzer_failed',
-  'analyzer_unavailable',
-  'analyzer_timeout',
-  'network_timeout',
-  'network_unreachable',
-  'quota_unavailable',
-  'invalid_image',
-  'invalid_body',
-  'free_limit',
-  'daily_limit',
-]);
+export { isSameKeyRetryable, isUpgradeScanError } from './scanErrorCodes';
 
-function messageForApiScanCode(
-  code: string,
-  copy: ReturnType<typeof getCopy>['screens']['scanConsent'],
-  fallback: string,
-): string {
-  if (code === 'free_limit') return copy.freeLimit;
-  if (code === 'daily_limit') return copy.dailyLimit;
-  if (
-    code === 'analyzer_failed' ||
-    code === 'analyzer_unavailable' ||
-    code === 'quota_unavailable' ||
-    code === 'network_unreachable'
-  ) {
-    return copy.analyzerFailed;
-  }
-  if (code === 'analyzer_timeout' || code === 'network_timeout') {
-    return copy.analyzerTimeout;
-  }
-  return fallback;
+type ScanCopy = ReturnType<typeof getCopy>['screens']['scanConsent'];
+
+function messageForApiScanCode(code: string, copy: ScanCopy, fallback: string): string {
+  const key = scanMessageKey(code);
+  return key ? copy[key] : fallback;
 }
 
 export function messageForScanUploadError(error: unknown, fallback: string): string {
@@ -56,5 +31,5 @@ export function isRetakeScanError(error: unknown): boolean {
   if (!isApiError(error)) {
     return true;
   }
-  return RETAKE_CODES.has(error.code);
+  return isRetakeScanCode(error.code);
 }

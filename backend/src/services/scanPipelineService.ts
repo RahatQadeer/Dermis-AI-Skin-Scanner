@@ -48,45 +48,72 @@ export type ScanPipelineDeps = {
  * idempotency → consent → quota check → validate → store photo → analyze →
  * consume+insert → delete photo.
  */
+/**
+ * Same user + idempotency key while a request is still running (client retry
+ * after a timeout, double submit): share the first request's result instead of
+ * analysing and consuming quota twice. Process-wide because the live backend
+ * builds a pipeline per request; the DB unique key and replay lookup still
+ * cover repeats across instances.
+ */
+const inFlightScans = new Map<string, ReturnType<ScanPipelineService['createScan']>>();
+
+function coalesceInFlight(
+  key: string,
+  run: () => ReturnType<ScanPipelineService['createScan']>,
+): ReturnType<ScanPipelineService['createScan']> {
+  const running = inFlightScans.get(key);
+  if (running) {
+    return running.then((result) => ({ ...result, replayed: true }));
+  }
+  const job = run().finally(() => {
+    inFlightScans.delete(key);
+  });
+  inFlightScans.set(key, job);
+  return job;
+}
+
 export function createScanPipelineService(deps: ScanPipelineDeps): ScanPipelineService {
-  return {
-    async createScan(input) {
-      if (deps.disabled) {
-        throw new HttpError(503, 'scan_pipeline_disabled');
-      }
+  const createScanOnce: ScanPipelineService['createScan'] = async (input) => {
+    if (deps.disabled) {
+      throw new HttpError(503, 'scan_pipeline_disabled');
+    }
 
-      const existing = await deps.scans.findByIdempotencyKey(input.userId, input.idempotencyKey);
-      if (existing) {
-        return { scan: existing, replayed: true };
-      }
+    const existing = await deps.scans.findByIdempotencyKey(input.userId, input.idempotencyKey);
+    if (existing) {
+      return { scan: existing, replayed: true };
+    }
 
-      await deps.consent.requireFaceAnalysisConsent(input.userId);
+    await deps.consent.requireFaceAnalysisConsent(input.userId);
 
-      // Fail fast before spending Gemini time/tokens.
-      const quota = await deps.quota.getStatus(input.userId);
-      if (quota.remaining <= 0) {
-        throw new HttpError(402, quota.plan === 'pro' ? 'daily_limit' : 'free_limit');
-      }
+    // Fail fast before spending Gemini time/tokens.
+    const quota = await deps.quota.getStatus(input.userId);
+    if (quota.remaining <= 0) {
+      throw new HttpError(402, quota.plan === 'pro' ? 'daily_limit' : 'free_limit');
+    }
 
-      const bytes = decodeAndValidateImage(input.imageBase64, input.contentType);
-      const photoPath = await deps.photos.store({
-        userId: input.userId,
+    const bytes = decodeAndValidateImage(input.imageBase64, input.contentType);
+    const photoPath = await deps.photos.store({
+      userId: input.userId,
+      bytes,
+      contentType: input.contentType,
+    });
+
+    try {
+      return await runAnalyzeAndPersist(deps, {
+        input,
         bytes,
         contentType: input.contentType,
+        photoPath,
       });
+    } catch (error) {
+      await deps.photos.delete(photoPath);
+      throw mapPipelineError(error);
+    }
+  };
 
-      try {
-        return await runAnalyzeAndPersist(deps, {
-          input,
-          bytes,
-          contentType: input.contentType,
-          photoPath,
-        });
-      } catch (error) {
-        await deps.photos.delete(photoPath);
-        throw mapPipelineError(error);
-      }
-    },
+  return {
+    createScan: (input) =>
+      coalesceInFlight(`${input.userId}:${input.idempotencyKey}`, () => createScanOnce(input)),
     async listScans(userId) {
       const rows = await deps.scans.listByUserId(userId);
       return rows.slice().sort((a, b) => b.takenAt.localeCompare(a.takenAt));

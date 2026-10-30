@@ -14,6 +14,8 @@ export function useCameraPermissionFlow() {
 
   return {
     granted: permission?.granted ?? false,
+    /** The user answered (denied) — not just "not asked yet". */
+    denied: permission != null && !permission.granted && permission.status !== 'undetermined',
     canAskAgain: permission?.canAskAgain ?? true,
     ensureCamera,
   };

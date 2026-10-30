@@ -6,6 +6,7 @@ import { getCopy } from '@/src/copy';
 import { colors, spacing } from '@/src/theme';
 
 import { useScanCaptureFlow } from '../hooks/useScanCaptureFlow';
+import { CameraPermissionCard } from './CameraPermissionCard';
 import { CameraPreviewLive, type CameraPreviewLiveHandle } from './CameraPreviewLive';
 import { CameraPreviewMock } from './CameraPreviewMock';
 import { FlashOverlay } from './FlashOverlay';
@@ -42,6 +43,12 @@ export function CameraStage({
             {String(countdownSeconds)}
           </AppText>
         </View>
+      ) : null}
+      {capture.permissionDenied ? (
+        <CameraPermissionCard
+          canAskAgain={capture.canAskCameraAgain}
+          onRequest={() => void capture.requestCamera()}
+        />
       ) : null}
       <FlashOverlay visible={flashing} onFinished={afterFlash} />
     </View>

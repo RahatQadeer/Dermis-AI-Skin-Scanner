@@ -24,7 +24,12 @@ export const geminiScanAnalysisSchema = z.object({
    * Short, user-facing tip when faceClear=false (e.g. which area is cut off).
    * Wellness coaching only — not medical advice.
    */
-  faceGuidance: z.string().trim().max(160).optional(),
+  // A tip only — truncate an over-long one instead of failing the whole scan.
+  faceGuidance: z
+    .string()
+    .trim()
+    .transform((tip) => tip.slice(0, 160))
+    .optional(),
   concerns: concernScoresSchema,
   zones: zoneScoresSchema,
   /** Optional wellness notes per concern — not medical advice. */

@@ -74,7 +74,14 @@ export async function verifyFaceIdentity(uri: string, userId: string): Promise<v
   if (!isFaceIdentityEnabled()) {
     return;
   }
-  const currentEmbedding = await computeCurrentEmbedding(uri);
+  let currentEmbedding: number[] | null;
+  try {
+    currentEmbedding = await computeCurrentEmbedding(uri);
+  } catch {
+    // Model load / decode failure: block (fail closed) with a friendly message
+    // rather than surfacing a raw library error on the camera toast.
+    throw new FaceIdentityError(FACE_IDENTITY_RETRY_MESSAGE);
+  }
 
   let referenceEmbedding: number[] | null;
   try {

@@ -18,10 +18,12 @@ export const scanConsentCopy = {
   uploadError: 'Could not complete your scan. Try again.',
   freeLimit:
     'You’ve used your free scan. Upgrade to Pro for more scans, or restore purchases if you already subscribed.',
-  dailyLimit:
-    'You’ve reached today’s scan limit. Try again tomorrow, or keep testing with local unlock enabled.',
-  analyzerFailed: 'Analysis failed. Check your connection and try another clear selfie.',
-  analyzerTimeout: 'Analysis took too long. Try again with a clearer, closer face photo.',
+  dailyLimit: 'You’ve used today’s 5 scans. Your scans reset at midnight — see you tomorrow.',
+  analyzerFailed: 'We couldn’t analyse this photo. Try again facing soft, even light.',
+  analyzerTimeout: 'Analysis is taking longer than usual. Please try again in a moment.',
+  networkUnreachable: 'You’re offline. Check your connection, then take your scan again.',
+  serviceUnavailable: 'Scanning is temporarily unavailable. Please try again in a few minutes.',
+  imageInvalid: 'That photo couldn’t be read. Please take a new scan.',
   consentError: 'Could not save your choice. If this keeps happening, sign out and sign in again.',
   missingCapture: 'No photo to analyse — take a new scan.',
   analyzingFace: 'Checking for a clear face…',

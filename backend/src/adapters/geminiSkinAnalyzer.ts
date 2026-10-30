@@ -30,9 +30,11 @@ export function createGeminiSkinAnalyzer(
     apiKey: config.apiKey,
     model,
     apiBaseUrl: config.apiBaseUrl,
-    // Camera scans need headroom; face+scores in one call.
-    timeoutMs: config.timeoutMs ?? 60_000,
-    maxRetries: config.maxRetries ?? 2,
+    // Worst case (timeout × attempts) must finish inside the app's 90s upload
+    // timeout; otherwise the app gives up while the server still saves a scan
+    // and spends quota for a result the user never sees.
+    timeoutMs: config.timeoutMs ?? 40_000,
+    maxRetries: config.maxRetries ?? 1,
     temperature: config.temperature ?? 0.2,
     fetchImpl: config.fetchImpl,
   });

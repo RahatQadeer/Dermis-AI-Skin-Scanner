@@ -16,6 +16,7 @@ export function applyUploadOutcome(
     setConsentOpen: Dispatch<SetStateAction<boolean>>;
     setErrorMessage: Dispatch<SetStateAction<string | null>>;
     onRetake: (message: string) => void;
+    onUpgrade: () => void;
   },
 ): void {
   if (outcome.kind === 'ok') {
@@ -27,6 +28,12 @@ export function applyUploadOutcome(
   if (outcome.kind === 'needs_consent') {
     deps.uploadStarted.current = false;
     deps.setConsentOpen(true);
+    return;
+  }
+  if (outcome.kind === 'upgrade') {
+    deps.uploadStarted.current = false;
+    deps.setPending(null);
+    deps.onUpgrade();
     return;
   }
   if (outcome.kind === 'retake') {

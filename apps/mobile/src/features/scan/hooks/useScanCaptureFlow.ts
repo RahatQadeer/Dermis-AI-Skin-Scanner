@@ -48,6 +48,9 @@ export function useScanCaptureFlow(cameraRef: RefObject<CameraPreviewLiveHandle 
   return {
     liveCamera,
     permissionGranted: permission.granted || !liveCamera,
+    permissionDenied: liveCamera && permission.denied,
+    canAskCameraAgain: permission.canAskAgain,
+    requestCamera: permission.ensureCamera,
     capturing,
     errorToast,
     clearError: () => setErrorToast(null),

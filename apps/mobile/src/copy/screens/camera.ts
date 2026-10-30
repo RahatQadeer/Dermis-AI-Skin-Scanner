@@ -15,8 +15,12 @@ export const cameraCopy = {
   capturing: 'Hold still…',
   cancelCountdown: 'Cancel',
   webPreviewNote: 'Web preview uses a placeholder photo. Use iOS or Android for the live camera.',
+  permissionTitle: 'Camera access needed',
   permissionDenied: 'Camera access is needed to take your scan.',
+  permissionDeniedSettings:
+    'Camera access is turned off for Dermis. Turn it on in Settings, then come back to scan.',
   grantPermission: 'Allow camera',
+  openSettings: 'Open Settings',
   captureFailed: 'Could not capture a photo. Try again.',
   qualityTooSmall: 'Photo was too small — move closer and try again.',
   qualityTooLarge: 'Photo was too large — try again in better light.',

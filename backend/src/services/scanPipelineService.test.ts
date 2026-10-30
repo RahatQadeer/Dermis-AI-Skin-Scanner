@@ -94,6 +94,26 @@ test('scan pipeline is idempotent for same key', async () => {
   assert.equal((await quota.getStatus(USER)).lifetimeScanCount, 1);
 });
 
+test('concurrent requests with the same key share one scan and one quota charge', async () => {
+  const { pipeline, quota, consents } = buildPipeline();
+  await grantFaceConsent(consents);
+  const input = {
+    userId: USER,
+    idempotencyKey: 'idem-key-concurrent',
+    imageBase64: IMAGE_B64,
+    contentType: 'image/jpeg' as const,
+  };
+  // e.g. the app retrying after a timeout while the first request still runs.
+  const [first, second] = await Promise.all([
+    pipeline.createScan(input),
+    pipeline.createScan(input),
+  ]);
+  assert.equal(first.scan.id, second.scan.id);
+  assert.equal(first.replayed, false);
+  assert.equal(second.replayed, true);
+  assert.equal((await quota.getStatus(USER)).lifetimeScanCount, 1);
+});
+
 test('analyzer failure does not consume quota and cleans photo', async () => {
   const photos = createMemoryPhotoStorage();
   const { pipeline, quota, consents } = buildPipeline({ failAnalyzer: true, photos });
