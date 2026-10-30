@@ -1,7 +1,9 @@
 import { Redirect, Tabs } from 'expo-router';
 
+import { FullScreenLoader } from '@/src/components/layout/FullScreenLoader';
 import { getCopy } from '@/src/copy';
 import { MainTabBar } from '@/src/features/navigation/MainTabBar';
+import { resolveAuthedRoute } from '@/src/features/session/authRoute';
 import { useSession } from '@/src/features/session/SessionContext';
 import { colors } from '@/src/theme';
 
@@ -12,11 +14,16 @@ export default function TabLayout() {
   if (!session.hydrated) {
     return null;
   }
-  if (!session.onboardingComplete) {
-    return <Redirect href="/welcome" />;
-  }
   if (!session.accessToken) {
-    return <Redirect href="/sign-up" />;
+    return <Redirect href={session.onboardingComplete ? '/sign-up' : '/welcome'} />;
+  }
+  // Authed: an incomplete backend profile must still finish the quiz first.
+  const route = resolveAuthedRoute(session.skinProfileStatus);
+  if (!route) {
+    return <FullScreenLoader />;
+  }
+  if (route === '/quiz') {
+    return <Redirect href="/quiz" />;
   }
 
   return (

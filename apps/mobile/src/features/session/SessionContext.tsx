@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 import { isApiEnabled } from '@/src/lib/api/config';
 
+import type { SkinProfileStatus } from './useSessionIdentityState';
 import { useSessionProviderState } from './useSessionProviderState';
 
 export type SessionState = {
@@ -15,7 +16,15 @@ export type SessionState = {
   /** False until AsyncStorage hydrate finishes — keep native splash up. */
   hydrated: boolean;
   onboardingComplete: boolean;
+  /**
+   * Backend-authoritative skin-assessment completeness for the signed-in user.
+   * 'unknown' while the post-login /v1/profile sync is in flight — routing
+   * should wait rather than assume onboarding is done.
+   */
+  skinProfileStatus: SkinProfileStatus;
   markOnboardingComplete: () => void;
+  /** Mark the authenticated user's skin assessment as persisted (post-auth quiz). */
+  markSkinProfileComplete: () => void;
   /**
    * When true, auth layout sends the user to paywall once after JWT apply
    * (avoids racing router.replace with a home Redirect).
@@ -50,7 +59,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       apiEnabled: isApiEnabled(),
       hydrated: state.hydrated,
       onboardingComplete: state.onboardingComplete,
+      skinProfileStatus: state.skinProfileStatus,
       markOnboardingComplete: state.markOnboardingComplete,
+      markSkinProfileComplete: state.markSkinProfileComplete,
       postAuthPaywall: state.postAuthPaywall,
       consumePostAuthPaywall: state.consumePostAuthPaywall,
       applyServerSession: state.applyServerSession,
@@ -64,7 +75,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       state.firstName,
       state.hydrated,
       state.markOnboardingComplete,
+      state.markSkinProfileComplete,
       state.onboardingComplete,
+      state.skinProfileStatus,
       state.postAuthPaywall,
       state.refreshToken,
       state.signOut,

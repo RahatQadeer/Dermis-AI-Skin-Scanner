@@ -1,5 +1,7 @@
 import { Redirect, Stack } from 'expo-router';
 
+import { FullScreenLoader } from '@/src/components/layout/FullScreenLoader';
+import { resolveAuthedRoute } from '@/src/features/session/authRoute';
 import { useSession } from '@/src/features/session/SessionContext';
 
 export default function ScanLayout() {
@@ -8,11 +10,16 @@ export default function ScanLayout() {
   if (!session.hydrated) {
     return null;
   }
-  if (!session.onboardingComplete) {
-    return <Redirect href="/welcome" />;
-  }
   if (!session.accessToken) {
-    return <Redirect href="/sign-up" />;
+    return <Redirect href={session.onboardingComplete ? '/sign-up' : '/welcome'} />;
+  }
+  // Authed: an incomplete backend profile must still finish the quiz first.
+  const route = resolveAuthedRoute(session.skinProfileStatus);
+  if (!route) {
+    return <FullScreenLoader />;
+  }
+  if (route === '/quiz') {
+    return <Redirect href="/quiz" />;
   }
 
   return <Stack screenOptions={{ headerShown: false }} />;

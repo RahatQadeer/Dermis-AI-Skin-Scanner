@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react';
 
+export type SkinProfileStatus = 'unknown' | 'complete' | 'incomplete';
+
 export function useSessionIdentityState() {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
@@ -8,6 +10,9 @@ export function useSessionIdentityState() {
   const [userId, setUserId] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [onboardingComplete, setOnboardingComplete] = useState(false);
+  // Backend-authoritative skin-profile completeness for the signed-in user.
+  // 'unknown' until the first /v1/profile sync resolves after auth.
+  const [skinProfileStatus, setSkinProfileStatus] = useState<SkinProfileStatus>('unknown');
   const [postAuthPaywall, setPostAuthPaywall] = useState(false);
 
   const accessTokenRef = useRef<string | null>(null);
@@ -29,6 +34,7 @@ export function useSessionIdentityState() {
     userId,
     hydrated,
     onboardingComplete,
+    skinProfileStatus,
     postAuthPaywall,
     setAccessToken,
     setRefreshToken,
@@ -37,6 +43,7 @@ export function useSessionIdentityState() {
     setUserId,
     setHydrated,
     setOnboardingComplete,
+    setSkinProfileStatus,
     setPostAuthPaywall,
     accessTokenRef,
     refreshTokenRef,

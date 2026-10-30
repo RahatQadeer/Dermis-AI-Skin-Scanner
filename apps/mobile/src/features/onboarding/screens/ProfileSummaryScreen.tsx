@@ -6,7 +6,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/src/components/text/AppText';
 import { getCopy } from '@/src/copy';
-import { useSession } from '@/src/features/session/SessionContext';
 import { colors, fontFamilies } from '@/src/theme';
 
 import { SummaryAnswerTable } from '../components/SummaryAnswerTable';
@@ -14,18 +13,19 @@ import { SummaryConfetti } from '../components/SummaryConfetti';
 import { SummaryFooter } from '../components/SummaryFooter';
 import { SummaryHero } from '../components/SummaryHero';
 import { SummaryHill } from '../components/SummaryHill';
+import { useFinishOnboarding } from '../hooks/useFinishOnboarding';
 import { isQuizDraftComplete, sensitivityKeyFromReaction } from '../lib/quizLogic';
 import { useQuizDraft } from '../state/QuizDraftProvider';
 
 export function ProfileSummaryScreen() {
   const router = useRouter();
-  const session = useSession();
   const insets = useSafeAreaInsets();
   const { draft } = useQuizDraft();
   const summary = getCopy().screens.summary;
   const quiz = getCopy().quiz;
   const sensitivityKey = sensitivityKeyFromReaction(draft.productReaction, quiz.q4.options);
   const sensitivityNote = sensitivityKey ? summary.sensitivityNotes[sensitivityKey] : '';
+  const finishOnboarding = useFinishOnboarding(draft);
 
   useEffect(() => {
     if (!isQuizDraftComplete(draft)) {
@@ -58,12 +58,10 @@ export function ProfileSummaryScreen() {
         <SummaryFooter
           bottomInset={insets.bottom}
           onScan={() => {
-            session.markOnboardingComplete();
-            router.replace('/sign-up');
+            void finishOnboarding();
           }}
           onSkip={() => {
-            session.markOnboardingComplete();
-            router.replace('/sign-up');
+            void finishOnboarding();
           }}
         />
       </View>

@@ -1,4 +1,7 @@
-import type { ConcernId } from '@dermis/domain';
+import type { ConcernId, SkinProfile } from '@dermis/domain';
+
+type SkinType = SkinProfile['skinType'];
+type SkinTone = SkinProfile['skinTone'];
 
 export type QuizDraft = {
   skinFeel: string | null;
@@ -74,4 +77,59 @@ export function toggleQuizPriority(
     return [...priorities];
   }
   return [...priorities, id];
+}
+
+/** Enum order locked to quiz copy option order (q1 / q2). */
+const SKIN_TYPE_BY_INDEX: readonly SkinType[] = ['oily', 'combination', 'dry', 'normal'];
+const SKIN_TONE_BY_INDEX: readonly SkinTone[] = ['typeI_II', 'typeIII', 'typeIV', 'typeV_VI'];
+
+function enumFromOptionLabel<T>(
+  label: string | null,
+  options: readonly { label: string }[],
+  table: readonly T[],
+): T | null {
+  if (!label) {
+    return null;
+  }
+  const index = options.findIndex((option) => option.label === label);
+  return index >= 0 && index < table.length ? table[index]! : null;
+}
+
+export function skinTypeFromFeel(
+  feel: string | null,
+  options: readonly { label: string }[],
+): SkinType | null {
+  return enumFromOptionLabel(feel, options, SKIN_TYPE_BY_INDEX);
+}
+
+export function skinToneFromFitzpatrick(
+  tone: string | null,
+  options: readonly { label: string }[],
+): SkinTone | null {
+  return enumFromOptionLabel(tone, options, SKIN_TONE_BY_INDEX);
+}
+
+type QuizCopyShape = {
+  q1: { options: readonly { label: string }[] };
+  q2: { options: readonly { label: string }[] };
+  q4: { options: readonly [{ label: string }, { label: string }, { label: string }] };
+};
+
+/**
+ * Converts a completed quiz draft into the backend skin-profile payload.
+ * Returns null if any answer is missing or cannot be mapped to an enum.
+ */
+export function quizDraftToSkinProfile(draft: QuizDraft, quiz: QuizCopyShape): SkinProfile | null {
+  const skinType = skinTypeFromFeel(draft.skinFeel, quiz.q1.options);
+  const skinTone = skinToneFromFitzpatrick(draft.fitzpatrick, quiz.q2.options);
+  const sensitivity = sensitivityKeyFromReaction(draft.productReaction, quiz.q4.options);
+  if (!skinType || !skinTone || !sensitivity || draft.priorities.length === 0) {
+    return null;
+  }
+  return {
+    skinType,
+    skinTone,
+    sensitivity,
+    priorityConcerns: draft.priorities,
+  };
 }

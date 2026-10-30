@@ -7,6 +7,7 @@ import {
 } from './sessionProviderEffects';
 import { usePersistSession } from './useSessionActions';
 import type { useSessionIdentityState } from './useSessionIdentityState';
+import { useSessionProfileSync } from './useSessionProfileSync';
 
 type Identity = ReturnType<typeof useSessionIdentityState>;
 
@@ -47,7 +48,13 @@ export function useSessionProviderBindings(identity: Identity) {
 
   bindApiTokenGetter(() => identity.accessTokenRef.current);
   bindApiRefreshHandler(refreshAccessToken);
+  useSessionSyncEffects(identity);
 
+  return { persistSession };
+}
+
+/** Post-auth background syncs: /v1/auth/me identity + /v1/profile completeness. */
+function useSessionSyncEffects(identity: Identity): void {
   useSessionMeProfileSync({
     accessToken: identity.accessToken,
     refreshToken: identity.refreshToken,
@@ -57,7 +64,13 @@ export function useSessionProviderBindings(identity: Identity) {
     setFirstName: identity.setFirstName,
   });
 
-  return { persistSession };
+  useSessionProfileSync({
+    accessToken: identity.accessToken,
+    hydrated: identity.hydrated,
+    onboardingComplete: identity.onboardingComplete,
+    setSkinProfileStatus: identity.setSkinProfileStatus,
+    setOnboardingComplete: identity.setOnboardingComplete,
+  });
 }
 
 export function resetSessionIdentity(identity: Identity): void {
@@ -66,5 +79,8 @@ export function resetSessionIdentity(identity: Identity): void {
   identity.setEmail(null);
   identity.setFirstName(null);
   identity.setUserId(null);
-  identity.setOnboardingComplete(false);
+  // Skin-profile completeness is per-user; force a fresh backend resolve on the
+  // next login. `onboardingComplete` stays sticky (device has seen the intro),
+  // so a returning logged-out user lands on sign-in rather than the welcome tour.
+  identity.setSkinProfileStatus('unknown');
 }

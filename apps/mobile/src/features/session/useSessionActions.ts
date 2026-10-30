@@ -1,35 +1,53 @@
 import { useCallback } from 'react';
 
+import { writeLocalFaceConsent } from '@/src/features/consent/localConsentStore';
+import { clearQuizDraft } from '@/src/features/onboarding/lib/quizDraftStorage';
+
 import { clearStoredSession, saveOnboardingComplete, saveStoredSession } from './sessionStorage';
 
+type ServerSession = {
+  accessToken: string;
+  refreshToken?: string | null;
+  email: string | null;
+  userId: string;
+  firstName?: string | null;
+  showPaywall?: boolean;
+};
+
+type PersistInput = {
+  accessToken: string;
+  refreshToken: string | null;
+  email: string | null;
+  userId: string;
+  firstName: string | null;
+};
+
+function toPersistInput(session: ServerSession): PersistInput {
+  return {
+    accessToken: session.accessToken,
+    refreshToken: session.refreshToken ?? null,
+    email: session.email?.trim().toLowerCase() ?? null,
+    userId: session.userId,
+    firstName: session.firstName?.trim() || null,
+  };
+}
+
+/** Drops per-user local caches on logout so nothing leaks to the next account. */
+function clearPerUserLocalCaches(): void {
+  void clearQuizDraft();
+  void writeLocalFaceConsent(false);
+}
+
 export function useSessionActions(ctx: {
-  persistSession: (next: {
-    accessToken: string;
-    refreshToken: string | null;
-    email: string | null;
-    userId: string;
-    firstName: string | null;
-  }) => void;
+  persistSession: (next: PersistInput) => void;
   setPostAuthPaywall: (v: boolean) => void;
   setOnboardingComplete: (v: boolean) => void;
+  setSkinProfileStatus: (v: 'unknown' | 'complete' | 'incomplete') => void;
   resetIdentity: () => void;
 }) {
   const applyServerSession = useCallback(
-    (session: {
-      accessToken: string;
-      refreshToken?: string | null;
-      email: string | null;
-      userId: string;
-      firstName?: string | null;
-      showPaywall?: boolean;
-    }) => {
-      ctx.persistSession({
-        accessToken: session.accessToken,
-        refreshToken: session.refreshToken ?? null,
-        email: session.email?.trim().toLowerCase() ?? null,
-        userId: session.userId,
-        firstName: session.firstName?.trim() || null,
-      });
+    (session: ServerSession) => {
+      ctx.persistSession(toPersistInput(session));
       ctx.setPostAuthPaywall(session.showPaywall !== false);
     },
     [ctx],
@@ -44,14 +62,29 @@ export function useSessionActions(ctx: {
     void saveOnboardingComplete(true);
   }, [ctx]);
 
+  // Post-auth quiz path: the assessment is persisted, so route off the quiz.
+  const markSkinProfileComplete = useCallback(() => {
+    ctx.setSkinProfileStatus('complete');
+    ctx.setOnboardingComplete(true);
+    void saveOnboardingComplete(true);
+  }, [ctx]);
+
+  // Onboarding intro flag stays sticky; per-user routing is re-resolved from the
+  // backend profile on next login, so existing users are never re-onboarded.
   const signOut = useCallback(() => {
     ctx.resetIdentity();
     ctx.setPostAuthPaywall(false);
     void clearStoredSession();
-    void saveOnboardingComplete(false);
+    clearPerUserLocalCaches();
   }, [ctx]);
 
-  return { applyServerSession, consumePostAuthPaywall, markOnboardingComplete, signOut };
+  return {
+    applyServerSession,
+    consumePostAuthPaywall,
+    markOnboardingComplete,
+    markSkinProfileComplete,
+    signOut,
+  };
 }
 
 export function usePersistSession(

@@ -9,6 +9,7 @@ export function useSessionProviderState() {
     persistSession,
     setPostAuthPaywall: identity.setPostAuthPaywall,
     setOnboardingComplete: identity.setOnboardingComplete,
+    setSkinProfileStatus: identity.setSkinProfileStatus,
     resetIdentity: () => resetSessionIdentity(identity),
   });
 
@@ -20,8 +21,10 @@ export function useSessionProviderState() {
     userId: identity.userId,
     hydrated: identity.hydrated,
     onboardingComplete: identity.onboardingComplete,
+    skinProfileStatus: identity.skinProfileStatus,
     postAuthPaywall: identity.postAuthPaywall,
     markOnboardingComplete: actions.markOnboardingComplete,
+    markSkinProfileComplete: actions.markSkinProfileComplete,
     consumePostAuthPaywall: actions.consumePostAuthPaywall,
     applyServerSession: actions.applyServerSession,
     signOut: actions.signOut,

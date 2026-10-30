@@ -1,6 +1,8 @@
 import { isUnlockAllFeatures } from '@dermis/domain';
 import { Redirect, Stack } from 'expo-router';
 
+import { FullScreenLoader } from '@/src/components/layout/FullScreenLoader';
+import { resolveAuthedRoute } from '@/src/features/session/authRoute';
 import { useSession } from '@/src/features/session/SessionContext';
 
 export default function AuthLayout() {
@@ -14,10 +16,13 @@ export default function AuthLayout() {
     if (session.postAuthPaywall && !isUnlockAllFeatures()) {
       return <Redirect href="/paywall" />;
     }
-    if (!session.onboardingComplete) {
-      return <Redirect href="/quiz" />;
+    // Route by backend-authoritative profile state so existing users skip the
+    // quiz and new users complete it. Hold while the sync resolves.
+    const route = resolveAuthedRoute(session.skinProfileStatus);
+    if (!route) {
+      return <FullScreenLoader />;
     }
-    return <Redirect href="/(tabs)/home" />;
+    return <Redirect href={route} />;
   }
 
   return <Stack screenOptions={{ headerShown: false }} />;
