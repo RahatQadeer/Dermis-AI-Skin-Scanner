@@ -19,16 +19,8 @@ import { useQuizDraft } from '../state/QuizDraftProvider';
 
 export function ProfileSummaryScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { draft } = useQuizDraft();
-  const summary = getCopy().screens.summary;
-  const quiz = getCopy().quiz;
-  const sensitivityKey = sensitivityKeyFromReaction(draft.productReaction, quiz.q4.options);
-  const sensitivityNote = sensitivityKey ? summary.sensitivityNotes[sensitivityKey] : '';
-  const finishOnboarding = useFinishOnboarding(draft);
-  const { height } = useResponsive();
-  const bandHeight = scaleHeight(330, height, 0.5);
-  const onFinish = () => void finishOnboarding();
+  const { finish, errorMessage, saving } = useFinishOnboarding(draft);
 
   useEffect(() => {
     if (!isQuizDraftComplete(draft)) {
@@ -41,12 +33,39 @@ export function ProfileSummaryScreen() {
   }
 
   return (
+    <SummaryLayout
+      draft={draft}
+      errorMessage={errorMessage}
+      onFinish={() => {
+        if (!saving) void finish();
+      }}
+    />
+  );
+}
+
+function SummaryLayout({
+  draft,
+  errorMessage,
+  onFinish,
+}: {
+  draft: ReturnType<typeof useQuizDraft>['draft'];
+  errorMessage: string | null;
+  onFinish: () => void;
+}) {
+  const insets = useSafeAreaInsets();
+  const summary = getCopy().screens.summary;
+  const quiz = getCopy().quiz;
+  const sensitivityKey = sensitivityKeyFromReaction(draft.productReaction, quiz.q4.options);
+  const sensitivityNote = sensitivityKey ? summary.sensitivityNotes[sensitivityKey] : '';
+  const { height } = useResponsive();
+  const bandHeight = scaleHeight(330, height, 0.5);
+
+  return (
     <View style={styles.root}>
       <StatusBar style="dark" />
       <View style={[styles.mintBand, { height: bandHeight }]} pointerEvents="none" />
       <SummaryHill />
       <SummaryConfetti />
-
       <ScrollView
         contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 12) + 18 }]}
         showsVerticalScrollIndicator={false}
@@ -60,6 +79,11 @@ export function ProfileSummaryScreen() {
               {sensitivityNote}
             </AppText>
           </View>
+        ) : null}
+        {errorMessage ? (
+          <AppText style={styles.errorText} color={colors.red}>
+            {errorMessage}
+          </AppText>
         ) : null}
         <View style={styles.spacer} />
         <SummaryFooter bottomInset={insets.bottom} onScan={onFinish} onSkip={onFinish} />
@@ -105,5 +129,12 @@ const styles = StyleSheet.create({
   spacer: {
     flex: 1,
     minHeight: 16,
+  },
+  errorText: {
+    marginTop: 12,
+    fontFamily: fontFamilies.bodySemiBold,
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
   },
 });

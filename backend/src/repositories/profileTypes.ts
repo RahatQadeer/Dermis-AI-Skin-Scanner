@@ -1,4 +1,4 @@
-import type { ConcernId } from '@dermis/domain';
+import type { AgeBand, ConcernId } from '@dermis/domain';
 import type { Sensitivity, SkinTone, SkinType } from './skinEnums';
 
 export type ProfileRecord = {
@@ -6,6 +6,7 @@ export type ProfileRecord = {
   skinType: SkinType | null;
   skinTone: SkinTone | null;
   sensitivity: Sensitivity | null;
+  ageBand: AgeBand | null;
   priorityConcerns: ConcernId[];
   notifyScanReminders: boolean;
   notifyProductUpdates: boolean;
@@ -17,6 +18,7 @@ export type ProfileWriteInput = {
   skinType: SkinType;
   skinTone: SkinTone;
   sensitivity: Sensitivity;
+  ageBand: AgeBand;
   priorityConcerns: ConcernId[];
   notifyScanReminders?: boolean;
   notifyProductUpdates?: boolean;

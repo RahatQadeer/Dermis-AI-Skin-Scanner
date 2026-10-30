@@ -10,6 +10,7 @@ export function toProfileDto(record: ProfileRecord) {
     skinType: record.skinType,
     skinTone: record.skinTone,
     sensitivity: record.sensitivity,
+    ageBand: record.ageBand,
     priorityConcerns: record.priorityConcerns,
     notifyScanReminders: record.notifyScanReminders,
     notifyProductUpdates: record.notifyProductUpdates,

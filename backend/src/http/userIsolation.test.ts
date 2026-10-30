@@ -130,6 +130,7 @@ test('skin profile and face reference are isolated per user', async () => {
     skinType: 'combination',
     skinTone: 'typeIII',
     sensitivity: 'sometimes',
+    ageBand: '25_34',
     priorityConcerns: ['redness'],
     notifyScanReminders: false,
   });

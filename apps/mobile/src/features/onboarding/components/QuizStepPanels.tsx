@@ -1,4 +1,4 @@
-import type { ConcernId } from '@dermis/domain';
+import type { AgeBand, ConcernId } from '@dermis/domain';
 import { StyleSheet, View } from 'react-native';
 
 import { getCopy } from '@/src/copy';
@@ -107,6 +107,26 @@ export function QuizStepFour({ draft, onPatch, onReact }: StepProps) {
   );
 }
 
+export function QuizStepFive({ draft, onPatch, onReact }: StepProps) {
+  const q = getCopy().quiz.q5;
+  return (
+    <View style={styles.list}>
+      {q.options.map((option) => (
+        <QuizOptionRow
+          key={option.id}
+          title={option.label}
+          subtitle={option.sub}
+          selected={draft.ageBand === option.id}
+          onPress={() => {
+            onPatch({ ageBand: option.id as AgeBand });
+            onReact?.(option.reaction);
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
 export function quizStepMeta(step: number) {
   const quiz = getCopy().quiz;
   switch (step) {
@@ -118,6 +138,8 @@ export function quizStepMeta(step: number) {
       return quiz.q3;
     case 4:
       return quiz.q4;
+    case 5:
+      return quiz.q5;
     default:
       return quiz.q1;
   }

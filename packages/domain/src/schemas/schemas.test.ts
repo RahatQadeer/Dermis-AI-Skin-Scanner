@@ -39,8 +39,20 @@ describe('Zod schemas', () => {
       skinTone: 'typeIII',
       priorityConcerns: ['pores', 'texture', 'hydration', 'redness'],
       sensitivity: 'rarely',
+      ageBand: '25_34',
     });
     assert.equal(result.success, false);
+  });
+
+  it('accepts a complete skin profile with age band', () => {
+    const result = skinProfileSchema.safeParse({
+      skinType: 'normal',
+      skinTone: 'typeIII',
+      priorityConcerns: ['pores', 'texture'],
+      sensitivity: 'rarely',
+      ageBand: '25_34',
+    });
+    assert.equal(result.success, true);
   });
 
   it('accepts valid Gemini analysis payload', () => {

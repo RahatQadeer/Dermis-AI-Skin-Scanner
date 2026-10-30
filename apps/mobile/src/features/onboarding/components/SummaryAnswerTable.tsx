@@ -11,11 +11,17 @@ export function SummaryAnswerTable({ draft }: { draft: QuizDraft }) {
   const summary = getCopy().screens.summary;
   const concerns = draft.priorities.map((id) => concernCopy[id]).join(summary.concernsSeparator);
 
+  const ageLabel =
+    draft.ageBand != null
+      ? (getCopy().quiz.q5.options.find((o) => o.id === draft.ageBand)?.label ?? draft.ageBand)
+      : '';
+
   const rows = [
     { label: summary.rowSkinType, value: draft.skinFeel ?? '' },
     { label: summary.rowTone, value: draft.fitzpatrick ?? '' },
     { label: summary.rowConcerns, value: concerns },
     { label: summary.rowSensitivity, value: draft.productReaction ?? '' },
+    { label: summary.rowAgeBand, value: ageLabel },
   ];
 
   return (

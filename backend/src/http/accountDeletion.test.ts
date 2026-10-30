@@ -34,6 +34,7 @@ const skinBody = {
   skinType: 'combination' as const,
   skinTone: 'typeIII' as const,
   sensitivity: 'sometimes' as const,
+  ageBand: '25_34' as const,
   priorityConcerns: ['redness', 'hydration'] as const,
 };
 

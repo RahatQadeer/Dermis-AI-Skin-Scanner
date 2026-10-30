@@ -10,6 +10,7 @@ import { clampFont, colors, fontFamilies, radii, shadows, useResponsive } from '
 
 import { QuizStepProgress } from '../components/QuizStepProgress';
 import {
+  QuizStepFive,
   QuizStepFour,
   QuizStepOne,
   QuizStepThree,
@@ -153,6 +154,7 @@ function QuizStepBody({ step, draft, onPatch, onReact }: BodyProps) {
       {step === 2 ? <QuizStepTwo draft={draft} onPatch={onPatch} onReact={onReact} /> : null}
       {step === 3 ? <QuizStepThree draft={draft} onPatch={onPatch} /> : null}
       {step === 4 ? <QuizStepFour draft={draft} onPatch={onPatch} onReact={onReact} /> : null}
+      {step === 5 ? <QuizStepFive draft={draft} onPatch={onPatch} onReact={onReact} /> : null}
     </View>
   );
 }

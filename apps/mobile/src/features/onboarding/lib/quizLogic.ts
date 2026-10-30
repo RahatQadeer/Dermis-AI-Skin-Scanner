@@ -1,4 +1,4 @@
-import type { ConcernId, SkinProfile } from '@dermis/domain';
+import type { AgeBand, ConcernId, SkinProfile } from '@dermis/domain';
 
 type SkinType = SkinProfile['skinType'];
 type SkinTone = SkinProfile['skinTone'];
@@ -8,15 +8,17 @@ export type QuizDraft = {
   fitzpatrick: string | null;
   priorities: ConcernId[];
   productReaction: string | null;
+  ageBand: AgeBand | null;
 };
 
-export const QUIZ_STEP_COUNT = 4;
+export const QUIZ_STEP_COUNT = 5;
 
 export const emptyQuizDraft = (): QuizDraft => ({
   skinFeel: null,
   fitzpatrick: null,
   priorities: [],
   productReaction: null,
+  ageBand: null,
 });
 
 export function isQuizStepComplete(step: number, draft: QuizDraft): boolean {
@@ -29,6 +31,8 @@ export function isQuizStepComplete(step: number, draft: QuizDraft): boolean {
       return draft.priorities.length > 0;
     case 4:
       return draft.productReaction !== null;
+    case 5:
+      return draft.ageBand !== null;
     default:
       return false;
   }
@@ -123,13 +127,14 @@ export function quizDraftToSkinProfile(draft: QuizDraft, quiz: QuizCopyShape): S
   const skinType = skinTypeFromFeel(draft.skinFeel, quiz.q1.options);
   const skinTone = skinToneFromFitzpatrick(draft.fitzpatrick, quiz.q2.options);
   const sensitivity = sensitivityKeyFromReaction(draft.productReaction, quiz.q4.options);
-  if (!skinType || !skinTone || !sensitivity || draft.priorities.length === 0) {
+  if (!skinType || !skinTone || !sensitivity || !draft.ageBand || draft.priorities.length === 0) {
     return null;
   }
   return {
     skinType,
     skinTone,
     sensitivity,
+    ageBand: draft.ageBand,
     priorityConcerns: draft.priorities,
   };
 }

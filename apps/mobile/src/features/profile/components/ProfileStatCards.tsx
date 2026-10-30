@@ -22,23 +22,42 @@ export function ProfileStatCards({ profile }: { profile: ProfileDto | null }) {
       label: p.statSensitivity,
       value: profile?.sensitivity ? p.sensitivityLabels[profile.sensitivity] : p.statNotSet,
     },
+    {
+      label: p.statAgeBand,
+      value: profile?.ageBand ? p.ageBandLabels[profile.ageBand] : p.statNotSet,
+    },
   ];
 
   return (
-    <View style={styles.row}>
-      {items.map((item) => (
-        <View key={item.label} style={styles.card}>
-          <AppText variant="caption" color={colors.mute}>
-            {item.label}
-          </AppText>
-          <AppText variant="bodyStrong">{item.value}</AppText>
-        </View>
-      ))}
+    <View style={styles.wrap}>
+      <View style={styles.row}>
+        {items.slice(0, 2).map((item) => (
+          <View key={item.label} style={styles.card}>
+            <AppText variant="caption" color={colors.mute}>
+              {item.label}
+            </AppText>
+            <AppText variant="bodyStrong">{item.value}</AppText>
+          </View>
+        ))}
+      </View>
+      <View style={styles.row}>
+        {items.slice(2).map((item) => (
+          <View key={item.label} style={styles.card}>
+            <AppText variant="caption" color={colors.mute}>
+              {item.label}
+            </AppText>
+            <AppText variant="bodyStrong">{item.value}</AppText>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrap: {
+    gap: spacing.sm,
+  },
   row: {
     flexDirection: 'row',
     gap: spacing.sm,

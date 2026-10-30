@@ -18,6 +18,7 @@ function emptyRecord(userId: string): ProfileRecord {
     skinType: null,
     skinTone: null,
     sensitivity: null,
+    ageBand: null,
     priorityConcerns: [],
     notifyScanReminders: false,
     notifyProductUpdates: false,
@@ -84,6 +85,7 @@ function clearSkin(store: Map<string, ProfileRecord>, userId: string): ProfileRe
     skinType: null,
     skinTone: null,
     sensitivity: null,
+    ageBand: null,
     priorityConcerns: [],
     updatedAt: nowIso(),
   };
@@ -97,6 +99,7 @@ function applyWrite(previous: ProfileRecord, data: ProfileWriteInput): ProfileRe
     skinType: data.skinType,
     skinTone: data.skinTone,
     sensitivity: data.sensitivity,
+    ageBand: data.ageBand,
     priorityConcerns: [...data.priorityConcerns] as ConcernId[],
     notifyScanReminders: data.notifyScanReminders ?? previous.notifyScanReminders,
     notifyProductUpdates: data.notifyProductUpdates ?? previous.notifyProductUpdates,
@@ -110,6 +113,7 @@ function applyPatch(previous: ProfileRecord, data: ProfilePatchInput): ProfileRe
     skinType: data.skinType ?? previous.skinType,
     skinTone: data.skinTone ?? previous.skinTone,
     sensitivity: data.sensitivity ?? previous.sensitivity,
+    ageBand: data.ageBand ?? previous.ageBand,
     priorityConcerns:
       data.priorityConcerns !== undefined
         ? ([...data.priorityConcerns] as ConcernId[])

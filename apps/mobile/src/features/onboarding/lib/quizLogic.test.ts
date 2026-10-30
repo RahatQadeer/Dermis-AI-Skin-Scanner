@@ -59,6 +59,7 @@ test('isQuizDraftComplete requires all steps', () => {
   draft.fitzpatrick = 'Type III';
   draft.priorities = ['hydration'];
   draft.productReaction = 'Rarely reacts';
+  draft.ageBand = '25_34';
   assert.equal(isQuizDraftComplete(draft), true);
 });
 
@@ -85,10 +86,12 @@ test('quizDraftToSkinProfile builds the backend payload from a complete draft', 
   draft.fitzpatrick = 'Type IV';
   draft.priorities = ['hydration', 'redness'];
   draft.productReaction = 'Reacts easily';
+  draft.ageBand = '35_44';
   assert.deepEqual(quizDraftToSkinProfile(draft, QUIZ_FIXTURE), {
     skinType: 'dry',
     skinTone: 'typeIV',
     sensitivity: 'easily',
+    ageBand: '35_44',
     priorityConcerns: ['hydration', 'redness'],
   });
 });

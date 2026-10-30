@@ -9,10 +9,12 @@ export {
   type ZoneScores,
 } from './score';
 export {
+  ageBandSchema,
   sensitivitySchema,
   skinProfileSchema,
   skinToneSchema,
   skinTypeSchema,
+  type AgeBand,
   type SkinProfile,
 } from './profile';
 export {

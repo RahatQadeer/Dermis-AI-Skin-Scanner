@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 import { getCopy } from '@/src/copy';
 import { createProfile } from '@/src/features/profile/api/profileApi';
@@ -13,37 +13,54 @@ function isProfileConflict(err: unknown): boolean {
   return isApiError(err) && (err.status === 409 || err.code === 'profile_exists');
 }
 
+export type FinishOnboardingResult = {
+  finish: () => Promise<void>;
+  errorMessage: string | null;
+  clearError: () => void;
+  saving: boolean;
+};
+
 /** Persists the assessment for an already-authenticated user (post-auth quiz). */
-async function persistAuthedProfile(draft: QuizDraft): Promise<void> {
+async function persistAuthedProfile(draft: QuizDraft, userId: string): Promise<'ok' | 'error'> {
   const payload = quizDraftToSkinProfile(draft, getCopy().quiz);
   if (!payload) {
-    return;
+    return 'error';
   }
   try {
     await createProfile(payload);
-    await clearQuizDraft();
+    await clearQuizDraft(userId);
+    return 'ok';
   } catch (err) {
-    // 409 = already saved; otherwise leave the draft for the post-login sync.
     if (isProfileConflict(err)) {
-      await clearQuizDraft();
+      await clearQuizDraft(userId);
+      return 'ok';
     }
+    return 'error';
   }
 }
 
 /**
  * Finishes the skin-profile quiz. The draft is always saved locally first so the
  * answers survive navigation. When authenticated, they are written to the
- * backend and the user continues into the app; otherwise the user goes to
- * sign-up and the post-login sync flushes the draft.
+ * backend; mark complete only after a successful save.
  */
-export function useFinishOnboarding(draft: QuizDraft): () => Promise<void> {
+export function useFinishOnboarding(draft: QuizDraft): FinishOnboardingResult {
   const router = useRouter();
   const session = useSession();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  return useCallback(async () => {
-    await saveQuizDraft(draft);
-    if (session.accessToken && session.apiEnabled) {
-      await persistAuthedProfile(draft);
+  const finish = useCallback(async () => {
+    setErrorMessage(null);
+    await saveQuizDraft(draft, session.userId);
+    if (session.accessToken && session.apiEnabled && session.userId) {
+      setSaving(true);
+      const result = await persistAuthedProfile(draft, session.userId);
+      setSaving(false);
+      if (result !== 'ok') {
+        setErrorMessage(getCopy().quiz.saveError);
+        return;
+      }
       session.markSkinProfileComplete();
       router.replace('/(tabs)/home');
       return;
@@ -51,4 +68,11 @@ export function useFinishOnboarding(draft: QuizDraft): () => Promise<void> {
     session.markOnboardingComplete();
     router.replace('/sign-up');
   }, [draft, router, session]);
+
+  return {
+    finish,
+    errorMessage,
+    clearError: () => setErrorMessage(null),
+    saving,
+  };
 }

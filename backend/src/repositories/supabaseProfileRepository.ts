@@ -38,6 +38,7 @@ export function createSupabaseProfileRepository(config: SupabaseProfileConfig): 
           skin_type: null,
           skin_tone: null,
           sensitivity: null,
+          age_band: null,
           priority_concerns: [],
         });
       } catch {

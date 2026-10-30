@@ -2,7 +2,6 @@ import { useCallback } from 'react';
 
 import { writeLocalFaceConsent } from '@/src/features/consent/localConsentStore';
 import { cancelScanReminders } from '@/src/features/notifications/notificationsApi';
-import { clearQuizDraft } from '@/src/features/onboarding/lib/quizDraftStorage';
 import { clearCachedFaceReference } from '@/src/features/scan/lib/faceReferenceCache';
 
 import { clearStoredSession, saveOnboardingComplete, saveStoredSession } from './sessionStorage';
@@ -34,9 +33,12 @@ function toPersistInput(session: ServerSession): PersistInput {
   };
 }
 
-/** Drops per-user local caches on logout so nothing leaks to the next account. */
+/**
+ * Drops per-user local caches on logout so nothing leaks to the next account.
+ * Quiz drafts are user-scoped and intentionally kept so an unflushed assessment
+ * can still save on the next login of the same account.
+ */
 function clearPerUserLocalCaches(): void {
-  void clearQuizDraft();
   void writeLocalFaceConsent(false);
   void clearCachedFaceReference();
   // Reminders are scheduled for the signed-in user; the next account (or a

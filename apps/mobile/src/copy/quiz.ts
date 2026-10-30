@@ -10,6 +10,7 @@ export const quizCopy = {
   stepProgressA11y: (current: number, total: number) => `Step ${current} of ${total}`,
   backA11y: 'Go back',
   continueArrow: '→',
+  saveError: 'Could not save your skin profile. Check your connection and try again.',
   q1: {
     eyebrow: 'Question 1',
     intro: "Let's start with how your skin behaves.",
@@ -90,7 +91,7 @@ export const quizCopy = {
   },
   q4: {
     eyebrow: 'Question 4',
-    intro: 'Last one! This keeps your routine safe.',
+    intro: 'Almost done — this keeps your routine safe.',
     title: 'How does your skin react to new products?',
     sub: 'Determines which actives we can recommend and at what strength.',
     hint: 'Retinoids and acids are gated on this answer.',
@@ -109,6 +110,39 @@ export const quizCopy = {
         label: 'Reacts easily',
         sub: 'Redness, itching, or breakouts',
         reaction: 'Gentle mode on. Lowest strengths first.',
+      },
+    ] as const,
+  },
+  q5: {
+    eyebrow: 'Question 5',
+    intro: 'Last one! Helps personalize recommendations.',
+    title: 'Which age range are you in?',
+    sub: 'Used only to tune wellness suggestions. Never shared.',
+    hint: 'You can update this later in Profile.',
+    options: [
+      {
+        id: '18_24' as const,
+        label: '18–24',
+        sub: 'Young adult skin',
+        reaction: 'Got it — tuning for your age range.',
+      },
+      {
+        id: '25_34' as const,
+        label: '25–34',
+        sub: 'Early adult skin',
+        reaction: 'Got it — tuning for your age range.',
+      },
+      {
+        id: '35_44' as const,
+        label: '35–44',
+        sub: 'Mature adult skin',
+        reaction: 'Got it — tuning for your age range.',
+      },
+      {
+        id: '45_plus' as const,
+        label: '45+',
+        sub: 'Experienced skin',
+        reaction: 'Got it — tuning for your age range.',
       },
     ] as const,
   },

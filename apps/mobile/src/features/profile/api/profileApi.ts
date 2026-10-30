@@ -1,4 +1,4 @@
-import type { ConcernId, SkinProfile } from '@dermis/domain';
+import type { AgeBand, ConcernId, SkinProfile } from '@dermis/domain';
 
 import { getApiClient } from '@/src/lib/api/client';
 
@@ -11,11 +11,17 @@ export type ProfileDto = {
   skinType: SkinType | null;
   skinTone: SkinTone | null;
   sensitivity: Sensitivity | null;
+  ageBand: AgeBand | null;
   priorityConcerns: ConcernId[];
   notifyScanReminders: boolean;
   notifyProductUpdates: boolean;
   createdAt: string;
   updatedAt: string;
+};
+
+export type ProfilePatchBody = Partial<SkinProfile> & {
+  notifyScanReminders?: boolean;
+  notifyProductUpdates?: boolean;
 };
 
 /** Reads the signed-in user's profile (backend creates an empty row if none). */
@@ -30,10 +36,16 @@ export async function createProfile(body: SkinProfile): Promise<ProfileDto> {
   return res.profile;
 }
 
+/** Updates skin assessment fields without re-running the full quiz. */
+export async function patchProfile(body: ProfilePatchBody): Promise<ProfileDto> {
+  const res = await getApiClient().patch<{ profile: ProfileDto }>('/v1/profile', body);
+  return res.profile;
+}
+
 /**
  * True once the three required skin-assessment fields are set. Mirrors the
  * backend `hasSkinProfile` gate so onboarding is treated as complete only when
- * the answers are actually persisted.
+ * the answers are actually persisted. Age band is additive for new quizzes.
  */
 export function profileHasSkinData(dto: ProfileDto): boolean {
   return dto.skinType !== null && dto.skinTone !== null && dto.sensitivity !== null;

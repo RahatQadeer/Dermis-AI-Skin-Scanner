@@ -4,6 +4,7 @@ import { getCopy } from '@/src/copy';
 import {
   clearQuizDraft,
   loadCompletedQuizDraft,
+  saveQuizDraft,
 } from '@/src/features/onboarding/lib/quizDraftStorage';
 import { quizDraftToSkinProfile } from '@/src/features/onboarding/lib/quizLogic';
 import {
@@ -19,6 +20,7 @@ import type { SkinProfileStatus } from './useSessionIdentityState';
 
 type ProfileSyncCtx = {
   accessToken: string | null;
+  userId: string | null;
   hydrated: boolean;
   onboardingComplete: boolean;
   setSkinProfileStatus: (v: SkinProfileStatus) => void;
@@ -29,13 +31,15 @@ function isConflict(err: unknown): boolean {
   return isApiError(err) && (err.status === 409 || err.code === 'profile_exists');
 }
 
-/** Flushes a stored pre-auth quiz draft to the backend. Returns true if saved. */
-async function flushPendingQuizDraft(): Promise<boolean> {
-  const draft = await loadCompletedQuizDraft();
+/** Flushes a stored quiz draft to the backend. Returns true if saved. */
+async function flushPendingQuizDraft(userId: string): Promise<boolean> {
+  const draft = await loadCompletedQuizDraft(userId);
   const payload = draft ? quizDraftToSkinProfile(draft, getCopy().quiz) : null;
   if (!payload) {
     return false;
   }
+  // Bind draft to this user before the network call so logout cannot orphan it.
+  await saveQuizDraft(draft!, userId);
   try {
     await createProfile(payload);
   } catch (err) {
@@ -43,44 +47,42 @@ async function flushPendingQuizDraft(): Promise<boolean> {
       throw err;
     }
   }
-  await clearQuizDraft();
+  await clearQuizDraft(userId);
   return true;
 }
 
 async function resolveStatus(
-  onboardingComplete: boolean,
+  userId: string,
   apply: (status: SkinProfileStatus) => void,
 ): Promise<void> {
   try {
     const profile = await fetchProfile();
     if (profileHasSkinData(profile)) {
-      await clearQuizDraft();
+      await clearQuizDraft(userId);
       apply('complete');
       return;
     }
-    const flushed = await flushPendingQuizDraft();
+    const flushed = await flushPendingQuizDraft(userId);
     apply(flushed ? 'complete' : 'incomplete');
   } catch {
-    // Fail open: never lock a user out because the profile fetch failed.
-    apply(onboardingComplete ? 'complete' : 'incomplete');
+    // Fail closed on profile completeness: never skip the quiz without a row.
+    // A local draft can still flush on the next successful sync.
+    apply('incomplete');
   }
 }
 
 /**
  * Resolves whether the signed-in user has completed the skin assessment, using
- * the backend profile as the source of truth (not just the local flag). This
- * prevents existing users from being re-onboarded after logout/login, keeps
- * onboarding per-user correct on shared devices, and flushes a pre-auth quiz
- * draft to `POST /v1/profile` on first login so answers are saved permanently.
+ * the backend profile as the source of truth (not just the local flag).
  */
 export function useSessionProfileSync(ctx: ProfileSyncCtx): void {
-  const { accessToken, hydrated } = ctx;
+  const { accessToken, userId, hydrated } = ctx;
 
   useEffect(() => {
     if (!hydrated) {
       return;
     }
-    if (!accessToken) {
+    if (!accessToken || !userId) {
       ctx.setSkinProfileStatus('unknown');
       return;
     }
@@ -101,13 +103,11 @@ export function useSessionProfileSync(ctx: ProfileSyncCtx): void {
         void saveOnboardingComplete(true);
       }
     };
-    void resolveStatus(ctx.onboardingComplete, apply);
+    void resolveStatus(userId, apply);
 
     return () => {
       cancelled = true;
     };
-    // Re-run only when the authenticated identity changes; onboardingComplete is
-    // read as a fallback and must not retrigger the sync.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accessToken, hydrated]);
+  }, [accessToken, userId, hydrated]);
 }

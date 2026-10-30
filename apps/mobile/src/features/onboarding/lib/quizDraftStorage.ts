@@ -2,23 +2,34 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { emptyQuizDraft, isQuizDraftComplete, type QuizDraft } from './quizLogic';
 
-const QUIZ_DRAFT_KEY = 'dermis.onboarding.quizDraft.v1';
+const PRE_AUTH_KEY = 'dermis.onboarding.quizDraft.v1';
+
+function userDraftKey(userId: string): string {
+  return `dermis.onboarding.quizDraft.v1.${userId}`;
+}
 
 /**
- * Persists the pre-auth quiz answers so they survive navigation to sign-up and
- * can be flushed to the backend once the user is authenticated.
+ * Persists quiz answers. Pre-auth uses a device key; after auth, prefer a
+ * user-scoped key so logout does not wipe an unflushed draft for that user.
  */
-export async function saveQuizDraft(draft: QuizDraft): Promise<void> {
-  await AsyncStorage.setItem(QUIZ_DRAFT_KEY, JSON.stringify(draft));
+export async function saveQuizDraft(draft: QuizDraft, userId?: string | null): Promise<void> {
+  const key = userId ? userDraftKey(userId) : PRE_AUTH_KEY;
+  await AsyncStorage.setItem(key, JSON.stringify(draft));
+  if (userId) {
+    // Migrate off the shared pre-auth slot once we know who the user is.
+    await AsyncStorage.removeItem(PRE_AUTH_KEY);
+  }
 }
 
-export async function clearQuizDraft(): Promise<void> {
-  await AsyncStorage.removeItem(QUIZ_DRAFT_KEY);
+/** Clears drafts only after a confirmed server save (or conflict). */
+export async function clearQuizDraft(userId?: string | null): Promise<void> {
+  await AsyncStorage.removeItem(PRE_AUTH_KEY);
+  if (userId) {
+    await AsyncStorage.removeItem(userDraftKey(userId));
+  }
 }
 
-/** Returns a completed draft, or null if absent / partial / malformed. */
-export async function loadCompletedQuizDraft(): Promise<QuizDraft | null> {
-  const raw = await AsyncStorage.getItem(QUIZ_DRAFT_KEY);
+function parseDraft(raw: string | null): QuizDraft | null {
   if (!raw) {
     return null;
   }
@@ -28,9 +39,21 @@ export async function loadCompletedQuizDraft(): Promise<QuizDraft | null> {
       ...emptyQuizDraft(),
       ...parsed,
       priorities: Array.isArray(parsed.priorities) ? parsed.priorities : [],
+      ageBand: parsed.ageBand ?? null,
     };
     return isQuizDraftComplete(draft) ? draft : null;
   } catch {
     return null;
   }
+}
+
+/** Returns a completed draft for this user (user key first, then pre-auth). */
+export async function loadCompletedQuizDraft(userId?: string | null): Promise<QuizDraft | null> {
+  if (userId) {
+    const owned = parseDraft(await AsyncStorage.getItem(userDraftKey(userId)));
+    if (owned) {
+      return owned;
+    }
+  }
+  return parseDraft(await AsyncStorage.getItem(PRE_AUTH_KEY));
 }

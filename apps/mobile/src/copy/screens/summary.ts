@@ -8,6 +8,7 @@ export const summaryCopy = {
   rowTone: 'Fitzpatrick',
   rowConcerns: 'Priorities',
   rowSensitivity: 'Sensitivity',
+  rowAgeBand: 'Age range',
   concernsSeparator: ', ',
   ctaScan: 'Take my free scan',
   ctaArrow: '→',

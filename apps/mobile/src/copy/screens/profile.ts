@@ -59,8 +59,17 @@ export const profileCopy = {
   statSkinType: 'Skin type',
   statFitzpatrick: 'Fitzpatrick',
   statSensitivity: 'Sensitivity',
+  statAgeBand: 'Age range',
   /** Shown while loading or when the assessment has no answer for a field. */
   statNotSet: '—',
+  editProfile: 'Edit skin profile',
+  editSave: 'Save changes',
+  editCancel: 'Cancel',
+  editSavedToast: 'Skin profile updated.',
+  editFailToast: 'Could not update profile. Try again.',
+  registerFace: 'Register my face',
+  reregisterFace: 'Update face reference',
+  faceHint: 'Only your face can scan this account. Progress stays on your account.',
   skinTypeLabels: { oily: 'Oily', combination: 'Combination', dry: 'Dry', normal: 'Normal' },
   skinToneLabels: {
     typeI_II: 'Type I–II',
@@ -69,6 +78,12 @@ export const profileCopy = {
     typeV_VI: 'Type V–VI',
   },
   sensitivityLabels: { rarely: 'Low', sometimes: 'Medium', easily: 'High' },
+  ageBandLabels: {
+    '18_24': '18–24',
+    '25_34': '25–34',
+    '35_44': '35–44',
+    '45_plus': '45+',
+  },
 
   // Preferences
   sectionPreferences: 'Preferences',

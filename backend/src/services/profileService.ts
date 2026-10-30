@@ -61,6 +61,7 @@ function isCompleteWrite(input: ProfilePatchInput): input is ProfileWriteInput {
     input.skinType !== undefined &&
     input.skinTone !== undefined &&
     input.sensitivity !== undefined &&
+    input.ageBand !== undefined &&
     input.priorityConcerns !== undefined
   );
 }

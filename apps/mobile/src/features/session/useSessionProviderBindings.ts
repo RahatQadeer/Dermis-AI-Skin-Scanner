@@ -70,6 +70,7 @@ function useSessionSyncEffects(identity: Identity): void {
 
   useSessionProfileSync({
     accessToken: identity.accessToken,
+    userId: identity.userId,
     hydrated: identity.hydrated,
     onboardingComplete: identity.onboardingComplete,
     setSkinProfileStatus: identity.setSkinProfileStatus,
