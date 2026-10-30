@@ -1,12 +1,12 @@
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/src/components/text/AppText';
 import { getCopy } from '@/src/copy';
-import { colors, fontFamilies } from '@/src/theme';
+import { colors, fontFamilies, scaleHeight, useResponsive } from '@/src/theme';
 
 import { SummaryAnswerTable } from '../components/SummaryAnswerTable';
 import { SummaryConfetti } from '../components/SummaryConfetti';
@@ -26,6 +26,9 @@ export function ProfileSummaryScreen() {
   const sensitivityKey = sensitivityKeyFromReaction(draft.productReaction, quiz.q4.options);
   const sensitivityNote = sensitivityKey ? summary.sensitivityNotes[sensitivityKey] : '';
   const finishOnboarding = useFinishOnboarding(draft);
+  const { height } = useResponsive();
+  const bandHeight = scaleHeight(330, height, 0.5);
+  const onFinish = () => void finishOnboarding();
 
   useEffect(() => {
     if (!isQuizDraftComplete(draft)) {
@@ -38,13 +41,17 @@ export function ProfileSummaryScreen() {
   }
 
   return (
-    <View style={[styles.root, { paddingTop: Math.max(insets.top, 12) + 18 }]}>
+    <View style={styles.root}>
       <StatusBar style="dark" />
-      <View style={styles.mintBand} pointerEvents="none" />
+      <View style={[styles.mintBand, { height: bandHeight }]} pointerEvents="none" />
       <SummaryHill />
       <SummaryConfetti />
 
-      <View style={styles.content}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 12) + 18 }]}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
         <SummaryHero />
         <SummaryAnswerTable draft={draft} />
         {sensitivityNote ? (
@@ -55,16 +62,8 @@ export function ProfileSummaryScreen() {
           </View>
         ) : null}
         <View style={styles.spacer} />
-        <SummaryFooter
-          bottomInset={insets.bottom}
-          onScan={() => {
-            void finishOnboarding();
-          }}
-          onSkip={() => {
-            void finishOnboarding();
-          }}
-        />
-      </View>
+        <SummaryFooter bottomInset={insets.bottom} onScan={onFinish} onSkip={onFinish} />
+      </ScrollView>
     </View>
   );
 }
@@ -80,14 +79,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     top: 0,
-    height: 330,
     backgroundColor: colors.hero,
     borderBottomLeftRadius: 40,
     borderBottomRightRadius: 40,
     zIndex: 0,
   },
   content: {
-    flex: 1,
+    flexGrow: 1,
     paddingHorizontal: 24,
     zIndex: 2,
   },

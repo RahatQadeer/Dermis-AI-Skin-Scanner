@@ -58,10 +58,10 @@ export function QuizOptionRow({
     >
       {leading ? <View style={styles.leading}>{leading}</View> : null}
       <View style={styles.text}>
-        <AppText style={styles.title} color={colors.ink}>
+        <AppText style={styles.title} color={colors.ink} numberOfLines={1}>
           {title}
         </AppText>
-        <AppText style={styles.subtitle} color={colors.muteSoft}>
+        <AppText style={styles.subtitle} color={colors.muteSoft} numberOfLines={2}>
           {subtitle}
         </AppText>
       </View>

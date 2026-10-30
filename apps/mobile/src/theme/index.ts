@@ -9,6 +9,8 @@ import { fontFamilies, fontSizes, lineHeights, textStyles } from './typography';
 export { colors, type ColorToken } from './colors';
 export { motion } from './motion';
 export { radii, type RadiusToken } from './radii';
+export { clampFont, scaleHeight, type Responsive } from './responsive';
+export { useResponsive } from './useResponsive';
 export { shadows } from './shadows';
 export { spacing, type SpacingToken } from './spacing';
 export { touchTargets } from './touchTargets';

@@ -11,7 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { useReduceMotion } from '@/src/lib/useReduceMotion';
-import { colors } from '@/src/theme';
+import { colors, scaleHeight, useResponsive } from '@/src/theme';
 
 /** Party-popper confetti behind sheep — denser burst, two waves. */
 const CONFETTI_COLORS = [
@@ -115,8 +115,10 @@ function ConfettiPiece({
 }
 
 export function SummaryConfetti() {
+  // Cap the burst zone on short screens so it doesn't dominate the viewport.
+  const { height } = useResponsive();
   return (
-    <View pointerEvents="none" style={styles.host}>
+    <View pointerEvents="none" style={[styles.host, { height: scaleHeight(420, height, 0.6) }]}>
       {PIECES.map((piece) => (
         <ConfettiPiece key={piece.id} {...piece} />
       ))}
@@ -130,7 +132,6 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 420,
     zIndex: 1,
     overflow: 'hidden',
   },

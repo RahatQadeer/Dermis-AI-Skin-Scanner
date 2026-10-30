@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Screen } from '@/src/components/layout/Screen';
 import { AppText } from '@/src/components/text/AppText';
 import { getCopy } from '@/src/copy';
-import { colors, fontFamilies } from '@/src/theme';
+import { clampFont, colors, fontFamilies, useResponsive } from '@/src/theme';
 
 import { WelcomeCta } from '../components/WelcomeCta';
 import { WelcomeHeroBand } from '../components/WelcomeHeroBand';
@@ -16,6 +16,8 @@ export function WelcomeScreen() {
   const router = useRouter();
   const w = getCopy().screens.welcome;
   const insets = useSafeAreaInsets();
+  const { width } = useResponsive();
+  const headlineSize = clampFont(36, width);
 
   return (
     <Screen
@@ -34,7 +36,14 @@ export function WelcomeScreen() {
           { paddingBottom: Math.max(38, 12 + insets.bottom) },
         ]}
       >
-        <Text style={styles.headline} accessibilityRole="header" maxFontSizeMultiplier={1}>
+        <Text
+          style={[
+            styles.headline,
+            { fontSize: headlineSize, lineHeight: Math.round(headlineSize * 1.05) },
+          ]}
+          accessibilityRole="header"
+          maxFontSizeMultiplier={1}
+        >
           {w.headlineKnow}
           {w.headlineMid}
           <Text style={styles.accent}>{w.headlineAccentLead}</Text>

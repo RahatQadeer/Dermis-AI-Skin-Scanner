@@ -5,13 +5,15 @@ import { ProfessorPuffSvg } from '@/src/components/mascot/ProfessorPuffSvg';
 import { useMascotMotion } from '@/src/components/mascot/useMascotMotion';
 import { AppText } from '@/src/components/text/AppText';
 import { getCopy } from '@/src/copy';
-import { colors, fontFamilies } from '@/src/theme';
+import { clampFont, colors, fontFamilies, useResponsive } from '@/src/theme';
 
 const SHEEP_SIZE = 140;
 
 export function SummaryHero() {
   const summary = getCopy().screens.summary;
   const { style: bobStyle } = useMascotMotion('bob');
+  const { width } = useResponsive();
+  const headlineSize = clampFont(30, width);
 
   return (
     <View style={styles.hero}>
@@ -21,7 +23,11 @@ export function SummaryHero() {
       <AppText style={styles.eyebrow} color={colors.quizEyebrow}>
         {summary.eyebrow}
       </AppText>
-      <AppText style={styles.headline} color={colors.ink} accessibilityRole="header">
+      <AppText
+        style={[styles.headline, { fontSize: headlineSize, lineHeight: Math.round(headlineSize * 1.07) }]}
+        color={colors.ink}
+        accessibilityRole="header"
+      >
         {summary.headline}
       </AppText>
     </View>

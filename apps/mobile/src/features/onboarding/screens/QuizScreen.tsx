@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/src/components/text/AppText';
 import { DermisSheepSvg } from '@/src/components/mascot/DermisSheepSvg';
 import { getCopy } from '@/src/copy';
-import { colors, fontFamilies, radii, shadows } from '@/src/theme';
+import { clampFont, colors, fontFamilies, radii, shadows, useResponsive } from '@/src/theme';
 
 import { QuizStepProgress } from '../components/QuizStepProgress';
 import {
@@ -70,6 +70,8 @@ type HeaderProps = {
 };
 
 function QuizStepHeader({ meta, bubble, onResetBubble }: HeaderProps) {
+  const { width } = useResponsive();
+  const titleSize = clampFont(32, width);
   return (
     <>
       <View style={styles.mascotRow}>
@@ -90,7 +92,11 @@ function QuizStepHeader({ meta, bubble, onResetBubble }: HeaderProps) {
       <AppText style={styles.eyebrow} color={colors.quizEyebrow}>
         {meta.eyebrow}
       </AppText>
-      <AppText style={styles.title} color={colors.ink} accessibilityRole="header">
+      <AppText
+        style={[styles.title, { fontSize: titleSize, lineHeight: Math.round(titleSize * 1.1) }]}
+        color={colors.ink}
+        accessibilityRole="header"
+      >
         {meta.title}
       </AppText>
       <AppText style={styles.sub} color={colors.muteSoft}>

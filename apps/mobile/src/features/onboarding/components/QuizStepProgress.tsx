@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     transform: [{ translateX: -15 }, { translateY: -14 }],
   },
   stepLabel: {
-    width: 34,
+    minWidth: 34,
     textAlign: 'right',
     fontFamily: fontFamilies.heading,
     fontSize: 13,
