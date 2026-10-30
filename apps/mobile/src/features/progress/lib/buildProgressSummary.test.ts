@@ -39,4 +39,13 @@ test('buildProgressSummary derives current, baseline and delta from newest-first
   assert.equal(summary.startDate, '2026-08-20');
   const redness = summary.concernChanges.find((c) => c.id === 'redness');
   assert.equal(redness?.delta, 6);
+  assert.ok(summary.previousVsLatest);
+  assert.equal(summary.previousVsLatest.previousScore, 66);
+  assert.equal(summary.previousVsLatest.latestScore, 72);
+});
+
+test('buildProgressSummary has no previousVsLatest for a single scan', () => {
+  const summary = buildProgressSummary([scan('a', '2026-08-20', 66, 70)]);
+  assert.ok(summary);
+  assert.equal(summary.previousVsLatest, null);
 });

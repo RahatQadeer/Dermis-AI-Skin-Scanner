@@ -51,6 +51,10 @@ export const progressCopy = {
   beforeAfterHint: 'Skin Health Index from your scans. Selfie photos are not kept after analysis.',
   baselineLabel: 'Baseline',
   latestLabel: 'Latest',
+  previousLabel: 'Previous',
+  vsPreviousTitle: 'Since last scan',
+  vsPreviousHint: 'How your latest scan compares with the one before it.',
+  singleScanHint: 'Take another scan to see improvements over time.',
   changeTitle: 'Change by concern',
   openScanA11y: (date: string) => `Open scan from ${date}`,
 } as const;

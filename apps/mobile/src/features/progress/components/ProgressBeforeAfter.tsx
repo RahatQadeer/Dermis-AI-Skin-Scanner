@@ -11,10 +11,14 @@ export type ProgressBeforeAfterProps = {
   latestScore: number;
   /** When false, hide the block (need at least one real scan). */
   visible?: boolean;
+  title?: string;
+  hint?: string;
+  baselineLabel?: string;
+  latestLabel?: string;
 };
 
 /**
- * Baseline vs latest Skin Health Index from real scans.
+ * Baseline/previous vs latest Skin Health Index from real scans.
  * Photos are not retained after analysis (PRODUCT retention) — scores only.
  */
 export function ProgressBeforeAfter({
@@ -23,38 +27,57 @@ export function ProgressBeforeAfter({
   latestDate,
   latestScore,
   visible = true,
+  title,
+  hint,
+  baselineLabel,
+  latestLabel,
 }: ProgressBeforeAfterProps) {
   const p = getCopy().screens.progress;
   if (!visible) {
     return null;
   }
 
-  const delta = latestScore - baselineScore;
-
   return (
     <View style={styles.block}>
       <AppText variant="headline" color={colors.ink}>
-        {p.beforeAfterTitle}
+        {title ?? p.beforeAfterTitle}
       </AppText>
       <AppText variant="caption" color={colors.muteFoot}>
-        {p.beforeAfterHint}
+        {hint ?? p.beforeAfterHint}
       </AppText>
       <View style={styles.row}>
-        <ScoreCard label={p.baselineLabel} date={baselineDate} score={baselineScore} />
-        <View style={styles.arrowWrap}>
-          <AppText variant="headline" color={colors.pinkAccent}>
-            →
-          </AppText>
-          <AppText
-            variant="caption"
-            color={delta >= 0 ? colors.greenDeep : colors.red}
-            style={styles.delta}
-          >
-            {delta === 0 ? p.deltaFlat : delta > 0 ? p.deltaUp(delta) : p.deltaDown(delta)}
-          </AppText>
-        </View>
-        <ScoreCard label={p.latestLabel} date={latestDate} score={latestScore} highlight />
+        <ScoreCard
+          label={baselineLabel ?? p.baselineLabel}
+          date={baselineDate}
+          score={baselineScore}
+        />
+        <DeltaArrow delta={latestScore - baselineScore} />
+        <ScoreCard
+          label={latestLabel ?? p.latestLabel}
+          date={latestDate}
+          score={latestScore}
+          highlight
+        />
       </View>
+    </View>
+  );
+}
+
+function DeltaArrow({ delta }: { delta: number }) {
+  const p = getCopy().screens.progress;
+  const label = delta === 0 ? p.deltaFlat : delta > 0 ? p.deltaUp(delta) : p.deltaDown(delta);
+  return (
+    <View style={styles.arrowWrap}>
+      <AppText variant="headline" color={colors.pinkAccent}>
+        →
+      </AppText>
+      <AppText
+        variant="caption"
+        color={delta >= 0 ? colors.greenDeep : colors.red}
+        style={styles.delta}
+      >
+        {label}
+      </AppText>
     </View>
   );
 }

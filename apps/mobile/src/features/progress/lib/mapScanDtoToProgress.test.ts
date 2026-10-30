@@ -64,19 +64,17 @@ describe('mapScanDtosToProgress', () => {
     assert.equal(mapped[0]!.capturedAt, '2026-09-24');
   });
 
-  it('keeps the series comparable after the user changes priority concerns', () => {
-    // Same skin both times; only the profile priorities changed (none → redness).
+  it('preserves stored index scores when priorities change (no history rewrite)', () => {
     const skin = { ...uniform(80), redness: 40 };
     const mapped = mapScanDtosToProgress([
       dto('before', '2026-09-01T08:00:00.000Z', 73, skin, {}),
       dto('after', '2026-09-24T08:00:00.000Z', 71, skin, PRIORITY_REDNESS),
     ]);
-    // Stored indexes differ (73 vs 71) but re-scored on the newest weights they match.
     assert.equal(mapped[0]!.indexScore, 71);
-    assert.equal(mapped[1]!.indexScore, 71);
+    assert.equal(mapped[1]!.indexScore, 73);
   });
 
-  it('keeps the stored index for rows it cannot re-score comparably', () => {
+  it('keeps the stored index for every row regardless of formula version', () => {
     const legacy = dto('legacy', '2026-08-01T08:00:00.000Z', 66, uniform(80), {});
     legacy.formulaVersion = 'index-v0';
     const partial = dto('partial', '2026-08-15T08:00:00.000Z', 64, uniform(80), {});
@@ -88,5 +86,6 @@ describe('mapScanDtosToProgress', () => {
     ]);
     assert.equal(mapped.find((s) => s.id === 'legacy')!.indexScore, 66);
     assert.equal(mapped.find((s) => s.id === 'partial')!.indexScore, 64);
+    assert.equal(mapped.find((s) => s.id === 'now')!.indexScore, 71);
   });
 });

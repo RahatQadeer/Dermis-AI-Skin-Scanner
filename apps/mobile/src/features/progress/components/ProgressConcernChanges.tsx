@@ -59,14 +59,17 @@ const styles = StyleSheet.create({
     borderTopColor: colors.rowDivider,
   },
   name: {
-    flex: 1.1,
+    flexShrink: 1,
+    flexGrow: 1,
+    minWidth: 72,
   },
   arrow: {
-    flex: 1,
+    flexShrink: 0,
     textAlign: 'center',
   },
   delta: {
-    minWidth: 40,
+    minWidth: 48,
+    flexShrink: 0,
     textAlign: 'right',
   },
 });
