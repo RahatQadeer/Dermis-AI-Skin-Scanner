@@ -1,10 +1,14 @@
+import { useRef } from 'react';
+
 import { useSessionActions } from './useSessionActions';
 import { useSessionIdentityState } from './useSessionIdentityState';
 import { resetSessionIdentity, useSessionProviderBindings } from './useSessionProviderBindings';
 
 export function useSessionProviderState() {
   const identity = useSessionIdentityState();
-  const { persistSession } = useSessionProviderBindings(identity);
+  // Bindings need sign-out (dead refresh token) before actions exist.
+  const signOutRef = useRef<() => void>(() => {});
+  const { persistSession } = useSessionProviderBindings(identity, signOutRef);
   const actions = useSessionActions({
     persistSession,
     setPostAuthPaywall: identity.setPostAuthPaywall,
@@ -12,6 +16,7 @@ export function useSessionProviderState() {
     setSkinProfileStatus: identity.setSkinProfileStatus,
     resetIdentity: () => resetSessionIdentity(identity),
   });
+  signOutRef.current = actions.signOut;
 
   return {
     accessToken: identity.accessToken,

@@ -11,7 +11,10 @@ import { useSessionProfileSync } from './useSessionProfileSync';
 
 type Identity = ReturnType<typeof useSessionIdentityState>;
 
-export function useSessionProviderBindings(identity: Identity) {
+export function useSessionProviderBindings(
+  identity: Identity,
+  signOutRef: { current: () => void },
+) {
   useSessionStorageHydrate({
     setAccessToken: identity.setAccessToken,
     setRefreshToken: identity.setRefreshToken,
@@ -44,6 +47,7 @@ export function useSessionProviderBindings(identity: Identity) {
     emailRef: identity.emailRef,
     firstNameRef: identity.firstNameRef,
     refreshInFlight: identity.refreshInFlight,
+    onRefreshRejected: () => signOutRef.current(),
   });
 
   bindApiTokenGetter(() => identity.accessTokenRef.current);
@@ -74,6 +78,11 @@ function useSessionSyncEffects(identity: Identity): void {
 }
 
 export function resetSessionIdentity(identity: Identity): void {
+  // Clear the refs now, not on the next render: an in-flight token refresh
+  // compares against them and must see the session as gone immediately.
+  identity.accessTokenRef.current = null;
+  identity.refreshTokenRef.current = null;
+  identity.refreshInFlight.current = null;
   identity.setAccessToken(null);
   identity.setRefreshToken(null);
   identity.setEmail(null);

@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 
 import { writeLocalFaceConsent } from '@/src/features/consent/localConsentStore';
+import { cancelScanReminders } from '@/src/features/notifications/notificationsApi';
 import { clearQuizDraft } from '@/src/features/onboarding/lib/quizDraftStorage';
 import { clearCachedFaceReference } from '@/src/features/scan/lib/faceReferenceCache';
 
@@ -38,6 +39,9 @@ function clearPerUserLocalCaches(): void {
   void clearQuizDraft();
   void writeLocalFaceConsent(false);
   void clearCachedFaceReference();
+  // Reminders are scheduled for the signed-in user; the next account (or a
+  // signed-out device) must not keep receiving them.
+  void cancelScanReminders();
 }
 
 export function useSessionActions(ctx: {

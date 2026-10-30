@@ -122,3 +122,30 @@ function parseRefresh(body: unknown): string {
   }
   return refreshToken.trim();
 }
+
+export async function handleRecover(
+  credentials: AuthCredentialsPort,
+  body: unknown,
+  redirectTo: string,
+): Promise<Response> {
+  const email = (body as { email?: unknown } | null)?.email;
+  if (typeof email !== 'string' || !email.trim()) {
+    throw new HttpError(400, 'invalid_email');
+  }
+  await credentials.recover(email, redirectTo);
+  // Same answer whether or not an account exists.
+  return json({ ok: true });
+}
+
+export async function handleUpdatePassword(
+  credentials: AuthCredentialsPort,
+  accessToken: string,
+  body: unknown,
+): Promise<Response> {
+  const password = (body as { password?: unknown } | null)?.password;
+  if (typeof password !== 'string') {
+    throw new HttpError(400, 'invalid_body');
+  }
+  await credentials.updatePassword(accessToken, password);
+  return json({ ok: true });
+}

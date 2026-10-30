@@ -32,16 +32,24 @@ export function ForgotPasswordScreen() {
           autoCapitalize="none"
           textContentType="emailAddress"
           error={form.errors.email}
-          editable={!form.sent}
+          editable={!form.sent && !form.submitting}
+          returnKeyType="send"
+          onSubmitEditing={form.sent ? undefined : form.submit}
         />
         {form.sent ? (
           <AppText variant="body" color={colors.mute}>
             {auth.resetSent}
           </AppText>
         ) : null}
+        {form.formError ? (
+          <AppText variant="caption" color={colors.red} accessibilityLiveRegion="polite">
+            {form.formError}
+          </AppText>
+        ) : null}
         <AuthPrimaryButton
           label={form.sent ? common.back : auth.forgotCta}
           onPress={form.sent ? form.goBack : form.submit}
+          loading={form.submitting}
         />
       </View>
     </AuthFormScaffold>

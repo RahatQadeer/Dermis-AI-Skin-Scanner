@@ -74,3 +74,10 @@ export const DELETE_ACCOUNT_HTML = `<!DOCTYPE html>
 </body>
 </html>
 `;
+
+export function serveDeleteAccountPage(): Response {
+  return new Response(DELETE_ACCOUNT_HTML, {
+    status: 200,
+    headers: { 'content-type': 'text/html; charset=utf-8' },
+  });
+}

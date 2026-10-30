@@ -5,6 +5,7 @@ import { getApiClient } from '@/src/lib/api/client';
 import { isApiEnabled } from '@/src/lib/api/config';
 
 import { parseMemoryAccessToken } from './parseMemoryAccessToken';
+import { isRefreshRejected, isRefreshStillCurrent } from './refreshOutcome';
 import { loadOnboardingComplete, loadStoredSession, saveStoredSession } from './sessionStorage';
 
 type AuthMeUser = {
@@ -70,6 +71,8 @@ export function useSessionRefreshToken(ctx: {
   emailRef: { current: string | null };
   firstNameRef: { current: string | null };
   refreshInFlight: { current: Promise<string | null> | null };
+  /** Called when the server rejects the refresh token (session unrecoverable). */
+  onRefreshRejected: () => void;
 }) {
   return useCallback(async (): Promise<string | null> => {
     if (ctx.refreshInFlight.current) {
@@ -79,26 +82,41 @@ export function useSessionRefreshToken(ctx: {
     if (!rt || !isApiEnabled()) {
       return null;
     }
-    const job = (async () => {
-      try {
-        const session = await refreshSession(rt);
-        ctx.persistSession({
-          accessToken: session.accessToken,
-          refreshToken: session.refreshToken ?? rt,
-          email: session.user.email ?? ctx.emailRef.current,
-          userId: session.user.id,
-          firstName: session.user.firstName ?? ctx.firstNameRef.current,
-        });
-        return session.accessToken;
-      } catch {
-        return null;
-      } finally {
+    const job: Promise<string | null> = runRefresh(ctx, rt).finally(() => {
+      // Sign-out may already have cleared (or replaced) the in-flight slot.
+      if (ctx.refreshInFlight.current === job) {
         ctx.refreshInFlight.current = null;
       }
-    })();
+    });
     ctx.refreshInFlight.current = job;
     return job;
   }, [ctx]);
+}
+
+type RefreshCtx = Parameters<typeof useSessionRefreshToken>[0];
+
+/** One refresh attempt; discards the result if the session changed meanwhile. */
+async function runRefresh(ctx: RefreshCtx, rt: string): Promise<string | null> {
+  try {
+    const session = await refreshSession(rt);
+    if (!isRefreshStillCurrent(rt, ctx.refreshTokenRef.current)) {
+      // Signed out (or another account signed in) while this was in flight.
+      return null;
+    }
+    ctx.persistSession({
+      accessToken: session.accessToken,
+      refreshToken: session.refreshToken ?? rt,
+      email: session.user.email ?? ctx.emailRef.current,
+      userId: session.user.id,
+      firstName: session.user.firstName ?? ctx.firstNameRef.current,
+    });
+    return session.accessToken;
+  } catch (err: unknown) {
+    if (isRefreshRejected(err) && isRefreshStillCurrent(rt, ctx.refreshTokenRef.current)) {
+      ctx.onRefreshRejected();
+    }
+    return null;
+  }
 }
 
 export function useSessionMeProfileSync(ctx: {

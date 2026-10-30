@@ -60,7 +60,6 @@ function createMemoryOrHybridBackend(env: BackendEnv): (request: Request) => Pro
     deps.credentials = createSupabaseCredentialsPort({
       supabaseUrl: env.supabaseUrl,
       anonKey: env.supabaseAnonKey,
-      serviceRoleKey: env.supabaseServiceRoleKey,
     });
   }
   return createApp(deps);
@@ -114,7 +113,6 @@ function buildLiveDeps(env: BackendEnv, auth: AuthPort, stores: LiveStores): App
     credentials: createSupabaseCredentialsPort({
       supabaseUrl: url,
       anonKey: anon,
-      serviceRoleKey: env.supabaseServiceRoleKey,
     }),
     profilesFor: ({ accessToken }) =>
       createProfileService(

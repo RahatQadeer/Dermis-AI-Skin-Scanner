@@ -21,7 +21,18 @@ export async function logInRevenueCat(appUserId: string): Promise<void> {
 }
 
 export async function logOutRevenueCat(): Promise<void> {
-  await Purchases.logOut();
+  // logOut() throws when the current RevenueCat user is already anonymous
+  // (e.g. app start while signed out) — that's the desired state, not an error.
+  if (await Purchases.isAnonymous()) {
+    return;
+  }
+  try {
+    await Purchases.logOut();
+  } catch (err: unknown) {
+    if (__DEV__) {
+      console.warn('[purchases] logOut failed', err);
+    }
+  }
 }
 
 export async function fetchPaywallPackages(): Promise<PaywallPackageMap> {

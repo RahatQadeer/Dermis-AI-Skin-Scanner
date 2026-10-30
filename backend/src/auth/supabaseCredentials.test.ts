@@ -3,19 +3,15 @@ import test from 'node:test';
 
 import { createSupabaseCredentialsPort } from './supabaseCredentials';
 
-test('signUp via admin create + password grant returns session', async () => {
+test('signUp uses the public endpoint and never auto-confirms via the admin API', async () => {
   const calls: string[] = [];
   const port = createSupabaseCredentialsPort({
     supabaseUrl: 'https://example.supabase.co',
     anonKey: 'anon',
-    serviceRoleKey: 'service',
     fetchImpl: async (input, init) => {
       const url = String(input);
       calls.push(url);
-      if (url.includes('/admin/users')) {
-        return new Response(JSON.stringify({ id: 'u1' }), { status: 200 });
-      }
-      if (url.includes('/token')) {
+      if (url.endsWith('/auth/v1/signup')) {
         assert.equal(init?.method, 'POST');
         return new Response(
           JSON.stringify({
@@ -40,7 +36,20 @@ test('signUp via admin create + password grant returns session', async () => {
     refreshToken: 'rt',
     user: { id: 'u1', email: 'a@b.c', firstName: 'Maya' },
   });
-  assert.equal(calls.length, 2);
+  assert.deepEqual(calls, ['https://example.supabase.co/auth/v1/signup']);
+});
+
+test('signUp reports email_confirmation_required when the project requires confirmation', async () => {
+  const port = createSupabaseCredentialsPort({
+    supabaseUrl: 'https://example.supabase.co',
+    anonKey: 'anon',
+    fetchImpl: async () =>
+      new Response(JSON.stringify({ id: 'u1', email: 'a@b.c' }), { status: 200 }),
+  });
+  await assert.rejects(
+    port.signUp({ email: 'a@b.c', password: 'Longenough1' }),
+    (err: unknown) => (err as { code?: string }).code === 'email_confirmation_required',
+  );
 });
 
 test('signIn maps invalid login to invalid_credentials', async () => {
@@ -264,4 +273,59 @@ test('signInWithAppleIdToken maps GoTrue failures', async () => {
       return true;
     },
   );
+});
+
+test('recover sends the reset email with a redirect to the hosted page', async () => {
+  const calls: { url: string; body: string }[] = [];
+  const port = createSupabaseCredentialsPort({
+    supabaseUrl: 'https://example.supabase.co',
+    anonKey: 'anon',
+    fetchImpl: async (input, init) => {
+      calls.push({ url: String(input), body: String(init?.body) });
+      return new Response('{}', { status: 200 });
+    },
+  });
+  await port.recover(' A@B.C ', 'https://api.example.com/reset-password');
+  assert.equal(
+    calls[0]!.url,
+    'https://example.supabase.co/auth/v1/recover?redirect_to=https%3A%2F%2Fapi.example.com%2Freset-password',
+  );
+  assert.deepEqual(JSON.parse(calls[0]!.body), { email: 'a@b.c' });
+});
+
+test('recover hides upstream failures but surfaces throttling', async () => {
+  const failing = createSupabaseCredentialsPort({
+    supabaseUrl: 'https://example.supabase.co',
+    anonKey: 'anon',
+    fetchImpl: async () => new Response('{}', { status: 500 }),
+  });
+  await failing.recover('a@b.c', 'https://x/reset-password');
+
+  const throttled = createSupabaseCredentialsPort({
+    supabaseUrl: 'https://example.supabase.co',
+    anonKey: 'anon',
+    fetchImpl: async () => new Response('{}', { status: 429 }),
+  });
+  await assert.rejects(
+    throttled.recover('a@b.c', 'https://x/reset-password'),
+    (err: unknown) => (err as { code?: string }).code === 'rate_limited',
+  );
+});
+
+test('updatePassword uses the recovery token and enforces the password rule', async () => {
+  let auth = '';
+  const port = createSupabaseCredentialsPort({
+    supabaseUrl: 'https://example.supabase.co',
+    anonKey: 'anon',
+    fetchImpl: async (_input, init) => {
+      auth = new Headers(init?.headers).get('authorization') ?? '';
+      return new Response('{}', { status: 200 });
+    },
+  });
+  await assert.rejects(
+    port.updatePassword('recovery-token', 'weak'),
+    (err: unknown) => (err as { code?: string }).code === 'weak_password',
+  );
+  await port.updatePassword('recovery-token', 'Longenough1');
+  assert.equal(auth, 'Bearer recovery-token');
 });

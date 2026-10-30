@@ -15,7 +15,6 @@ export type { AuthSessionResult } from './goTrueShared';
 export type SupabaseCredentialsConfig = {
   supabaseUrl: string;
   anonKey: string;
-  serviceRoleKey?: string;
   fetchImpl?: typeof fetch;
 };
 
@@ -46,7 +45,56 @@ export function createSupabaseCredentialsPort(config: SupabaseCredentialsConfig)
         firstName: options?.firstName,
       }),
     refresh: (refreshToken: string) => refreshWithGoTrue(ctx, refreshToken),
+    recover: (email: string, redirectTo: string) => recoverWithGoTrue(ctx, email, redirectTo),
+    updatePassword: (accessToken: string, password: string) =>
+      updatePasswordWithGoTrue(ctx, accessToken, password),
   };
+}
+
+/**
+ * Sends the password-reset email. Never reveals whether the email exists:
+ * GoTrue answers the same for unknown addresses; only throttling surfaces.
+ */
+async function recoverWithGoTrue(ctx: CredCtx, email: string, redirectTo: string): Promise<void> {
+  const normalized = normalizeEmail(email);
+  const url = `${ctx.base}/auth/v1/recover?redirect_to=${encodeURIComponent(redirectTo)}`;
+  const response = await ctx.fetchImpl(url, {
+    method: 'POST',
+    headers: {
+      apikey: ctx.config.anonKey,
+      authorization: `Bearer ${ctx.config.anonKey}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ email: normalized }),
+  });
+  if (response.status === 429) {
+    throw new HttpError(429, 'rate_limited');
+  }
+  if (!response.ok) {
+    console.error('[auth] recover failed', response.status);
+  }
+}
+
+/** Sets a new password using the short-lived recovery session from the reset link. */
+async function updatePasswordWithGoTrue(
+  ctx: CredCtx,
+  accessToken: string,
+  password: string,
+): Promise<void> {
+  assertPassword(password);
+  const response = await ctx.fetchImpl(`${ctx.base}/auth/v1/user`, {
+    method: 'PUT',
+    headers: {
+      apikey: ctx.config.anonKey,
+      authorization: `Bearer ${accessToken}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ password }),
+  });
+  if (!response.ok) {
+    const body = (await response.json().catch(() => ({}))) as GoTrueTokenBody;
+    throw mapGoTrueError(response.status, body);
+  }
 }
 
 type CredCtx = {
@@ -62,21 +110,11 @@ async function signUpWithGoTrue(
   const email = normalizeEmail(input.email);
   assertPassword(input.password);
   const signedUpName = input.firstName?.trim() || null;
-  if (ctx.config.serviceRoleKey) {
-    await adminCreateUser(ctx.fetchImpl, ctx.base, ctx.config.serviceRoleKey, {
-      email,
-      password: input.password,
-      firstName: input.firstName,
-    });
-    const session = await passwordGrant({
-      fetchImpl: ctx.fetchImpl,
-      base: ctx.base,
-      anonKey: ctx.config.anonKey,
-      email,
-      password: input.password,
-    });
-    return withSignupName(session, signedUpName);
-  }
+  // Always the public sign-up endpoint: it honours the project's "Confirm email"
+  // setting. Creating users through the admin API with email_confirm=true
+  // marked unproven addresses as verified, letting someone pre-register a
+  // victim's email and inherit their later Google/Apple sign-in via automatic
+  // identity linking.
   const session = await anonSignUp(ctx.fetchImpl, ctx.base, ctx.config.anonKey, {
     email,
     password: input.password,
@@ -154,35 +192,6 @@ async function anonSignUp(
     throw new HttpError(403, 'email_confirmation_required');
   }
   return toSession(body);
-}
-
-async function adminCreateUser(
-  fetchImpl: typeof fetch,
-  base: string,
-  serviceRoleKey: string,
-  input: { email: string; password: string; firstName?: string },
-): Promise<void> {
-  const response = await fetchImpl(`${base}/auth/v1/admin/users`, {
-    method: 'POST',
-    headers: {
-      apikey: serviceRoleKey,
-      authorization: `Bearer ${serviceRoleKey}`,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      email: input.email,
-      password: input.password,
-      email_confirm: true,
-      user_metadata: input.firstName
-        ? { first_name: input.firstName.trim(), full_name: input.firstName.trim() }
-        : {},
-    }),
-  });
-  if (response.ok) {
-    return;
-  }
-  const body = (await response.json()) as GoTrueTokenBody;
-  throw mapGoTrueError(response.status, body);
 }
 
 async function passwordGrant(opts: {

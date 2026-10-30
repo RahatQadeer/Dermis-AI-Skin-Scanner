@@ -31,10 +31,16 @@ import { handleGetQuota } from '../handlers/quotaHandlers';
 import { handleDevGrantPro } from '../handlers/devEntitlementHandlers';
 import { handleRevenueCatWebhook } from '../handlers/revenueCatWebhookHandler';
 import { handleCreateScan, handleDeleteAllScans, handleListScans } from '../handlers/scanHandlers';
-import { DELETE_ACCOUNT_HTML } from './deleteAccountPage';
+import { serveDeleteAccountPage } from './deleteAccountPage';
 import { json } from './respond';
 import { routeRoutineAndSettings } from './routineRoutes';
 import type { AppDeps } from './createApp';
+import {
+  handlePublicRecover,
+  handlePublicUpdatePassword,
+  RESET_PASSWORD_PATH,
+  serveResetPasswordPage,
+} from './passwordResetRoutes';
 import { readJsonBody } from './readJsonBody';
 
 type RouteHandler = (request: Request, deps: AppDeps) => Promise<Response> | Response;
@@ -42,11 +48,7 @@ type RouteHandler = (request: Request, deps: AppDeps) => Promise<Response> | Res
 const PUBLIC_ROUTES: Record<string, RouteHandler> = {
   'GET /': () => json({ ok: true, service: 'dermis-api', health: '/health' }),
   'GET /health': () => json({ ok: true }),
-  'GET /delete-account': () =>
-    new Response(DELETE_ACCOUNT_HTML, {
-      status: 200,
-      headers: { 'content-type': 'text/html; charset=utf-8' },
-    }),
+  'GET /delete-account': serveDeleteAccountPage,
   'POST /v1/public/deletion-requests': handlePublicDeletion,
   'POST /v1/webhooks/revenuecat': handleWebhook,
   'POST /v1/auth/sign-up': handlePublicSignUp,
@@ -54,6 +56,9 @@ const PUBLIC_ROUTES: Record<string, RouteHandler> = {
   'POST /v1/auth/google': handlePublicGoogle,
   'POST /v1/auth/apple': handlePublicApple,
   'POST /v1/auth/refresh': handlePublicRefresh,
+  'POST /v1/auth/recover': handlePublicRecover,
+  'POST /v1/auth/password': handlePublicUpdatePassword,
+  [`GET ${RESET_PASSWORD_PATH}`]: serveResetPasswordPage,
 };
 
 export async function dispatchAuthed(
