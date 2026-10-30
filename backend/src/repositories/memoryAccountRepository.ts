@@ -46,15 +46,20 @@ export function createMemoryDeletionRequestStore(): DeletionRequestStore & {
 } {
   const rows: DeletionRequestRecord[] = [];
   return {
-    async enqueue(email, status) {
+    async enqueue({ email, userId, status }) {
       const row: DeletionRequestRecord = {
         id: randomUUID(),
         email: normalizeEmail(email),
+        userId,
         createdAt: new Date().toISOString(),
         status,
       };
       rows.push(row);
       return row;
+    },
+    async hasRecent(email, sinceIso) {
+      const normalized = normalizeEmail(email);
+      return rows.some((row) => row.email === normalized && row.createdAt >= sinceIso);
     },
     list: () => [...rows],
   };

@@ -1,3 +1,5 @@
+import { isProductionRuntime } from '@dermis/domain/server';
+
 import type { AuthPort } from './auth/AuthPort';
 import { createSupabaseAuthPort } from './auth/supabaseAuthPort';
 import { createSupabaseCredentialsPort } from './auth/supabaseCredentials';
@@ -5,7 +7,6 @@ import { createApp, type AppDeps } from './http/createApp';
 import { buildMemoryBackendDeps } from './memoryBackend';
 import { createMemoryPhotoStorage } from './adapters/memoryPhotoStorage';
 import { resolveSkinAnalyzer } from './adapters/resolveSkinAnalyzer';
-import { createMemoryDeletionRequestStore } from './repositories/memoryAccountRepository';
 import { createMemoryQuotaRepository } from './repositories/memoryQuotaRepository';
 import { createMemoryRoutineRepository } from './repositories/memoryRoutineRepository';
 import { createMemoryScanRepository } from './repositories/memoryScanRepository';
@@ -17,6 +18,7 @@ import {
   createSupabaseAccountDataPort,
   createSupabaseAuthAdmin,
 } from './repositories/supabaseAccountRepository';
+import { createSupabaseDeletionRequestStore } from './repositories/supabaseDeletionRequestRepository';
 import { createSupabaseConsentRepository } from './repositories/supabaseConsentRepository';
 import { createSupabaseEntitlementRepository } from './repositories/supabaseEntitlementRepository';
 import { createSupabaseFaceReferenceRepository } from './repositories/supabaseFaceReferenceRepository';
@@ -40,6 +42,13 @@ type LiveStores = {
 
 export function createBackendFromEnv(env: BackendEnv): (request: Request) => Promise<Response> {
   if (env.useMemory || !env.supabaseUrl || !env.supabaseAnonKey) {
+    // The memory stack accepts unsigned dev tokens (`user:<id>:<email>`) —
+    // never let a missing Supabase setting silently select it in production.
+    if (isProductionRuntime()) {
+      throw new Error(
+        'Refusing to start: memory backend selected in production (set SUPABASE_URL and SUPABASE_ANON_KEY, and unset DERMIS_BACKEND_MEMORY).',
+      );
+    }
     return createMemoryOrHybridBackend(env);
   }
   return createLiveSupabaseBackend(env);
@@ -151,7 +160,11 @@ function liveScanPipeline(opts: {
       preferFake: env.preferFakeAnalyzer ?? !env.geminiApiKey,
     }),
     photos: createMemoryPhotoStorage(),
-    disabled: env.scanPipelineDisabled,
+    // Never persist fake-analyzer scores as real scans in production: without a
+    // Gemini key the pipeline refuses (503) instead.
+    disabled:
+      env.scanPipelineDisabled ||
+      (isProductionRuntime() && (env.preferFakeAnalyzer === true || !env.geminiApiKey)),
   });
 }
 
@@ -195,19 +208,20 @@ function wireEntitlementsAndAccount(deps: AppDeps, env: BackendEnv): void {
       supabaseUrl: env.supabaseUrl!,
       serviceRoleKey: env.supabaseServiceRoleKey!,
     }),
-    deletionRequests: createMemoryDeletionRequestStore(),
+    deletionRequests: createSupabaseDeletionRequestStore({
+      supabaseUrl: env.supabaseUrl!,
+      serviceRoleKey: env.supabaseServiceRoleKey!,
+    }),
   });
   deps.accountFor = () => account;
   deps.publicAccount = account;
 }
 
 function shouldExposeDevEntitlements(env: BackendEnv): boolean {
-  // Explicit staging flag may stay on for preview hosts (Render) even when NODE_ENV=production.
-  if (env.allowDevEntitlement === true) {
-    return true;
-  }
-  if (process.env.NODE_ENV === 'production') {
+  // The dev grant writes a permanent plan='pro' row for the caller — never
+  // reachable in production, whatever DERMIS_ALLOW_DEV_ENTITLEMENT says.
+  if (isProductionRuntime()) {
     return false;
   }
-  return env.useMemory === true;
+  return env.allowDevEntitlement === true || env.useMemory === true;
 }

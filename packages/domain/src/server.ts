@@ -7,3 +7,4 @@ export { calculateIndex, DomainError } from './calculateIndex';
 export { canConsumeScan, remainingScans } from './quota';
 export { resolveFreePreviewConcernId } from './freePreviewConcern';
 export { DEFAULT_WEIGHT, MAX_PRIORITIES, PRIORITY_WEIGHT, SCORE_MAX, SCORE_MIN } from './constants';
+export { isProductionRuntime } from './readProcessEnv';

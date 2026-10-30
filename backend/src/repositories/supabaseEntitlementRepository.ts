@@ -16,6 +16,7 @@ type DbRow = {
   plan: PlanTier;
   pro_expires_at: string | null;
   revenuecat_app_user_id: string | null;
+  revenuecat_event_at_ms?: number | null;
   updated_at: string;
 };
 
@@ -66,6 +67,7 @@ function fromDb(row: DbRow): EntitlementRecord {
     plan: row.plan,
     proExpiresAt: row.pro_expires_at,
     revenueCatAppUserId: row.revenuecat_app_user_id,
+    lastEventAtMs: row.revenuecat_event_at_ms ?? null,
     updatedAt: row.updated_at,
   };
 }
@@ -76,5 +78,7 @@ function toDb(input: EntitlementUpsert): Record<string, unknown> {
     plan: input.plan,
     pro_expires_at: input.proExpiresAt,
     revenuecat_app_user_id: input.revenueCatAppUserId,
+    // Omit when unknown so a merge-upsert keeps the stored ordering marker.
+    ...(input.lastEventAtMs != null ? { revenuecat_event_at_ms: input.lastEventAtMs } : {}),
   };
 }

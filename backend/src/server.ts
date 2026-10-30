@@ -29,10 +29,17 @@ async function handleNode(
     });
     const buffer = Buffer.from(await response.arrayBuffer());
     res.end(buffer);
-  } catch {
-    res.statusCode = 500;
+  } catch (error) {
+    const tooLarge = error instanceof BodyTooLargeError;
+    res.statusCode = tooLarge ? 413 : 500;
     res.setHeader('content-type', 'application/json');
-    res.end(JSON.stringify({ error: 'internal_error' }));
+    if (tooLarge) {
+      res.setHeader('connection', 'close');
+    }
+    res.end(JSON.stringify({ error: tooLarge ? 'payload_too_large' : 'internal_error' }));
+    if (tooLarge) {
+      req.destroy();
+    }
   }
 }
 
@@ -60,10 +67,29 @@ function headersFromNode(req: IncomingMessage): Headers {
   return headers;
 }
 
+/**
+ * Largest accepted request body: an 8 MB scan image as base64 (~10.7 MB) plus
+ * JSON overhead. Checked while streaming so an oversized upload is rejected
+ * before it is buffered (any route, including unauthenticated ones).
+ */
+const MAX_BODY_BYTES = 12 * 1024 * 1024;
+
+class BodyTooLargeError extends Error {}
+
 async function readBody(req: IncomingMessage): Promise<Buffer> {
+  const declared = Number(req.headers['content-length'] ?? 0);
+  if (declared > MAX_BODY_BYTES) {
+    throw new BodyTooLargeError();
+  }
   const chunks: Buffer[] = [];
+  let total = 0;
   for await (const chunk of req) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    total += buf.byteLength;
+    if (total > MAX_BODY_BYTES) {
+      throw new BodyTooLargeError();
+    }
+    chunks.push(buf);
   }
   return Buffer.concat(chunks);
 }

@@ -1,4 +1,4 @@
-import { readProcessEnv } from './readProcessEnv';
+import { isProductionRuntime, readProcessEnv } from './readProcessEnv';
 
 /** Product limits — authoritative values for server enforcement. */
 export const FORMULA_VERSION = 'index-v1' as const;
@@ -22,7 +22,7 @@ export const SCORE_BAND = {
 /** Server/local testing: raise free scans without changing the product constant. */
 export function resolveFreeLifetimeScans(): number {
   const raw = readProcessEnv('DERMIS_FREE_LIFETIME_SCANS');
-  if (!raw) {
+  if (!raw || isProductionRuntime()) {
     return FREE_LIFETIME_SCANS;
   }
   const n = Number(raw);

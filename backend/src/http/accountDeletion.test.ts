@@ -46,6 +46,7 @@ function buildAccountApp() {
   const consentRepo = createMemoryConsentRepository();
   const emailIndex = new Map<string, string>();
   const deletedAuthUsers = new Set<string>();
+  const deletionRequests = createMemoryDeletionRequestStore();
   registerMemoryEmail(emailIndex, EMAIL, USER_ID);
 
   const account = createAccountService({
@@ -59,7 +60,7 @@ function buildAccountApp() {
       emailIndex,
     }),
     authAdmin: createMemoryAuthAdmin(deletedAuthUsers),
-    deletionRequests: createMemoryDeletionRequestStore(),
+    deletionRequests,
   });
 
   const app = createApp({
@@ -69,7 +70,15 @@ function buildAccountApp() {
     publicAccount: account,
   });
 
-  return { app, profileRepo, scanRepo, routineRepo, entitlementRepo, emailIndex };
+  return {
+    app,
+    profileRepo,
+    scanRepo,
+    routineRepo,
+    entitlementRepo,
+    emailIndex,
+    deletionRequests,
+  };
 }
 
 function authHeaders(): HeadersInit {
@@ -146,8 +155,8 @@ test('export then delete account removes data and invalidates auth', async () =>
   assert.equal(exportAfter.status, 401);
 });
 
-test('public deletion request purges by email without leaking existence', async () => {
-  const { app, profileRepo } = buildAccountApp();
+test('public deletion request is recorded, not executed, and does not leak existence', async () => {
+  const { app, profileRepo, deletionRequests } = buildAccountApp();
   await app(
     new Request('http://local/v1/profile', {
       method: 'POST',
@@ -181,7 +190,25 @@ test('public deletion request purges by email without leaking existence', async 
   );
   assert.equal(found.status, 202);
   assert.deepEqual(await found.json(), { accepted: true });
-  assert.equal(await profileRepo.findByUserId(USER_ID), null);
+  // The form does not prove email ownership — nothing may be deleted yet.
+  assert.notEqual(await profileRepo.findByUserId(USER_ID), null);
+  assert.deepEqual(
+    deletionRequests.list().map((r) => [r.email, r.status, r.userId]),
+    [
+      ['nobody@example.com', 'not_found', null],
+      [EMAIL, 'pending_verification', USER_ID],
+    ],
+  );
+
+  // Repeat submissions for the same email within a day are not re-recorded.
+  await app(
+    new Request('http://local/v1/public/deletion-requests', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: EMAIL, confirmation: 'DELETE MY ACCOUNT' }),
+    }),
+  );
+  assert.equal(deletionRequests.list().length, 2);
 });
 
 test('DELETE /v1/account rejects wrong confirmation', async () => {

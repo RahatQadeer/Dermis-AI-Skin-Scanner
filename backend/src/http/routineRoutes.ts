@@ -10,6 +10,7 @@ import { handleGetSettings, handlePatchSettings } from '../handlers/settingsHand
 import { json } from './respond';
 import type { RoutineService } from '../services/routineService';
 import type { SettingsService } from '../services/settingsService';
+import { readJsonBody } from './readJsonBody';
 
 export type RoutineSettingsDeps = {
   routine: RoutineService;
@@ -32,7 +33,7 @@ export async function routeRoutineAndSettings(ctx: RouteCtx): Promise<Response |
     return routeRoutineRoot(ctx);
   }
   if (ctx.path === '/v1/routine/steps' && ctx.method === 'POST') {
-    return handleAddRoutineStep(ctx.deps.routine, ctx.userId, await ctx.request.json());
+    return handleAddRoutineStep(ctx.deps.routine, ctx.userId, await readJsonBody(ctx.request));
   }
 
   const stepMatch = /^\/v1\/routine\/steps\/([^/]+)$/.exec(ctx.path);
@@ -46,7 +47,7 @@ export async function routeRoutineAndSettings(ctx: RouteCtx): Promise<Response |
       ctx.deps.routine,
       ctx.userId,
       completionMatch[1]!,
-      await ctx.request.json(),
+      await readJsonBody(ctx.request),
     );
   }
 
@@ -58,7 +59,7 @@ async function routeSettings(ctx: RouteCtx): Promise<Response> {
     return handleGetSettings(ctx.deps.settings, ctx.userId);
   }
   if (ctx.method === 'PATCH') {
-    return handlePatchSettings(ctx.deps.settings, ctx.userId, await ctx.request.json());
+    return handlePatchSettings(ctx.deps.settings, ctx.userId, await readJsonBody(ctx.request));
   }
   return json({ error: 'method_not_allowed' }, 405);
 }
@@ -69,14 +70,19 @@ async function routeRoutineRoot(ctx: RouteCtx): Promise<Response> {
     return handleGetRoutine(ctx.deps.routine, ctx.userId, date);
   }
   if (ctx.method === 'PUT') {
-    return handleReplaceRoutine(ctx.deps.routine, ctx.userId, await ctx.request.json());
+    return handleReplaceRoutine(ctx.deps.routine, ctx.userId, await readJsonBody(ctx.request));
   }
   return json({ error: 'method_not_allowed' }, 405);
 }
 
 async function routeRoutineStep(ctx: RouteCtx, stepId: string): Promise<Response> {
   if (ctx.method === 'PATCH') {
-    return handlePatchRoutineStep(ctx.deps.routine, ctx.userId, stepId, await ctx.request.json());
+    return handlePatchRoutineStep(
+      ctx.deps.routine,
+      ctx.userId,
+      stepId,
+      await readJsonBody(ctx.request),
+    );
   }
   if (ctx.method === 'DELETE') {
     return handleDeleteRoutineStep(ctx.deps.routine, ctx.userId, stepId);

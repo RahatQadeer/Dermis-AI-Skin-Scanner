@@ -35,6 +35,7 @@ import { DELETE_ACCOUNT_HTML } from './deleteAccountPage';
 import { json } from './respond';
 import { routeRoutineAndSettings } from './routineRoutes';
 import type { AppDeps } from './createApp';
+import { readJsonBody } from './readJsonBody';
 
 type RouteHandler = (request: Request, deps: AppDeps) => Promise<Response> | Response;
 
@@ -131,7 +132,7 @@ async function handleFaceReferenceRoute(
   if (method === 'GET') {
     return handleGetFaceReference(service, user.id);
   }
-  return handleRegisterFaceReference(service, user.id, await request.json());
+  return handleRegisterFaceReference(service, user.id, await readJsonBody(request));
 }
 
 const CORE_ROUTES: Record<string, RouteHandler> = {
@@ -173,7 +174,7 @@ async function handleConsentRoute(
     return handleConsentStatus(consents, user.id);
   }
   if (method === 'POST' && path === '/v1/consents') {
-    return handleGrantConsent(consents, user.id, await request.json());
+    return handleGrantConsent(consents, user.id, await readJsonBody(request));
   }
   return json({ error: 'method_not_allowed' }, 405);
 }
@@ -182,42 +183,42 @@ async function handlePublicSignUp(request: Request, deps: AppDeps): Promise<Resp
   if (!deps.credentials) {
     return json({ error: 'auth_credentials_not_configured' }, 503);
   }
-  return handleSignUp(deps.credentials, await request.json());
+  return handleSignUp(deps.credentials, await readJsonBody(request));
 }
 
 async function handlePublicSignIn(request: Request, deps: AppDeps): Promise<Response> {
   if (!deps.credentials) {
     return json({ error: 'auth_credentials_not_configured' }, 503);
   }
-  return handleSignIn(deps.credentials, await request.json());
+  return handleSignIn(deps.credentials, await readJsonBody(request));
 }
 
 async function handlePublicGoogle(request: Request, deps: AppDeps): Promise<Response> {
   if (!deps.credentials) {
     return json({ error: 'auth_credentials_not_configured' }, 503);
   }
-  return handleGoogleSignIn(deps.credentials, await request.json());
+  return handleGoogleSignIn(deps.credentials, await readJsonBody(request));
 }
 
 async function handlePublicApple(request: Request, deps: AppDeps): Promise<Response> {
   if (!deps.credentials) {
     return json({ error: 'auth_credentials_not_configured' }, 503);
   }
-  return handleAppleSignIn(deps.credentials, await request.json());
+  return handleAppleSignIn(deps.credentials, await readJsonBody(request));
 }
 
 async function handlePublicRefresh(request: Request, deps: AppDeps): Promise<Response> {
   if (!deps.credentials) {
     return json({ error: 'auth_credentials_not_configured' }, 503);
   }
-  return handleRefresh(deps.credentials, await request.json());
+  return handleRefresh(deps.credentials, await readJsonBody(request));
 }
 
 async function handlePublicDeletion(request: Request, deps: AppDeps): Promise<Response> {
   if (!deps.publicAccount) {
     return json({ error: 'account_deletion_not_configured' }, 503);
   }
-  return handlePublicDeletionRequest(deps.publicAccount, await request.json());
+  return handlePublicDeletionRequest(deps.publicAccount, await readJsonBody(request));
 }
 
 async function handleAccountRoute(
@@ -235,7 +236,7 @@ async function handleAccountRoute(
     return handleExportAccount(account, user.id, user.email);
   }
   if (method === 'DELETE' && path === '/v1/account') {
-    return handleDeleteAccount(account, user.id, await request.json());
+    return handleDeleteAccount(account, user.id, await readJsonBody(request));
   }
   return json({ error: 'method_not_allowed' }, 405);
 }
@@ -268,7 +269,7 @@ async function handleScanRoute(request: Request, method: string, deps: AppDeps):
   if (method === 'DELETE') {
     return handleDeleteAllScans(pipeline, user.id);
   }
-  return handleCreateScan(pipeline, user.id, await request.json());
+  return handleCreateScan(pipeline, user.id, await readJsonBody(request));
 }
 
 async function handleRoutineSettings(
@@ -304,10 +305,10 @@ async function handleProfileRoute(
     return handleGetProfile(profiles, user.id);
   }
   if (method === 'POST') {
-    return handleCreateProfile(profiles, user.id, await request.json());
+    return handleCreateProfile(profiles, user.id, await readJsonBody(request));
   }
   if (method === 'PATCH') {
-    return handlePatchProfile(profiles, user.id, await request.json());
+    return handlePatchProfile(profiles, user.id, await readJsonBody(request));
   }
   if (method === 'DELETE') {
     return handleDeleteProfile(profiles, user.id);

@@ -29,11 +29,8 @@ services:
         value: '0'
       - key: DERMIS_FAKE_ANALYZER
         value: '0'
-      # Testing unlock — remove before real store billing.
-      - key: DERMIS_FORCE_PRO
-        value: '1'
-      - key: DERMIS_ALLOW_DEV_ENTITLEMENT
-        value: '1'
+      # DERMIS_FORCE_PRO / DERMIS_ALLOW_DEV_ENTITLEMENT / DERMIS_FREE_LIFETIME_SCANS
+      # are local-testing overrides and are ignored when NODE_ENV=production.
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_ANON_KEY

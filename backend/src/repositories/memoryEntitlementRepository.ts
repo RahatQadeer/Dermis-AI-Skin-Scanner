@@ -28,6 +28,7 @@ export function createMemoryEntitlementRepository(
         plan: input.plan,
         proExpiresAt: input.proExpiresAt,
         revenueCatAppUserId: input.revenueCatAppUserId,
+        lastEventAtMs: input.lastEventAtMs ?? store.get(input.userId)?.lastEventAtMs ?? null,
         updatedAt: nowIso(),
       };
       store.set(input.userId, next);

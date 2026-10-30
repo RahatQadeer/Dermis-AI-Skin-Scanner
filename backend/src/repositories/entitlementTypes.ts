@@ -5,6 +5,8 @@ export type EntitlementRecord = {
   plan: PlanTier;
   proExpiresAt: string | null;
   revenueCatAppUserId: string | null;
+  /** event_timestamp_ms of the newest RevenueCat event applied (ordering guard). */
+  lastEventAtMs: number | null;
   updatedAt: string;
 };
 
@@ -13,6 +15,7 @@ export type EntitlementUpsert = {
   plan: PlanTier;
   proExpiresAt: string | null;
   revenueCatAppUserId: string;
+  lastEventAtMs?: number | null;
 };
 
 export type EntitlementRepository = {

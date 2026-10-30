@@ -35,7 +35,7 @@ export const DELETE_ACCOUNT_HTML = `<!DOCTYPE html>
       <input id="confirmation" name="confirmation" type="text" required autocomplete="off" />
       <button type="submit" id="submit">Request deletion</button>
     </form>
-    <p class="note">Dermis is a wellness tool, not a medical device. We process deletion requests for the email you enter. You will not receive confirmation that an account existed.</p>
+    <p class="note">Dermis is a wellness tool, not a medical device. Fastest option: open Dermis, go to Profile and choose Delete account &mdash; it takes effect immediately. Requests made on this page are completed after we confirm you own the email address, so watch that inbox for a message from us.</p>
     <div id="msg" class="msg" role="status"></div>
   </main>
   <script>
@@ -61,7 +61,7 @@ export const DELETE_ACCOUNT_HTML = `<!DOCTYPE html>
           throw new Error('Request failed');
         }
         msg.className = 'msg ok';
-        msg.textContent = 'If an account exists for that email, it has been scheduled for deletion.';
+        msg.textContent = 'Request received. If an account exists for that email, we will contact that inbox to confirm before deleting it.';
         form.reset();
       } catch {
         msg.className = 'msg err';

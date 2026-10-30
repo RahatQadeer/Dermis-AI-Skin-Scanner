@@ -9,6 +9,9 @@ import type {
 export const ACCOUNT_DELETE_CONFIRMATION = 'DELETE' as const;
 export const PUBLIC_DELETE_CONFIRMATION = 'DELETE MY ACCOUNT' as const;
 
+/** One recorded public request per email per day. */
+const PUBLIC_DELETION_DEDUPE_MS = 24 * 60 * 60 * 1000;
+
 export type AccountService = {
   exportData: (userId: string, email: string | null) => Promise<AccountExportPayload>;
   deleteAccount: (userId: string, confirmation: string) => Promise<void>;
@@ -45,14 +48,20 @@ export function createAccountService(deps: AccountServiceDeps): AccountService {
       if (!isPlausibleEmail(normalized)) {
         throw new HttpError(400, 'invalid_email');
       }
-      const userId = await deps.data.findUserIdByEmail(normalized);
-      if (!userId) {
-        await deps.deletionRequests.enqueue(normalized, 'not_found');
+      // Same response whatever happens below — never reveal whether an account exists.
+      const since = new Date(Date.now() - PUBLIC_DELETION_DEDUPE_MS).toISOString();
+      if (await deps.deletionRequests.hasRecent(normalized, since)) {
         return { accepted: true as const };
       }
-      await deps.data.purgeUserData(userId);
-      await deps.authAdmin.deleteAuthUser(userId);
-      await deps.deletionRequests.enqueue(normalized, 'completed');
+      // Signed-out web form: anyone can type any email, so never purge here.
+      // Record the request; it is completed after the owner confirms from that
+      // inbox. Signed-in users delete immediately via DELETE /v1/account.
+      const userId = await deps.data.findUserIdByEmail(normalized);
+      await deps.deletionRequests.enqueue({
+        email: normalized,
+        userId,
+        status: userId ? 'pending_verification' : 'not_found',
+      });
       return { accepted: true as const };
     },
   };

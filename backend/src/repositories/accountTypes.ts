@@ -22,16 +22,25 @@ export type AuthAdminPort = {
   deleteAuthUser: (userId: string) => Promise<void>;
 };
 
+/**
+ * Public (signed-out) deletion requests. Ownership of the email is NOT proven
+ * by the web form, so a request is only recorded — the account is deleted
+ * after the owner confirms from that inbox (or deletes in-app while signed in).
+ */
 export type DeletionRequestRecord = {
   id: string;
   email: string;
+  userId: string | null;
   createdAt: string;
-  status: 'completed' | 'not_found';
+  status: 'pending_verification' | 'not_found';
 };
 
 export type DeletionRequestStore = {
-  enqueue: (
-    email: string,
-    status: DeletionRequestRecord['status'],
-  ) => Promise<DeletionRequestRecord>;
+  enqueue: (input: {
+    email: string;
+    userId: string | null;
+    status: DeletionRequestRecord['status'];
+  }) => Promise<DeletionRequestRecord>;
+  /** Any request for this email created at/after `sinceIso` (form spam guard). */
+  hasRecent: (email: string, sinceIso: string) => Promise<boolean>;
 };

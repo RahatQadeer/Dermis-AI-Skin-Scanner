@@ -11,6 +11,7 @@ export const revenueCatWebhookSchema = z.object({
     entitlement_ids: z.array(z.string()).nullable().optional(),
     expiration_at_ms: z.number().nullable().optional(),
     purchased_at_ms: z.number().nullable().optional(),
+    event_timestamp_ms: z.number().nullable().optional(),
     store: z.string().optional(),
     environment: z.enum(['SANDBOX', 'PRODUCTION']).optional(),
   }),

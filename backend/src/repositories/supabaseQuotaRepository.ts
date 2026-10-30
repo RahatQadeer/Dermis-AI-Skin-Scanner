@@ -23,7 +23,19 @@ const consumeResultSchema = z.discriminatedUnion('allowed', [
   }),
 ]);
 
-type EntitlementRow = { plan: Plan };
+type EntitlementRow = { plan: Plan; pro_expires_at?: string | null };
+
+/** Pro with a past expiry is treated as free. */
+export function planAfterExpiry(
+  plan: Plan,
+  proExpiresAt: string | null | undefined,
+  now: Date,
+): Plan {
+  if (plan === 'pro' && proExpiresAt && Date.parse(proExpiresAt) <= now.getTime()) {
+    return 'free';
+  }
+  return plan;
+}
 type UsageRow = {
   lifetime_scan_count: number;
   daily_scan_count: number;
@@ -237,13 +249,21 @@ async function fetchPlan(
   headers: () => HeadersInit,
   userId: string,
 ): Promise<Plan | null> {
-  const url = `${root}/rest/v1/entitlements?user_id=eq.${encodeURIComponent(userId)}&select=plan`;
+  const url =
+    `${root}/rest/v1/entitlements?user_id=eq.${encodeURIComponent(userId)}` +
+    `&select=plan,pro_expires_at`;
   const response = await fetchImpl(url, { headers: headers() });
   if (!response.ok) {
     return null;
   }
   const rows = (await response.json()) as EntitlementRow[];
-  return rows[0]?.plan ?? null;
+  const row = rows[0];
+  if (!row) {
+    return null;
+  }
+  // Mirrors consume_scan_quota: Pro lapses at pro_expires_at even if the
+  // EXPIRATION webhook never arrived.
+  return planAfterExpiry(row.plan, row.pro_expires_at, new Date());
 }
 
 async function fetchUsage(
