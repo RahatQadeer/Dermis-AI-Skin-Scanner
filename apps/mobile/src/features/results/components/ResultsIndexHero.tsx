@@ -10,18 +10,12 @@ export type ResultsIndexHeroProps = {
   /** e.g. "+4 vs 21 Sept" — omit when no prior scan. */
   deltaLabel?: string;
   /** Skin age estimate label — omit when unavailable. */
-  skinAgeLabel?: string;
   insight: string;
 };
 
-export function ResultsIndexHero({
-  indexScore,
-  deltaLabel,
-  skinAgeLabel,
-  insight,
-}: ResultsIndexHeroProps) {
+export function ResultsIndexHero({ indexScore, deltaLabel, insight }: ResultsIndexHeroProps) {
   const r = getCopy().screens.results;
-  const showPills = Boolean(deltaLabel || skinAgeLabel);
+  const showPills = Boolean(deltaLabel);
 
   return (
     <View style={styles.card}>
@@ -42,13 +36,6 @@ export function ResultsIndexHero({
                   </AppText>
                 </View>
               ) : null}
-              {skinAgeLabel ? (
-                <View style={[styles.pill, styles.pillBeige]}>
-                  <AppText variant="caption" color={colors.ink} style={styles.pillText}>
-                    {skinAgeLabel}
-                  </AppText>
-                </View>
-              ) : null}
             </View>
           ) : null}
         </View>
@@ -62,6 +49,9 @@ export function ResultsIndexHero({
           </AppText>
         </View>
       </View>
+      <AppText variant="caption" color={colors.muteBody}>
+        {r.indexCaption}
+      </AppText>
     </View>
   );
 }
@@ -109,9 +99,6 @@ const styles = StyleSheet.create({
   },
   pillDelta: {
     backgroundColor: colors.greenSoft,
-  },
-  pillBeige: {
-    backgroundColor: colors.zoneDetailBg,
   },
   pillText: {
     fontFamily: fontFamilies.bodySemiBold,

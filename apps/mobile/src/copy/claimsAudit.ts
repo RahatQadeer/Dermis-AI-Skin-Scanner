@@ -14,9 +14,13 @@ export const BANNED_CLAIM_PATTERNS: readonly RegExp[] = [
   /41k/,
   /68\s+landmarks?/,
   /uv\s+index/,
-  /skin\s+age(?!\s+estimate)/,
+  /skin\s+age/,
   /full\s+zone\s+map\s+on\s+every\s+scan/,
   /photos?\s+stay\s+on\s+your/,
+  // Outcome promises / personalised-looking projections shown to every user.
+  /projected\s+index/,
+  /modell?ed\s+on\s+similar/,
+  /\bderm[- ]built\b/,
 ];
 
 export function findBannedClaim(text: string): string | null {

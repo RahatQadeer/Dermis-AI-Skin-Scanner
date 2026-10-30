@@ -16,7 +16,8 @@ export const PLACEHOLDER_PRODUCTS: readonly PlaceholderProduct[] = [
     id: 'retinoid',
     category: 'Retinoid',
     name: 'Encapsulated retinol 0.3%',
-    summary: 'Supports cell turnover; matched to your low-sensitivity profile.',
+    summary:
+      'Supports cell turnover. Start 2× weekly at night; skip if pregnant and ask a pharmacist if your skin is sensitive.',
     primaryConcern: 'texture',
     score: 64,
     priceLabel: '$48',
@@ -26,7 +27,7 @@ export const PLACEHOLDER_PRODUCTS: readonly PlaceholderProduct[] = [
     id: 'brightening-serum',
     category: 'Brightening serum',
     name: 'Tranexamic acid 3% + niacinamide',
-    summary: 'Aims at uneven marks on the left cheek, without hydroquinone.',
+    summary: 'Commonly used for uneven-looking marks, without hydroquinone.',
     primaryConcern: 'darkSpots',
     score: 69,
     priceLabel: '$39',
@@ -36,7 +37,8 @@ export const PLACEHOLDER_PRODUCTS: readonly PlaceholderProduct[] = [
     id: 'mineral-sunscreen',
     category: 'Mineral sunscreen',
     name: 'Zinc oxide SPF 50, tinted',
-    summary: 'Daily broad-spectrum step for dark-spot goals. Tint matched to Fitzpatrick IV.',
+    summary:
+      'Daily broad-spectrum step for dark-spot goals. Pick the tint closest to your skin tone.',
     primaryConcern: 'fineLines',
     score: 70,
     badgeLabel: 'Prevention',

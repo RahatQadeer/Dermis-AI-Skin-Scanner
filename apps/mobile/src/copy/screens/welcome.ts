@@ -19,7 +19,7 @@ export const welcomeCopy = {
   stats: [
     { title: '60s', subtitle: 'per scan' },
     { title: 'Private', subtitle: 'secure upload' },
-    { title: 'Derm-built', subtitle: 'wellness insights' },
+    { title: '6 concerns', subtitle: 'tracked over time' },
   ],
   chipHydrationScore: '72',
   chipHydrationLabel: 'Hydration',

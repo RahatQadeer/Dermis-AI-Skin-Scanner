@@ -34,7 +34,6 @@ export function ResultsScreen() {
       report={screen.report}
       reportWhen={screen.reportWhen}
       deltaLabel={screen.deltaLabel}
-      skinAgeLabel={screen.skinAgeLabel}
       insight={screen.insight}
       concernDeltas={screen.concernDeltas}
       zoneId={screen.zoneId}

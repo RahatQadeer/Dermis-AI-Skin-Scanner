@@ -10,7 +10,6 @@ import type { ResultsReport } from '../mock/resultsMockReport';
 export function ResultsReportMain(props: {
   report: ResultsReport;
   deltaLabel: string | undefined;
-  skinAgeLabel: string | undefined;
   insight: string;
   concernDeltas: Partial<Record<ConcernId, string>> | undefined;
   zoneId: ZoneId | null;
@@ -24,7 +23,6 @@ export function ResultsReportMain(props: {
       <ResultsIndexHero
         indexScore={props.report.scan.indexScore}
         deltaLabel={props.deltaLabel}
-        skinAgeLabel={props.skinAgeLabel}
         insight={props.insight}
       />
       <ResultsZoneSection

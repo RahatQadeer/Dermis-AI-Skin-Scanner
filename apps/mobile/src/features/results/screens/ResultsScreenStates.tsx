@@ -60,7 +60,6 @@ export function ResultsScreenReport(props: {
   report: ResultsReport;
   reportWhen: string;
   deltaLabel: string | undefined;
-  skinAgeLabel: string | undefined;
   insight: string;
   concernDeltas: Partial<Record<ConcernId, string>> | undefined;
   zoneId: ZoneId | null;

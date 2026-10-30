@@ -3,15 +3,13 @@ export const resultsCopy = {
   reportTitle: (when: string) => `Report · ${when}`,
   shareCta: 'Share',
   indexTitle: 'SKIN HEALTH INDEX',
-  indexCaption: 'Overall wellness estimate from this scan',
+  indexCaption: 'Wellness estimate from this photo — not a diagnosis',
   indexInsight: 'A calm baseline from this selfie — track habits over time.',
   indexInsightDelta: (delta: number, when: string) =>
     delta >= 0
-      ? `Up ${String(delta)} since ${when}. Texture improved the most!`
-      : `Down ${String(Math.abs(delta))} since ${when}. Soft light and gentle care help the next scan.`,
+      ? `Up ${String(delta)} since ${when}. See which concerns moved below.`
+      : `Down ${String(Math.abs(delta))} since ${when}. Lighting changes scores too — scan in the same soft light to compare fairly.`,
   deltaVs: (delta: number, when: string) => `${delta >= 0 ? '+' : ''}${String(delta)} vs ${when}`,
-  /** Must keep “estimate” — D4 bans bare “skin age”. */
-  skinAgeEstimate: (age: number) => `Skin age estimate ${String(age)}`,
   zonesTitle: 'Zone map',
   zonesTapHint: 'Tap a zone',
   zonesLockedHint: 'Zone map is included on each Pro scan',
@@ -35,21 +33,23 @@ export const resultsCopy = {
   pdfExportFail: 'Could not create the PDF. Try again.',
   pdfExportUnavailable: 'Sharing is not available on this device.',
   freePreviewHint: 'Free includes your index and one priority concern. Unlock Pro for the rest.',
+  // Describe what each zone/concern score reflects — never claim to have seen
+  // something specific on this user's face (the same text shows for everyone).
   zoneBlurbs: {
     forehead: 'Often first to show dryness or stress lines. Soft cleanser and daily SPF help.',
-    tZone: 'Highest oil activity here. Pores look larger; mild redness at the sides of the nose.',
+    tZone: 'Usually the oiliest area, so pores and shine tend to show here first.',
     leftCheek: 'Tone and texture often show here first. Even light helps you compare fairly.',
     rightCheek: 'Tone and texture often show here first. Even light helps you compare fairly.',
     periorbital: 'The eye area looks thinner. Hydration and sunscreen support a softer look.',
     chin: 'Chin can feel reactive to products. Keep routines simple and note what stings.',
   },
   concernBlurbs: {
-    redness: 'Mild warmth on the sides of the nose; within a typical range for this selfie.',
-    fineLines: 'Soft lines near the eyes, light depth. Looking steady vs your last scan.',
-    hydration: 'Cheeks hold moisture better; the plump look is trending up.',
-    darkSpots: 'Post-blemish marks on the left cheek look softer over time.',
-    texture: 'Surface feel looks smoother since retinol nights started.',
-    pores: 'Pores look larger in the T-zone; oil balance is the main focus here.',
+    redness: 'How even and calm skin tone looks, especially around the nose and cheeks.',
+    fineLines: 'How visible fine lines look, mostly around the eyes and forehead.',
+    hydration: 'How plump and smooth skin looks — a visual cue, not a moisture reading.',
+    darkSpots: 'How even pigmentation looks, including marks left after blemishes.',
+    texture: 'How smooth the skin surface looks in this photo.',
+    pores: 'How visible pores look, usually most noticeable on the T-zone.',
   },
   notes: {
     redness: {
@@ -69,9 +69,8 @@ export const resultsCopy = {
       body: 'Sunscreen and gentle care matter most — marks soften slowly with steady habits.',
     },
     texture: {
-      headline:
-        'Texture rose since retinol nights started. That is the clearest win in this report.',
-      body: 'Keep retinol on Mon/Wed/Fri. Adding a fourth night now may feel too strong.',
+      headline: 'Smooth the look of texture with gentle consistency.',
+      body: 'Gentle exfoliation a few nights a week and daily moisturizer help. Ask a pharmacist or dermatologist before starting strong actives like retinoids.',
     },
     pores: {
       headline: 'Pore look calms with balance, not scrubbing.',

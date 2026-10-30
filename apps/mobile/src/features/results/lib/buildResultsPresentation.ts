@@ -6,7 +6,6 @@ import { indexDeltaSincePrevious } from '@/src/features/scan/lib/indexDelta';
 
 import {
   concernDeltaLabels,
-  estimateSkinAge,
   formatPriorWhen,
   formatReportWhen,
   formatScanWhen,
@@ -43,7 +42,6 @@ export function buildResultsPresentation(
 ): {
   reportWhen: string;
   deltaLabel: string | undefined;
-  skinAgeLabel: string | undefined;
   insight: string;
   concernDeltas: Partial<Record<ConcernId, string>> | undefined;
 } {
@@ -56,7 +54,6 @@ export function buildResultsPresentation(
     return {
       reportWhen,
       deltaLabel: undefined,
-      skinAgeLabel: undefined,
       insight: r.indexInsight,
       concernDeltas: undefined,
     };
@@ -69,9 +66,6 @@ export function buildResultsPresentation(
   return {
     reportWhen,
     deltaLabel: buildDeltaLabel(indexDelta, priorWhen, usePrototypeExtras, r),
-    skinAgeLabel: r.skinAgeEstimate(
-      estimateSkinAge(report.scan.indexScore, report.scan.concernScores),
-    ),
     insight: buildIndexInsight(indexDelta, priorWhen, usePrototypeExtras, r),
     concernDeltas: buildConcernDeltas(report, previous, usePrototypeExtras),
   };

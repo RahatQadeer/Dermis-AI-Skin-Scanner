@@ -10,12 +10,15 @@ describe('claims audit (DERM-061)', () => {
     assert.ok(findBannedClaim('Clinical scoring powered by AI'));
     assert.ok(findBannedClaim('68 landmarks detected'));
     assert.ok(findBannedClaim('Full zone map on every scan'));
+    // Invented from scores, never from the user's real age — banned outright.
+    assert.ok(findBannedClaim('Fun skin age estimate only'));
+    assert.ok(findBannedClaim('YOUR PROJECTED INDEX 62 → 78'));
+    assert.ok(findBannedClaim('Modelled on similar skin profiles'));
   });
 
   it('allows compliant cloud and disclaimer phrasing', () => {
     assert.equal(findBannedClaim('Secure cloud analysis with Google Gemini'), null);
     assert.equal(findBannedClaim('Not a medical device. Consult a dermatologist.'), null);
-    assert.equal(findBannedClaim('Fun skin age estimate only'), null);
   });
 
   it('copy catalog has no banned claim substrings', () => {

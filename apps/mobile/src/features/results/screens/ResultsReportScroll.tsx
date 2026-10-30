@@ -21,7 +21,6 @@ export type ResultsReportScrollProps = {
   report: ResultsReport;
   reportWhen: string;
   deltaLabel: string | undefined;
-  skinAgeLabel: string | undefined;
   insight: string;
   concernDeltas: Partial<Record<ConcernId, string>> | undefined;
   zoneId: ZoneId | null;
@@ -57,7 +56,6 @@ export function ResultsReportScroll(props: ResultsReportScrollProps) {
       <ResultsReportMain
         report={props.report}
         deltaLabel={props.deltaLabel}
-        skinAgeLabel={props.skinAgeLabel}
         insight={props.insight}
         concernDeltas={props.concernDeltas}
         zoneId={props.zoneId}

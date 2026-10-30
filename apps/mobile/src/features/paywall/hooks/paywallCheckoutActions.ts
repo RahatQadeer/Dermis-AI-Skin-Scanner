@@ -11,7 +11,11 @@ import {
 } from '@/src/features/purchases/revenueCat/revenueCatApi';
 import type { PlanKind } from '@/src/components/PlanCard';
 
+/** Dev builds only: the backend refuses this grant in production anyway. */
 async function tryGrantDevPro(): Promise<boolean> {
+  if (!__DEV__) {
+    return false;
+  }
   try {
     await grantDevProEntitlement();
     return true;
@@ -21,8 +25,9 @@ async function tryGrantDevPro(): Promise<boolean> {
 }
 
 /**
- * Testing / preview: unlock-all always succeeds.
- * No RevenueCat key: try staging POST /v1/dev/entitlements/pro when signed in.
+ * Testing: unlock-all always succeeds (never in release builds — see
+ * isUnlockAllFeatures). Dev builds without store billing fall back to
+ * POST /v1/dev/entitlements/pro; release builds report the real outcome.
  */
 export async function runPaywallPurchase(
   billingEnabled: boolean,

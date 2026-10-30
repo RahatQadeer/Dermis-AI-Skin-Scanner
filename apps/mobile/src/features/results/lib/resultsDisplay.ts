@@ -3,23 +3,6 @@ import type { ConcernId } from '@dermis/domain';
 import { formatShortDate } from '@/src/features/progress/lib/formatShortDate';
 import type { ScanDto } from '@/src/features/scan/api/scanApi';
 
-type AgeConcernScores = Partial<
-  Pick<Record<ConcernId, number>, 'fineLines' | 'texture' | 'darkSpots'>
->;
-
-/**
- * Fun wellness estimate only — not a medical age (PRODUCT.md).
- * Uses index + age-linked concerns so score changes move the estimate.
- */
-export function estimateSkinAge(indexScore: number, concerns?: AgeConcernScores): number {
-  const lines = concerns?.fineLines ?? indexScore;
-  const texture = concerns?.texture ?? indexScore;
-  const spots = concerns?.darkSpots ?? indexScore;
-  const youth = lines * 0.45 + texture * 0.25 + spots * 0.15 + indexScore * 0.15;
-  const age = Math.round(56 - youth * 0.38);
-  return Math.min(55, Math.max(18, age));
-}
-
 export function formatReportWhen(date = new Date()): string {
   const day = date.getDate();
   const month = date.toLocaleString('en-GB', { month: 'short' });
