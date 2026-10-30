@@ -1,4 +1,4 @@
-import { isUnlockAllFeatures } from '@dermis/domain';
+import { isFeaturesUnlocked } from '@dermis/domain';
 
 import { getCopy } from '@/src/copy';
 import type { SessionState } from '@/src/features/session/SessionContext';
@@ -55,7 +55,7 @@ export async function submitSignUpRequest(
       email: authSession.user.email ?? email,
       userId: authSession.user.id,
       firstName: authSession.user.firstName ?? firstName.trim(),
-      showPaywall: session.onboardingComplete && !isUnlockAllFeatures(),
+      showPaywall: session.onboardingComplete && !isFeaturesUnlocked(),
     });
     return { errors: {} };
   } catch (error) {
@@ -84,7 +84,7 @@ export async function submitLogInRequest(
       email: authSession.user.email ?? email,
       userId: authSession.user.id,
       firstName: authSession.user.firstName,
-      showPaywall: session.onboardingComplete && !isUnlockAllFeatures(),
+      showPaywall: session.onboardingComplete && !isFeaturesUnlocked(),
     });
     return { errors: {} };
   } catch (error) {

@@ -1,4 +1,4 @@
-import { isUnlockAllFeatures } from '@dermis/domain';
+import { isFeaturesUnlocked } from '@dermis/domain';
 import { Redirect, Stack } from 'expo-router';
 
 import { FullScreenLoader } from '@/src/components/layout/FullScreenLoader';
@@ -12,8 +12,8 @@ export default function AuthLayout() {
     return null;
   }
   if (session.accessToken) {
-    // Local unlock-all testing: skip paywall gate.
-    if (session.postAuthPaywall && !isUnlockAllFeatures()) {
+    // Open billing / unlock-all: skip paywall gate.
+    if (session.postAuthPaywall && !isFeaturesUnlocked()) {
       return <Redirect href="/paywall" />;
     }
     // Route by backend-authoritative profile state so existing users skip the

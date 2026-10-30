@@ -1,6 +1,6 @@
 import {
   canConsumeScan,
-  isUnlockAllFeatures,
+  isFeaturesUnlocked,
   resolveFreeLifetimeScans,
   type Plan,
 } from '@dermis/domain/server';
@@ -42,9 +42,9 @@ type UsageRow = {
   daily_window_date: string | null;
 };
 
-/** Skip SQL RPC when local free-scan raise or force-Pro unlock is on. */
+/** Skip SQL RPC when open billing, unlock-all, or raised free lifetime is on. */
 function isRelaxedQuotaPath(): boolean {
-  return isUnlockAllFeatures() || resolveFreeLifetimeScans() > 1;
+  return isFeaturesUnlocked() || resolveFreeLifetimeScans() > 1;
 }
 
 export function createSupabaseQuotaRepository(config: SupabaseQuotaConfig): QuotaRepository {
@@ -188,7 +188,7 @@ async function consumeRelaxed(
   if (!usage) {
     return { allowed: false, remaining: 0, reason: 'no_usage_row' };
   }
-  const unlocked = isUnlockAllFeatures();
+  const unlocked = isFeaturesUnlocked();
   const effectivePlan: Plan = unlocked ? 'pro' : plan;
   const decision = canConsumeScan({
     plan: effectivePlan,

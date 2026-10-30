@@ -1,3 +1,4 @@
+import { isFeaturesUnlocked } from '@dermis/domain';
 import { StyleSheet, Pressable, View } from 'react-native';
 
 import { Card } from '@/src/components/Card';
@@ -16,6 +17,9 @@ const PRO_DAILY_LIMIT = 5;
 
 function availableLine(quota: QuotaState): string {
   const h = getCopy().screens.home;
+  if (isFeaturesUnlocked()) {
+    return h.scansAvailablePro(Math.max(0, PRO_DAILY_LIMIT));
+  }
   if (quota.plan === 'free') {
     return h.scansAvailableFree(Math.max(0, FREE_LIFETIME_LIMIT - quota.lifetimeScanCount));
   }
@@ -24,6 +28,7 @@ function availableLine(quota: QuotaState): string {
 
 export function HomeQuotaRow({ quota, onUpgrade }: HomeQuotaRowProps) {
   const h = getCopy().screens.home;
+  const showUpgrade = quota.plan === 'free' && !isFeaturesUnlocked();
   return (
     <Card accessibilityRole="summary">
       <View style={styles.row}>
@@ -31,7 +36,7 @@ export function HomeQuotaRow({ quota, onUpgrade }: HomeQuotaRowProps) {
           <View style={styles.dot} />
           <AppText variant="bodyStrong">{availableLine(quota)}</AppText>
         </View>
-        {quota.plan === 'free' ? (
+        {showUpgrade ? (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={h.getMoreCta}

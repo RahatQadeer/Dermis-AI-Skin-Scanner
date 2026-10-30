@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+process.env.DERMIS_BILLING_MODE = 'store';
 process.env.DERMIS_FORCE_PRO = '0';
 process.env.EXPO_PUBLIC_UNLOCK_ALL_FEATURES = '0';
 

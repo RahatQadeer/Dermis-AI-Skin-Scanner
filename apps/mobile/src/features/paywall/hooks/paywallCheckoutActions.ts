@@ -1,4 +1,4 @@
-import { isUnlockAllFeatures } from '@dermis/domain';
+import { isFeaturesUnlocked } from '@dermis/domain';
 
 import {
   packageForPlan,
@@ -25,16 +25,15 @@ async function tryGrantDevPro(): Promise<boolean> {
 }
 
 /**
- * Testing: unlock-all always succeeds (never in release builds — see
- * isUnlockAllFeatures). Dev builds without store billing fall back to
- * POST /v1/dev/entitlements/pro; release builds report the real outcome.
+ * Open billing / unlock-all always succeeds. Dev builds without store billing
+ * fall back to POST /v1/dev/entitlements/pro; store mode reports real outcome.
  */
 export async function runPaywallPurchase(
   billingEnabled: boolean,
   packages: PaywallPackageMap,
   plan: PlanKind,
 ): Promise<'billing_off' | 'no_package' | 'cancelled' | 'error' | 'success'> {
-  if (isUnlockAllFeatures()) {
+  if (isFeaturesUnlocked()) {
     await tryGrantDevPro();
     return 'success';
   }
@@ -58,7 +57,7 @@ export async function runPaywallPurchase(
 export async function runPaywallRestore(
   billingEnabled: boolean,
 ): Promise<'billing_off' | 'restored' | 'none' | 'error'> {
-  if (isUnlockAllFeatures()) {
+  if (isFeaturesUnlocked()) {
     await tryGrantDevPro();
     return 'restored';
   }

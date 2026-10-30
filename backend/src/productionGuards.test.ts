@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { isUnlockAllFeatures, resolveFreeLifetimeScans } from '@dermis/domain/server';
+import {
+  isBillingOpen,
+  isUnlockAllFeatures,
+  resolveFreeLifetimeScans,
+} from '@dermis/domain/server';
 
 import { createBackendFromEnv } from './createBackendFromEnv';
 
@@ -46,6 +50,25 @@ test('testing overrides are ignored in production', () => {
 test('testing overrides still work locally', () => {
   withEnv({ NODE_ENV: 'development', DERMIS_FORCE_PRO: '1' }, () => {
     assert.equal(isUnlockAllFeatures(), true);
+  });
+});
+
+test('open billing mode works in production', () => {
+  withEnv({ NODE_ENV: 'production', DERMIS_BILLING_MODE: 'open' }, () => {
+    assert.equal(isBillingOpen(), true);
+    assert.equal(isUnlockAllFeatures(), false);
+  });
+});
+
+test('billing defaults to open when unset', () => {
+  withEnv({ NODE_ENV: 'production', DERMIS_BILLING_MODE: undefined, EXPO_PUBLIC_BILLING_MODE: undefined }, () => {
+    assert.equal(isBillingOpen(), true);
+  });
+});
+
+test('store billing mode re-enables gates', () => {
+  withEnv({ NODE_ENV: 'production', DERMIS_BILLING_MODE: 'store' }, () => {
+    assert.equal(isBillingOpen(), false);
   });
 });
 

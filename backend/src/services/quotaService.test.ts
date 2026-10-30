@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+// Enforce Free vs Pro quotas (product default billing is open for testing).
+process.env.DERMIS_BILLING_MODE = 'store';
+process.env.DERMIS_FORCE_PRO = '0';
+process.env.EXPO_PUBLIC_UNLOCK_ALL_FEATURES = '0';
+
 import { createMemoryQuotaRepository } from '../repositories/memoryQuotaRepository';
 import { createQuotaService } from '../services/quotaService';
 

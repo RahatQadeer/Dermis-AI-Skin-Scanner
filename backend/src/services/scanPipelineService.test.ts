@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 // Deterministic product free quota for these tests (ignore local .env unlock overrides).
+process.env.DERMIS_BILLING_MODE = 'store';
 process.env.DERMIS_FORCE_PRO = '0';
 process.env.EXPO_PUBLIC_UNLOCK_ALL_FEATURES = '0';
 process.env.DERMIS_FREE_LIFETIME_SCANS = '1';

@@ -11,7 +11,7 @@ export {
   SCORE_BAND,
   resolveFreeLifetimeScans,
 } from './constants';
-export { isUnlockAllFeatures } from './featureUnlock';
+export { isUnlockAllFeatures, isBillingOpen, isFeaturesUnlocked } from './featureUnlock';
 export { isElementUnlocked, resolveEffectivePlan, type GatedElement } from './gating';
 export { scoreColor, type ScoreColorToken } from './scoreColor';
 export { deltaColor, type DeltaColorToken } from './deltaColor';

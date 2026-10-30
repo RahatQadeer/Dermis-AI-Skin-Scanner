@@ -29,6 +29,9 @@ services:
         value: '0'
       - key: DERMIS_FAKE_ANALYZER
         value: '0'
+      # Temporary: all features free. Switch to `store` when Stripe/RevenueCat ships.
+      - key: DERMIS_BILLING_MODE
+        value: open
       # DERMIS_FORCE_PRO / DERMIS_ALLOW_DEV_ENTITLEMENT / DERMIS_FREE_LIFETIME_SCANS
       # are local-testing overrides and are ignored when NODE_ENV=production.
       - key: SUPABASE_URL

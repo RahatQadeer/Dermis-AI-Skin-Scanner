@@ -1,3 +1,4 @@
+import { isFeaturesUnlocked } from '@dermis/domain';
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -15,7 +16,8 @@ export type LockedOverlayProps = {
 };
 
 export function LockedOverlay({ locked, children, onUnlock, hint }: LockedOverlayProps) {
-  if (!locked) {
+  // Open billing / unlock-all: never show Pro locks while testing every feature.
+  if (!locked || isFeaturesUnlocked()) {
     return <>{children}</>;
   }
 

@@ -1,4 +1,4 @@
-import { isUnlockAllFeatures } from '@dermis/domain';
+import { isFeaturesUnlocked } from '@dermis/domain';
 
 import type { SessionState } from '@/src/features/session/SessionContext';
 import { isApiError } from '@/src/lib/api/errors';
@@ -25,7 +25,7 @@ export async function completeAppleSignIn(
       email: authSession.user.email ?? '',
       userId: authSession.user.id,
       firstName: authSession.user.firstName,
-      showPaywall: callbacks.session.onboardingComplete && !isUnlockAllFeatures(),
+      showPaywall: callbacks.session.onboardingComplete && !isFeaturesUnlocked(),
     });
   } catch (error) {
     const mapped = mapAuthApiError(error, 'logIn');

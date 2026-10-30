@@ -1,3 +1,4 @@
+import { isFeaturesUnlocked } from '@dermis/domain';
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
@@ -23,6 +24,7 @@ export function ProfileAccountSection({ plan, showToast }: ProfileAccountSection
   const common = getCopy().common;
   const { bumpQuotaRefresh } = useQuotaRefresh();
   const [restoring, setRestoring] = useState(false);
+  const billingHidden = isFeaturesUnlocked();
 
   // Restores in place (store requirement) instead of bouncing to the paywall.
   const restore = async () => {
@@ -42,6 +44,10 @@ export function ProfileAccountSection({ plan, showToast }: ProfileAccountSection
       }[outcome],
     );
   };
+
+  if (billingHidden) {
+    return null;
+  }
 
   return (
     <View style={styles.block}>

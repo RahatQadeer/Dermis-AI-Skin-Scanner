@@ -1,4 +1,4 @@
-import { isUnlockAllFeatures } from './featureUnlock';
+import { isFeaturesUnlocked } from './featureUnlock';
 import type { Plan } from './quota';
 
 /** Report / feature elements gated for free users. */
@@ -18,16 +18,16 @@ const FREE_UNLOCKED: ReadonlySet<GatedElement> = new Set(['overallIndex', 'prior
 /**
  * Free tier sees overall index + one priority concern; everything else locked.
  * Server/product rules — UI should mirror API flags, not invent unlocks.
- * Local testing: `DERMIS_FORCE_PRO` / `EXPO_PUBLIC_UNLOCK_ALL_FEATURES` unlocks all.
+ * Open billing / unlock-all treats every element as unlocked.
  */
 export function isElementUnlocked(plan: Plan, element: GatedElement): boolean {
-  if (isUnlockAllFeatures() || plan === 'pro') {
+  if (isFeaturesUnlocked() || plan === 'pro') {
     return true;
   }
   return FREE_UNLOCKED.has(element);
 }
 
-/** Effective plan for UI/quota when local unlock-all is on. */
+/** Effective plan for UI/quota when open billing or unlock-all is on. */
 export function resolveEffectivePlan(plan: Plan): Plan {
-  return isUnlockAllFeatures() ? 'pro' : plan;
+  return isFeaturesUnlocked() ? 'pro' : plan;
 }

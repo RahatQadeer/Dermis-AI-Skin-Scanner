@@ -7,17 +7,12 @@ import { Screen } from '@/src/components/layout/Screen';
 import { spacing } from '@/src/theme';
 
 import { PaywallScreenBottom } from '../components/PaywallScreenBottom';
-import {
-  PaywallFeatureList,
-  PaywallHero,
-  PaywallProjectedIndex,
-  PaywallTierCards,
-  PaywallTopBar,
-} from '../components/PaywallDarkSections';
+import { PaywallFeatureList, PaywallHero, PaywallTopBar } from '../components/PaywallDarkSections';
 import { paywallDark } from '../paywallDark';
 import { usePaywallSelection } from '../hooks/usePaywallSelection';
 import { useSession } from '@/src/features/session/SessionContext';
 
+/** Slim paywall kept for future Stripe/store billing; marketing blocks removed. */
 export function PaywallScreen() {
   const router = useRouter();
   const session = useSession();
@@ -48,8 +43,6 @@ export function PaywallScreen() {
       <StatusBar style="light" />
       <PaywallTopBar onClose={onClose} />
       <PaywallHero />
-      <PaywallProjectedIndex />
-      <PaywallTierCards />
       <PaywallFeatureList />
       <PaywallScreenBottom flow={flow} />
     </Screen>
