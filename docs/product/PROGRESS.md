@@ -1,7 +1,7 @@
 # Dermis — progress handoff
 
-**Last updated:** 2026-10-29  
-**Current focus:** Auth (email/Google/Apple); preview unlock-all; refreshed cute icon/splash
+**Last updated:** 2026-10-30  
+**Current focus:** Open billing (all features free); one-time onboarding + age band; manual camera; face enroll UX; progress honesty
 
 **GitHub:** https://github.com/RahatQadeer/Dermis-AI-Skin-Scanner.git (you commit/push)
 
@@ -9,85 +9,54 @@
 
 ## Entry flow (live)
 
-1. Splash → Welcome → Quiz → Summary → Sign up / Log in → Paywall → Home
-2. Scan: face gate + real Gemini; Results + zone map
+1. Splash → Welcome → Quiz (5 steps incl. age band) → Summary → Sign up / Log in → Home  
+   (Paywall skipped — billing defaults open)
+2. Scan: AI consent → face enroll (CDN model on by default) → camera → Gemini → Results
 
-## Subscriptions / local unlock
+## Billing (temporary open)
 
-- **Local unlock-all (current):** `DERMIS_FORCE_PRO=1` + `EXPO_PUBLIC_UNLOCK_ALL_FEATURES=1` — no Pro locks (zones, concerns, routine, progress, PDF). Quota treated as Pro. Restart backend + Expo after changing. Turn off before store builds.
-- **Dev paywall Subscribe:** `DERMIS_ALLOW_DEV_ENTITLEMENT=1` when RevenueCat unset.
-- **Production:** RevenueCat + native build + webhook.
+- **Open mode (default):** billing defaults to open unless mode is `store` / `paid` / `closed` — all Pro gates unlocked, high scan quota, no post-auth paywall, Upgrade/Restore hidden. LockedOverlay also short-circuits when unlocked.
+- Entitlement tables kept; Stripe/RevenueCat can later set mode to `store` and write `entitlements.plan`.
+- Slim paywall UI retained for future store billing (marketing blocks removed).
 
----
+## Onboarding / profile
+
+- Quiz once; answers saved via `POST /v1/profile` (age band included). Draft is user-scoped; logout does not wipe an unflushed draft.
+- Profile sync fail-closed: incomplete until server has skin data.
+- Profile screen: edit skin type / tone / sensitivity / age band via `PATCH /v1/profile`.
+
+## Scan UX (live)
+
+- **Manual capture only** — press shutter when framed; auto-capture removed.
+- Live MediaPipe framing + lighting/blur; separate busy locks so sampling cannot starve `takePhoto`.
+- Face identity: **on by default** via CDN MobileFaceNet (`EXPO_PUBLIC_FACE_MODEL_URL=off` to disable). First scan → enroll screen; other faces rejected (“Use your own selfie”). Progress stays on the account. Profile → Update face reference.
+- Capture flash shortened; no full-screen enroll gate delay; face model preloads on camera/enroll.
+- `GET/POST /v1/face-reference` wired on the API.
+
+## Progress (live)
+
+- Real `GET /v1/scans` only. Chart uses **stored** index scores (no history re-score).
+- ≥2 scans: previous → latest comparison + window baseline → latest; single-scan hint when only one exists.
+- No mock concern deltas when a signed-in current scan is present.
+
+## Tab bar / layout
+
+- Active tab = pink icon/label + soft wash + underline + pink dot; secondary routes (results/assistant/recommendations) keep Home highlighted; scan FAB pink when on camera/analysing/enroll.
+- Screen: max-width 560 on wide; narrower/shorter devices get tighter padding; tab scroll pad 120.
 
 ## Run locally
 
 ```bash
+# Billing open by default; apps/mobile/.env has EXPO_PUBLIC_BILLING_MODE=open
 npm run start --workspace=@dermis/backend
 cd apps/mobile && npx expo start -c --lan
 ```
 
----
-
-## Routine (live)
-
-- **Edit:** red − removes a step; **Done** exits with sparkle. Progress card shows “Tap – to remove a step”.
-- **Add step** sheet: `+` / **Added** toggle; sheet **Done** sparkles then closes.
-- Complete-all sheep banner on last check. Load seeds empty server routines; token bind is sync (no missing-token race).
-- **See recommended actives →** under adherence → `/(tabs)/recommendations` (Professor Puff picks + 4 placeholder actives; no purchase).
-
-## Auth / API (live)
-
-- Expired JWT: client calls **POST /v1/auth/refresh** then retries once (fixes consent / progress / profile 401s).
-
-## Progress (live)
-
-- Real **GET /v1/scans** (Supabase) only. Empty = no scans; session error vs network error are separate copy.
-- Before/after = baseline vs latest **index scores** (photos deleted after Gemini analysis — no selfie retention).
-- Scans persist in Supabase; backend restart does not clear history.
-
-## Home / Recommendations (live)
-
-- Home hero/priorities from latest real scan + live quota/routine — **no DEMO mock scores** when signed in.
-- Home loads quota / scans / routine with `Promise.allSettled` so a quota blip cannot blank the page.
-- Missing `entitlements` / `scan_usage` rows are healed on first `GET /v1/quota` (signup trigger gaps).
-- Recommended actives ranked by weakest concern scores from latest scan; empty until a scan exists. Ingredient catalog is still a fixed example list (not store SKUs).
-
-## Profile Data (live)
-
-- **Delete all scan data** → confirm → **DELETE /v1/scans** (account kept).
-- **Delete account** → confirm sheet → **DELETE /v1/account**.
-- **Log out** → clears session → sign-up.
-
-## Results (live)
-
-- Home **View report** → `/(tabs)/results` — index hero, zone map, Professor notes, per-concern cards, Compare / Update routine (mock layout).
-- **Share** header CTA stays one line (header right slot no longer clips to 48px).
-- Zone map = soft gray face oval + brow/nose/jaw contours; tap zone → party confetti + detail card.
-- Deltas + skin-age estimate when a prior scan exists; prototype deltas on offline mock report only.
-
-## Scan UX (live)
-
-- Camera live guidance: MediaPipe Face Detector (TFJS/CPU on-device) + lighting/blur heuristics; green oval + chips when face is framed; shutter gated; auto-capture after ~550ms ready (short 2–1); hi-res recheck before upload. Failed/unclear faces are not saved. Local unlock does not block daily limit.
-- **Create scan** client timeout is **90s** (was 12s — that aborted Gemini and showed “Could not complete your scan”). Server trusts `faceClear=true` even if a stray `faceIssue` is set; Gemini prompt v7 prefers pass for ordinary clear selfies.
-- Unclear / failed analysis → toast on **camera** (not Analysing). Analysing eases toward 98% then snaps to 100% on accept. Toast Close dismisses.
-
-## Tab bar (live)
-
-- Floating white pill: Home · Progress · pink sheep scan · Routine · Profile (icons + labels; active = ink/bold).
-
-## Hosting (live)
-
-- Render Web Service: `https://dermis-ai-skin-scanner.onrender.com` — check `GET /` or `GET /health`.
-- `render.yaml` Blueprint; GitHub Actions `deploy-render` job POSTs `RENDER_DEPLOY_HOOK_URL` after CI on `main`.
-- EAS `EXPO_PUBLIC_API_URL` = Render HTTPS (not LAN `http://`).
-- **Testing unlock:** preview/dev EAS sets `EXPO_PUBLIC_UNLOCK_ALL_FEATURES=1`; Render sets `DERMIS_FORCE_PRO=1` + `DERMIS_ALLOW_DEV_ENTITLEMENT=1`. Paywall Subscribe succeeds without RevenueCat. Remove before store billing.
-- **This test build:** email works. Google works when `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` + `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` are set and Supabase Google is enabled. Apple (iOS) uses `expo-apple-authentication` → `POST /v1/auth/apple` → GoTrue `provider=apple`; requires App ID Sign in with Apple + Supabase Apple Client IDs including `com.righttail.dermis`, then a **new EAS preview/dev build** (native module + `usesAppleSignIn`).
-- Backend: `POST /v1/auth/google` and `POST /v1/auth/apple` exchange provider `id_token` via GoTrue. Native Apple does **not** need a Services ID / `.p8` secret.
+Apply new migration for age band: `backend/supabase/migrations/20261030140000_profile_age_band.sql`
 
 ## Next chat starts at
 
-1. Supabase Auth → Apple: enable provider; Client IDs = `com.righttail.dermis` (and `host.exp.Exponent` only if testing in Expo Go).
-2. Rebuild iOS preview: `cd apps/mobile && eas build --profile preview --platform ios` — install IPA, test Continue with Apple on a real device.
-3. Deploy backend with `/v1/auth/apple` to Render (after approve/push). Confirm Google still works.
-4. RevenueCat sandbox / store copy audit (DERM-061).
+1. Apply `age_band` migration on Supabase (if not already).
+2. Deploy backend (face-reference routes) to Render; restart Expo with `apps/mobile/.env`.
+3. Device QA: enroll face → scan same face OK → different face blocked; Progress shows account scans only.
+4. When ready for paid: set `DERMIS_BILLING_MODE=store` + `EXPO_PUBLIC_BILLING_MODE=store`, wire Stripe → `EntitlementService.upsert`.

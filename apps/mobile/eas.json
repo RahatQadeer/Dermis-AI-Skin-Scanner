@@ -8,6 +8,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
+        "EXPO_PUBLIC_BILLING_MODE": "open",
         "EXPO_PUBLIC_UNLOCK_ALL_FEATURES": "1"
       }
     },
@@ -15,6 +16,7 @@
       "distribution": "internal",
       "autoIncrement": true,
       "env": {
+        "EXPO_PUBLIC_BILLING_MODE": "open",
         "EXPO_PUBLIC_UNLOCK_ALL_FEATURES": "1"
       },
       "ios": {
@@ -22,7 +24,10 @@
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_BILLING_MODE": "open"
+      }
     }
   },
   "submit": {

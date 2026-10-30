@@ -1,5 +1,13 @@
 {
   "ios": {
-    "bundleIdentifier": "com.rahat-qadeer.dermis"
+    "bundleIdentifier": "com.rahat-qadeer.dermis",
+    "infoPlist": {
+      "ITSAppUsesNonExemptEncryption": false
+    }
+  },
+  "extra": {
+    "eas": {
+      "projectId": "548ca3a2-4123-4a46-87fa-1b7e1385626e"
+    }
   }
 }
