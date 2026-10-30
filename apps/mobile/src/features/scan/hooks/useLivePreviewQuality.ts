@@ -10,9 +10,9 @@ import {
   type HysteresisState,
 } from './livePreviewHysteresis';
 
-const WARMUP_MS = 500;
-const INTERVAL_MS = 900;
-const RETRY_MS = 350;
+const WARMUP_MS = 80;
+const INTERVAL_MS = 450;
+const RETRY_MS = 180;
 
 export type LivePreviewQuality = {
   issue: LiveScanIssue | null;

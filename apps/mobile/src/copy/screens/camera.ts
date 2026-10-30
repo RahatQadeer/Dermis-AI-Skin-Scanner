@@ -9,8 +9,8 @@ export const cameraCopy = {
   qualityDistance: 'Face in oval',
   qualityHold: 'Hold still',
   shutterA11y: 'Take photo',
-  shutterNeedReadyA11y: 'Wait until the frame is ready — photo takes automatically',
-  needReadyToast: 'Fix the guidance tip first — photo takes when the frame is ready.',
+  shutterNeedReadyA11y: 'Wait until your face is framed, then press capture',
+  needReadyToast: 'Fix the guidance tip first, then press the capture button.',
   capture: 'Capture',
   capturing: 'Hold still…',
   cancelCountdown: 'Cancel',
@@ -43,7 +43,7 @@ export const cameraCopy = {
   liveTooBright: 'Too bright — ease off direct glare.',
   liveUneven: 'Uneven lighting — face the light source.',
   liveBlurry: 'Image is blurry — hold your phone steady.',
-  liveReady: 'Perfect! Taking your photo…',
+  liveReady: 'Perfect — press capture when you are ready.',
   liveDetectorLoading: 'Checking your face… keep it in the oval.',
   liveDetectorUnavailable: 'Still starting face check… keep your face in the oval with good light.',
   faceGuideA11y: 'Face guide oval',
@@ -62,4 +62,7 @@ export const cameraCopy = {
   faceNotClear:
     "Face isn't clear enough — fill the oval with forehead, eyes, cheeks, and chin in good light.",
   needServer: 'Sign in and connect to the server to scan.',
+  /** Shown when face identity model is not configured — framing only. */
+  framingOnlyHint: 'Framing check only — identity matching is off.',
+  identityOnHint: 'Only your registered face can scan this account.',
 } as const;

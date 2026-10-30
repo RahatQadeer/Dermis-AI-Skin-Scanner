@@ -9,7 +9,7 @@ export const motion = {
     /** Face / retake errors — long enough to read on camera. */
     toastImportant: 8000,
     countdown: 750,
-    flash: 420,
+    flash: 160,
     indexCountUp: 1100,
   },
 } as const;

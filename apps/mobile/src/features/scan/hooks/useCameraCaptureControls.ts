@@ -5,7 +5,6 @@ import { getCopy } from '@/src/copy';
 import type { CameraPreviewLiveHandle } from '../components/CameraPreviewLive';
 import { messageForLiveIssue } from '../lib/liveGuidanceCopy';
 import type { LiveScanIssue } from '../lib/liveScanGuidance';
-import { useAutoCaptureWhenReady } from './useAutoCaptureWhenReady';
 import { useCaptureCountdown } from './useCaptureCountdown';
 import { useLivePreviewQuality } from './useLivePreviewQuality';
 import { useScanCaptureFlow } from './useScanCaptureFlow';
@@ -26,21 +25,17 @@ export function useCameraCaptureControls(cameraRef: RefObject<CameraPreviewLiveH
     void capture.runCapture();
   }, [flashing, capture]);
 
+  // Countdown retained for UI compatibility; shutter captures immediately (no auto).
   const countdown = useCaptureCountdown(beginCapture);
   const busy = flashing || capture.capturing || countdown.active;
-  // Keep sampling during countdown so a green frame is not wiped (that used to cancel auto-take).
   const liveQuality = useLivePreviewQuality(
     cameraRef,
-    capture.liveCamera && capture.permissionGranted && !flashing && !capture.capturing,
+    capture.liveCamera &&
+      capture.permissionGranted &&
+      !flashing &&
+      !capture.capturing &&
+      !countdown.active,
   );
-
-  useAutoCaptureWhenReady({
-    ready: liveQuality.ready,
-    busy,
-    countdownActive: countdown.active,
-    startCountdown: countdown.start,
-    cancelCountdown: countdown.cancel,
-  });
 
   const shutter = useCallback(() => {
     if (flashing || capture.capturing || countdown.active) return;
@@ -48,8 +43,8 @@ export function useCameraCaptureControls(cameraRef: RefObject<CameraPreviewLiveH
       setCoachToast(coachMessage(liveQuality.issue));
       return;
     }
-    countdown.start();
-  }, [flashing, capture.capturing, countdown, liveQuality.ready, liveQuality.issue]);
+    beginCapture();
+  }, [flashing, capture.capturing, countdown.active, liveQuality.ready, liveQuality.issue, beginCapture]);
 
   return {
     flashing,

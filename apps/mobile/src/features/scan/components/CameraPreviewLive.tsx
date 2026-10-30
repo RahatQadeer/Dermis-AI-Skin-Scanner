@@ -19,17 +19,19 @@ type CameraPreviewLiveProps = {
 };
 
 const TAKE_ATTEMPTS = 3;
+const SAMPLE_WAIT_MS = 2000;
 
 export const CameraPreviewLive = forwardRef<CameraPreviewLiveHandle, CameraPreviewLiveProps>(
   function CameraPreviewLive({ active, faceLocked = false }, ref) {
     const cameraRef = useRef<CameraView>(null);
-    // Serialise capture + sampling — CameraView allows only one shot at a time.
-    const busyRef = useRef(false);
+    // Separate locks so live sampling cannot starve an explicit capture.
+    const captureBusyRef = useRef(false);
+    const sampleBusyRef = useRef(false);
     const c = getCopy().screens.camera;
 
     useImperativeHandle(ref, () => ({
-      takePhoto: () => runExclusive(busyRef, active, () => takePictureWithRetry(cameraRef.current)),
-      sampleFrameUri: () => runExclusive(busyRef, active, () => sampleFrame(cameraRef.current)),
+      takePhoto: () => takeExclusive(cameraRef, active, captureBusyRef, sampleBusyRef),
+      sampleFrameUri: () => sampleExclusive(cameraRef, active, captureBusyRef, sampleBusyRef),
     }));
 
     if (!active) {
@@ -51,20 +53,41 @@ export const CameraPreviewLive = forwardRef<CameraPreviewLiveHandle, CameraPrevi
   },
 );
 
-/** Run `op` only when the camera is active and not already taking a shot. */
-async function runExclusive(
-  busyRef: { current: boolean },
+async function takeExclusive(
+  cameraRef: { current: CameraView | null },
   active: boolean,
-  op: () => Promise<string | null>,
+  captureBusyRef: { current: boolean },
+  sampleBusyRef: { current: boolean },
 ): Promise<string | null> {
-  if (!active || busyRef.current) {
+  if (!active || captureBusyRef.current) {
     return null;
   }
-  busyRef.current = true;
+  captureBusyRef.current = true;
   try {
-    return await op();
+    const deadline = Date.now() + SAMPLE_WAIT_MS;
+    while (sampleBusyRef.current && Date.now() < deadline) {
+      await wait(50);
+    }
+    return await takePictureWithRetry(cameraRef.current);
   } finally {
-    busyRef.current = false;
+    captureBusyRef.current = false;
+  }
+}
+
+async function sampleExclusive(
+  cameraRef: { current: CameraView | null },
+  active: boolean,
+  captureBusyRef: { current: boolean },
+  sampleBusyRef: { current: boolean },
+): Promise<string | null> {
+  if (!active || captureBusyRef.current || sampleBusyRef.current) {
+    return null;
+  }
+  sampleBusyRef.current = true;
+  try {
+    return await sampleFrame(cameraRef.current);
+  } finally {
+    sampleBusyRef.current = false;
   }
 }
 
