@@ -7,6 +7,7 @@ import type { CameraPreviewLiveHandle } from '../components/CameraPreviewLive';
 import { useScanCapture } from '../context/ScanCaptureContext';
 import { useFaceAnalysisConsentRedirect, useRetakeMessageEffect } from './cameraScreenHelpers';
 import { useCameraCaptureControls } from './useCameraCaptureControls';
+import { useFaceEnrollmentGate } from './useFaceEnrollmentGate';
 
 export function useCameraScreenState() {
   const router = useRouter();
@@ -16,6 +17,7 @@ export function useCameraScreenState() {
   const cameraRef = useRef<CameraPreviewLiveHandle>(null);
   const [retakeToast, setRetakeToast] = useState<string | null>(null);
   const controls = useCameraCaptureControls(cameraRef);
+  const enrollGate = useFaceEnrollmentGate(consent.ready && consent.faceAnalysisGranted);
 
   useRetakeMessageEffect(params.retakeMessage, retakeMessage, setRetakeToast, setRetakeMessage);
   useFaceAnalysisConsentRedirect(consent.ready, consent.faceAnalysisGranted, router);
@@ -37,7 +39,9 @@ export function useCameraScreenState() {
     countdown: controls.countdown,
     errorToast: controls.coachToast ?? retakeToast ?? controls.capture.errorToast,
     clearError,
+    // Enroll redirect runs in background — do not freeze the shutter for ~1s.
     busy: controls.busy,
     liveQuality: controls.liveQuality,
+    enrollChecking: enrollGate.checking,
   };
 }

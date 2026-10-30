@@ -70,8 +70,8 @@ function cropResizeNormalize(image: PixelBuffer, box: FaceBoxLike): tf.Tensor4D 
   const h = Math.max(1, Math.min(Math.round(box.height), image.height - y));
   const crop = full.slice([y, x, 0], [h, w, 3]);
   const resized = tf.image.resizeBilinear(crop, [INPUT_SIZE, INPUT_SIZE]);
-  // Normalize to [-1, 1] (MobileFaceNet convention).
-  return resized.sub(127.5).div(127.5).expandDims(0) as tf.Tensor4D;
+  // Normalize to [0, 1] (vladmandic MobileFaceNet / human-models convention).
+  return resized.div(255).expandDims(0) as tf.Tensor4D;
 }
 
 /**
@@ -101,6 +101,11 @@ export async function computeFaceEmbedding(
     }
     return null;
   }
+}
+
+/** Warm the recognition model so enroll/verify is not delayed on first capture. */
+export function preloadFaceEmbedder(): Promise<tf.GraphModel | null> {
+  return getModel();
 }
 
 /** Test helper — reset singleton between unit tests. */

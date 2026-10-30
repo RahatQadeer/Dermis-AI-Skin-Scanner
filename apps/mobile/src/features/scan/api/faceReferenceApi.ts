@@ -18,6 +18,11 @@ export async function fetchFaceReference(): Promise<FaceReferenceDto> {
 export async function registerFaceReference(
   embedding: number[],
   modelVersion: string,
+  replace = false,
 ): Promise<void> {
-  await getApiClient().post('/v1/face-reference', { embedding, modelVersion });
+  await getApiClient().post('/v1/face-reference', {
+    embedding,
+    modelVersion,
+    ...(replace ? { replace: true } : {}),
+  });
 }

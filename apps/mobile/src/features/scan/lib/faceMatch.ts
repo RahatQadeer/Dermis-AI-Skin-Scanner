@@ -48,22 +48,20 @@ export type FaceGateInput = {
 
 export type FaceGateDecision =
   | { action: 'allow' }
-  | { action: 'enroll' }
+  | { action: 'need_enroll' }
   | { action: 'block'; reason: 'mismatch' | 'no_embedding' };
 
 /**
  * Decides what the identity gate should do before a scan. Fail-closed: when a
- * reference exists but no embedding can be produced, block (never silently
- * allow a scan that bypasses verification).
+ * reference exists but no embedding can be produced, block. Enrollment is a
+ * dedicated screen — analysis scans never auto-enroll.
  */
 export function decideFaceGate(input: FaceGateInput): FaceGateDecision {
   if (!input.enabled) {
     return { action: 'allow' };
   }
   if (!input.hasReference) {
-    // First enrollment needs a usable embedding; without one, don't block the
-    // user's very first scan (nothing to verify against yet).
-    return input.currentEmbedding ? { action: 'enroll' } : { action: 'allow' };
+    return { action: 'need_enroll' };
   }
   if (!input.currentEmbedding || !input.referenceEmbedding) {
     return { action: 'block', reason: 'no_embedding' };

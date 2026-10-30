@@ -6,12 +6,18 @@ import { computeFaceEmbedding, faceModelVersion } from './faceEmbedder';
 import { decideFaceGate } from './faceMatch';
 import { readCachedFaceReference, writeCachedFaceReference } from './faceReferenceCache';
 
-/** Exact copy required when a different person attempts a scan. */
+/** Exact copy when another person attempts a scan. */
 export const FACE_IDENTITY_MISMATCH_MESSAGE =
-  "Face identity doesn't match your registered profile.";
+  'Use your own selfie — this face does not match your registered profile.';
 /** Shown when verification cannot run (model/network) for an enrolled user. */
 export const FACE_IDENTITY_RETRY_MESSAGE =
   "Couldn't verify it's you. Please try again in good, even lighting.";
+/** Analysis scan attempted before dedicated enrollment. */
+export const FACE_IDENTITY_NEED_ENROLL_MESSAGE =
+  'Register your face once before scanning. Open Face setup from Scan.';
+/** Enrollment capture failed to produce an embedding. */
+export const FACE_ENROLL_FAILED_MESSAGE =
+  "Couldn't register your face. Center one face in good light and try again.";
 
 /** Thrown to block a scan; the message is surfaced on the camera retake toast. */
 export class FaceIdentityError extends Error {
@@ -23,7 +29,7 @@ export class FaceIdentityError extends Error {
 
 const EMBED_WIDTH_PX = 360;
 
-async function computeCurrentEmbedding(uri: string): Promise<number[] | null> {
+export async function computeCurrentEmbedding(uri: string): Promise<number[] | null> {
   const pixels = await decodeJpegPixels(uri, EMBED_WIDTH_PX);
   if (!pixels) {
     return null;
@@ -55,20 +61,26 @@ async function resolveReference(userId: string): Promise<number[] | null> {
   return null;
 }
 
-async function enroll(userId: string, embedding: number[]): Promise<void> {
-  try {
-    await registerFaceReference(embedding, faceModelVersion());
-    await writeCachedFaceReference(userId, embedding);
-  } catch {
-    // Non-fatal: a later scan re-attempts enrollment. Allow this first scan.
+/** Dedicated enrollment — fails closed (does not swallow API errors). */
+export async function enrollFaceReference(
+  userId: string,
+  uri: string,
+  replace = false,
+): Promise<void> {
+  if (!isFaceIdentityEnabled()) {
+    return;
   }
+  const embedding = await computeCurrentEmbedding(uri);
+  if (!embedding) {
+    throw new FaceIdentityError(FACE_ENROLL_FAILED_MESSAGE);
+  }
+  await registerFaceReference(embedding, faceModelVersion(), replace);
+  await writeCachedFaceReference(userId, embedding);
 }
 
 /**
- * Identity gate run before a scan is uploaded. No-op when disabled. Enrolls on
- * first scan, verifies on subsequent scans, and throws FaceIdentityError to
- * block a mismatched face or when an enrolled user can't be verified
- * (fail-closed).
+ * Identity gate run before a scan is uploaded. No-op when disabled.
+ * Never auto-enrolls — enrollment is a dedicated screen.
  */
 export async function verifyFaceIdentity(uri: string, userId: string): Promise<void> {
   if (!isFaceIdentityEnabled()) {
@@ -78,8 +90,6 @@ export async function verifyFaceIdentity(uri: string, userId: string): Promise<v
   try {
     currentEmbedding = await computeCurrentEmbedding(uri);
   } catch {
-    // Model load / decode failure: block (fail closed) with a friendly message
-    // rather than surfacing a raw library error on the camera toast.
     throw new FaceIdentityError(FACE_IDENTITY_RETRY_MESSAGE);
   }
 
@@ -87,7 +97,6 @@ export async function verifyFaceIdentity(uri: string, userId: string): Promise<v
   try {
     referenceEmbedding = await resolveReference(userId);
   } catch {
-    // Can't determine enrollment state → fail closed rather than skip the check.
     throw new FaceIdentityError(FACE_IDENTITY_RETRY_MESSAGE);
   }
 
@@ -102,9 +111,8 @@ export async function verifyFaceIdentity(uri: string, userId: string): Promise<v
   if (decision.action === 'allow') {
     return;
   }
-  if (decision.action === 'enroll') {
-    await enroll(userId, currentEmbedding!);
-    return;
+  if (decision.action === 'need_enroll') {
+    throw new FaceIdentityError(FACE_IDENTITY_NEED_ENROLL_MESSAGE);
   }
   throw new FaceIdentityError(
     decision.reason === 'mismatch' ? FACE_IDENTITY_MISMATCH_MESSAGE : FACE_IDENTITY_RETRY_MESSAGE,

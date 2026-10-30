@@ -28,6 +28,7 @@ import { handleDevGrantPro } from '../handlers/devEntitlementHandlers';
 import { handleRevenueCatWebhook } from '../handlers/revenueCatWebhookHandler';
 import { handleCreateScan, handleDeleteAllScans, handleListScans } from '../handlers/scanHandlers';
 import { DELETE_ACCOUNT_HTML } from './deleteAccountPage';
+import { handleFaceReferenceRoute } from './faceReferenceRoutes';
 import { json } from './respond';
 import { routeRoutineAndSettings } from './routineRoutes';
 import type { AppDeps } from './createApp';
@@ -107,6 +108,9 @@ async function matchCoreAuthed(
   }
   if (path === '/v1/profile') {
     return handleProfileRoute(request, method, deps);
+  }
+  if (path === '/v1/face-reference') {
+    return handleFaceReferenceRoute(request, method, deps);
   }
   return null;
 }
@@ -292,3 +296,4 @@ async function handleProfileRoute(
 
   return json({ error: 'method_not_allowed' }, 405);
 }
+

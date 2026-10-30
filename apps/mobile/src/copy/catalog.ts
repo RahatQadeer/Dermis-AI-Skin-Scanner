@@ -15,6 +15,7 @@ import { quizCopy } from './quiz';
 import { analysingCopy } from './screens/analysing';
 import { assistantCopy } from './screens/assistant';
 import { cameraCopy } from './screens/camera';
+import { faceEnrollCopy } from './screens/faceEnroll';
 import { homeCopy } from './screens/home';
 import { privacyCopy } from './screens/privacy';
 import { progressCopy } from './screens/progress';
@@ -46,6 +47,7 @@ export const copy = {
   screens: {
     analysing: analysingCopy,
     camera: cameraCopy,
+    faceEnroll: faceEnrollCopy,
     home: homeCopy,
     privacy: privacyCopy,
     progress: progressCopy,

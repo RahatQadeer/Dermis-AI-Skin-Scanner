@@ -32,7 +32,7 @@ test('decideFaceGate allows everything when the gate is disabled', () => {
   assert.deepEqual(d, { action: 'allow' });
 });
 
-test('decideFaceGate enrolls when there is no reference yet', () => {
+test('decideFaceGate requires dedicated enrollment when there is no reference', () => {
   const d = decideFaceGate({
     enabled: true,
     hasReference: false,
@@ -40,7 +40,7 @@ test('decideFaceGate enrolls when there is no reference yet', () => {
     referenceEmbedding: null,
     threshold: 0.6,
   });
-  assert.deepEqual(d, { action: 'enroll' });
+  assert.deepEqual(d, { action: 'need_enroll' });
 });
 
 test('decideFaceGate blocks a mismatched face', () => {

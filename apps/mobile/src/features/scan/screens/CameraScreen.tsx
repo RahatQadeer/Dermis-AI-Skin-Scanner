@@ -1,4 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { IconButton } from '@/src/components/IconButton';
@@ -14,24 +15,16 @@ import { CameraStage } from '../components/CameraStage';
 import { ScanQualityChips } from '../components/ScanQualityChips';
 import { ScanShutterButton } from '../components/ScanShutterButton';
 import { useCameraScreenState } from '../hooks/useCameraScreenState';
+import { isFaceIdentityEnabled } from '../lib/faceConfig';
+import { preloadFaceEmbedder } from '../lib/faceEmbedder';
 import { messageForLiveIssue } from '../lib/liveGuidanceCopy';
 
 export function CameraScreen() {
   const c = getCopy().screens.camera;
   const state = useCameraScreenState();
-  const onBack = state.router.canGoBack()
-    ? () => state.router.back()
-    : () => state.router.replace('/(tabs)/home');
-  const faceLocked = state.liveQuality.ready || state.countdown.active;
-  const prompt = state.countdown.active
-    ? state.countdown.secondsLeft === 1
-      ? c.faceLocked
-      : c.faceGetReady
-    : state.liveQuality.ready
-      ? c.liveReady
-      : state.liveQuality.issue
-        ? messageForLiveIssue(state.liveQuality.issue)
-        : c.tip;
+  useEffect(() => {
+    if (isFaceIdentityEnabled()) void preloadFaceEmbedder();
+  }, []);
 
   return (
     <Screen
@@ -41,18 +34,26 @@ export function CameraScreen() {
       contentStyle={styles.content}
     >
       <StatusBar style="light" />
-      <CameraHeader label={c.frontViewLabel} onBack={onBack} />
+      <CameraHeader
+        label={c.frontViewLabel}
+        onBack={
+          state.router.canGoBack()
+            ? () => state.router.back()
+            : () => state.router.replace('/(tabs)/home')
+        }
+      />
+      <IdentityHint copy={c} />
       <CameraStage
         capture={state.capture}
         cameraRef={state.cameraRef}
         flashing={state.flashing || state.capture.capturing}
         afterFlash={state.afterFlash}
-        faceLocked={faceLocked}
+        faceLocked={state.liveQuality.ready || state.countdown.active}
         countdownSeconds={state.countdown.secondsLeft}
       />
       <ScanQualityChips liveIssue={state.liveQuality.issue} ready={state.liveQuality.ready} />
       <CameraBottomBar
-        prompt={prompt}
+        prompt={cameraPrompt(c, state)}
         onShutter={state.shutter}
         busy={state.busy}
         ready={state.liveQuality.ready}
@@ -66,6 +67,30 @@ export function CameraScreen() {
       />
     </Screen>
   );
+}
+
+function IdentityHint({ copy }: { copy: ReturnType<typeof getCopy>['screens']['camera'] }) {
+  return isFaceIdentityEnabled() ? (
+    <AppText variant="caption" color={colors.pinkBright} align="center">
+      {copy.identityOnHint}
+    </AppText>
+  ) : (
+    <AppText variant="caption" color={colors.mute} align="center">
+      {copy.framingOnlyHint}
+    </AppText>
+  );
+}
+
+function cameraPrompt(
+  c: ReturnType<typeof getCopy>['screens']['camera'],
+  state: ReturnType<typeof useCameraScreenState>,
+): string {
+  if (state.countdown.active) {
+    return state.countdown.secondsLeft === 1 ? c.faceLocked : c.faceGetReady;
+  }
+  if (state.liveQuality.ready) return c.liveReady;
+  if (state.liveQuality.issue) return messageForLiveIssue(state.liveQuality.issue);
+  return c.tip;
 }
 
 function CameraHeader({ label, onBack }: { label: string; onBack: () => void }) {
