@@ -7,6 +7,7 @@ export const navCopy = {
   progress: 'Progress',
   profile: 'Profile',
   recommendations: 'Recommendations',
+  assistant: 'Ask Dermis',
   results: 'Report',
   scan: 'Scan',
   notFound: 'Not found',

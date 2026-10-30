@@ -1,3 +1,4 @@
+import { AssistantEntryCard } from '@/src/features/assistant/components/AssistantEntryCard';
 import type { ConcernId, ZoneId } from '@dermis/domain';
 
 import { ResultsActions } from '../components/ResultsActions';
@@ -45,6 +46,7 @@ export function ResultsReportMain(props: {
         onUnlock={props.goPaywall}
       />
       <ResultsActions onCompare={props.onCompare} onUpdateRoutine={props.onUpdateRoutine} />
+      <AssistantEntryCard />
     </>
   );
 }

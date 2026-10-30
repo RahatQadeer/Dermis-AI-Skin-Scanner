@@ -1,3 +1,4 @@
+import type { AssistantService } from '../assistant/assistantService';
 import type { AuthPort } from '../auth/AuthPort';
 import type { AuthCredentialsPort } from '../auth/supabaseCredentials';
 import type { RevenueCatWebhookDeps } from '../handlers/revenueCatWebhookHandler';
@@ -46,6 +47,8 @@ export type FaceReferenceServiceFactory = (ctx: {
 
 export type AppDeps = {
   auth: AuthPort;
+  /** Pro AI skincare assistant (POST /v1/assistant/messages). */
+  assistantFor?: (ctx: { userId: string; accessToken: string }) => AssistantService;
   profilesFor: ProfileServiceFactory;
   quotaFor?: QuotaServiceFactory;
   scanPipelineFor?: ScanPipelineFactory;

@@ -48,6 +48,7 @@ export default function TabLayout() {
       <Tabs.Screen name="profile" options={{ title: nav.profile }} />
       <Tabs.Screen name="results" options={{ title: nav.results, href: null }} />
       <Tabs.Screen name="recommendations" options={{ title: nav.recommendations, href: null }} />
+      <Tabs.Screen name="assistant" options={{ title: nav.assistant, href: null }} />
     </Tabs>
   );
 }

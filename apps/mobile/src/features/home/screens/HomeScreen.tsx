@@ -14,6 +14,8 @@ import { colors, spacing } from '@/src/theme';
 
 import { HomeHeader } from '../components/HomeHeader';
 import { HomeHeroCard } from '../components/HomeHeroCard';
+import { AssistantEntryCard } from '@/src/features/assistant/components/AssistantEntryCard';
+
 import { HomePrioritiesCard } from '../components/HomePrioritiesCard';
 import { HomeQuotaRow } from '../components/HomeQuotaRow';
 import { HomeRoutineCard } from '../components/HomeRoutineCard';
@@ -63,6 +65,7 @@ export function HomeScreen() {
       <HomeScanCta plan={snapshot.quota.plan} onPress={goScan} />
       <HomeQuotaRow quota={snapshot.quota} onUpgrade={() => router.push('/paywall')} />
       <HomeRoutineCard routine={snapshot.routine} onContinue={() => router.push('/routine')} />
+      <AssistantEntryCard />
       <HomeStatCards scan={snapshot.scan} />
       {snapshot.scan ? <HomePrioritiesCard scan={snapshot.scan} /> : null}
       <HealthDisclaimer compact />

@@ -55,3 +55,13 @@ function resetPageUrl(request: Request): string {
   const origin = proto ? `${proto}://${url.host}` : url.origin;
   return `${origin}${RESET_PASSWORD_PATH}`;
 }
+
+/** Public routes for the forgot-password flow (merged into the public route table). */
+export const PASSWORD_RESET_ROUTES: Record<
+  string,
+  (request: Request, deps: AppDeps) => Promise<Response> | Response
+> = {
+  'POST /v1/auth/recover': handlePublicRecover,
+  'POST /v1/auth/password': handlePublicUpdatePassword,
+  [`GET ${RESET_PASSWORD_PATH}`]: serveResetPasswordPage,
+};

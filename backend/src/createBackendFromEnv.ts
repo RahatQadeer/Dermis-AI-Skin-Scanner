@@ -1,5 +1,12 @@
 import { isProductionRuntime } from '@dermis/domain/server';
 
+import { GEMINI_DEFAULT_MODEL } from './adapters/gemini/prompt';
+import { createGeminiAssistantResponder } from './assistant/assistantResponder';
+import { createAssistantService } from './assistant/assistantService';
+import {
+  createMemoryAssistantUsageRepository,
+  createSupabaseAssistantUsageRepository,
+} from './assistant/assistantUsage';
 import type { AuthPort } from './auth/AuthPort';
 import { createSupabaseAuthPort } from './auth/supabaseAuthPort';
 import { createSupabaseCredentialsPort } from './auth/supabaseCredentials';
@@ -136,6 +143,7 @@ function buildLiveDeps(env: BackendEnv, auth: AuthPort, stores: LiveStores): App
     }),
     quotaFor: () => stores.quota,
     scanPipelineFor: ({ accessToken }) => liveScanPipeline({ env, url, anon, stores, accessToken }),
+    assistantFor: liveAssistantFactory(env, stores),
   };
 }
 
@@ -224,4 +232,33 @@ function shouldExposeDevEntitlements(env: BackendEnv): boolean {
     return false;
   }
   return env.allowDevEntitlement === true || env.useMemory === true;
+}
+
+/** Pro assistant on Gemini; not wired (503) without a Gemini key. */
+function liveAssistantFactory(env: BackendEnv, stores: LiveStores): AppDeps['assistantFor'] {
+  const { geminiApiKey, supabaseServiceRoleKey } = env;
+  if (!geminiApiKey) {
+    return undefined;
+  }
+  const url = env.supabaseUrl!;
+  const anon = env.supabaseAnonKey!;
+  // Daily cap must be shared across requests (and instances): DB-backed when possible.
+  const usage = supabaseServiceRoleKey
+    ? createSupabaseAssistantUsageRepository({
+        supabaseUrl: url,
+        serviceRoleKey: supabaseServiceRoleKey,
+      })
+    : createMemoryAssistantUsageRepository();
+  const responder = createGeminiAssistantResponder({
+    apiKey: geminiApiKey,
+    model: env.geminiModel ?? GEMINI_DEFAULT_MODEL,
+  });
+  return ({ accessToken }) =>
+    createAssistantService({
+      responder,
+      usage,
+      quota: stores.quota,
+      profiles: createSupabaseProfileRepository({ supabaseUrl: url, anonKey: anon, accessToken }),
+      scans: stores.scans,
+    });
 }

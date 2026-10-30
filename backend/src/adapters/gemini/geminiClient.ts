@@ -23,8 +23,11 @@ export type GeminiClientConfig = {
 export type GeminiGenerateRequest = {
   prompt: string;
   responseSchema: Record<string, unknown>;
-  imageBase64: string;
-  contentType: string;
+  /** Optional inline image (scan analysis, assistant photo questions). */
+  imageBase64?: string;
+  contentType?: string;
+  /** Optional system instruction (assistant guardrails). */
+  systemInstruction?: string;
 };
 
 /**
@@ -136,21 +139,14 @@ function firstCandidateText(payload: GeminiApiPayload): string | undefined {
 }
 
 function buildBody(args: CallArgs): Record<string, unknown> {
+  const { prompt, imageBase64, contentType, systemInstruction } = args.request;
+  const parts: Record<string, unknown>[] = [{ text: prompt }];
+  if (imageBase64) {
+    parts.push({ inline_data: { mime_type: contentType ?? 'image/jpeg', data: imageBase64 } });
+  }
   return {
-    contents: [
-      {
-        role: 'user',
-        parts: [
-          { text: args.request.prompt },
-          {
-            inline_data: {
-              mime_type: args.request.contentType,
-              data: args.request.imageBase64,
-            },
-          },
-        ],
-      },
-    ],
+    ...(systemInstruction ? { systemInstruction: { parts: [{ text: systemInstruction }] } } : {}),
+    contents: [{ role: 'user', parts }],
     generationConfig: {
       temperature: args.temperature,
       responseMimeType: 'application/json',

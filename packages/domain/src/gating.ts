@@ -10,7 +10,8 @@ export type GatedElement =
   | 'skinAge'
   | 'routine'
   | 'progressAnalytics'
-  | 'pdfExport';
+  | 'pdfExport'
+  | 'aiAssistant';
 
 const FREE_UNLOCKED: ReadonlySet<GatedElement> = new Set(['overallIndex', 'priorityConcern']);
 

@@ -13,6 +13,7 @@ import { paywallCopy } from './paywall';
 import { shellCopy } from './shell';
 import { quizCopy } from './quiz';
 import { analysingCopy } from './screens/analysing';
+import { assistantCopy } from './screens/assistant';
 import { cameraCopy } from './screens/camera';
 import { homeCopy } from './screens/home';
 import { privacyCopy } from './screens/privacy';
@@ -48,6 +49,7 @@ export const copy = {
     home: homeCopy,
     privacy: privacyCopy,
     progress: progressCopy,
+    assistant: assistantCopy,
     profile: profileCopy,
     recommendations: recommendationsCopy,
     results: resultsCopy,

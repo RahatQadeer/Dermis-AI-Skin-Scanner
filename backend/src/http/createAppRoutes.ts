@@ -1,3 +1,4 @@
+import { ASSISTANT_PATH, handleAssistantRoute } from '../assistant/assistantRoute';
 import { requireUser } from '../auth/requireUser';
 import {
   handleDeleteAccount,
@@ -35,12 +36,7 @@ import { serveDeleteAccountPage } from './deleteAccountPage';
 import { json } from './respond';
 import { routeRoutineAndSettings } from './routineRoutes';
 import type { AppDeps } from './createApp';
-import {
-  handlePublicRecover,
-  handlePublicUpdatePassword,
-  RESET_PASSWORD_PATH,
-  serveResetPasswordPage,
-} from './passwordResetRoutes';
+import { PASSWORD_RESET_ROUTES } from './passwordResetRoutes';
 import { readJsonBody } from './readJsonBody';
 
 type RouteHandler = (request: Request, deps: AppDeps) => Promise<Response> | Response;
@@ -56,9 +52,7 @@ const PUBLIC_ROUTES: Record<string, RouteHandler> = {
   'POST /v1/auth/google': handlePublicGoogle,
   'POST /v1/auth/apple': handlePublicApple,
   'POST /v1/auth/refresh': handlePublicRefresh,
-  'POST /v1/auth/recover': handlePublicRecover,
-  'POST /v1/auth/password': handlePublicUpdatePassword,
-  [`GET ${RESET_PASSWORD_PATH}`]: serveResetPasswordPage,
+  ...PASSWORD_RESET_ROUTES,
 };
 
 export async function dispatchAuthed(
@@ -151,6 +145,7 @@ const CORE_ROUTES: Record<string, RouteHandler> = {
     handleConsentRoute(request, deps, 'GET', '/v1/consents/status'),
   'POST /v1/consents': (request, deps) => handleConsentRoute(request, deps, 'POST', '/v1/consents'),
   'POST /v1/dev/entitlements/pro': handleDevEntitlementRoute,
+  [`POST ${ASSISTANT_PATH}`]: handleAssistantRoute,
 };
 
 async function handleDevEntitlementRoute(request: Request, deps: AppDeps): Promise<Response> {

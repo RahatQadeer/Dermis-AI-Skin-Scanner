@@ -1,4 +1,11 @@
+import { GEMINI_DEFAULT_MODEL } from './adapters/gemini/prompt';
 import { createMemoryPhotoStorage } from './adapters/memoryPhotoStorage';
+import {
+  createFakeAssistantResponder,
+  createGeminiAssistantResponder,
+} from './assistant/assistantResponder';
+import { createAssistantService } from './assistant/assistantService';
+import { createMemoryAssistantUsageRepository } from './assistant/assistantUsage';
 import { resolveSkinAnalyzer } from './adapters/resolveSkinAnalyzer';
 import { createMemoryAuthPort } from './auth/memoryAuthPort';
 import type { AppDeps } from './http/createApp';
@@ -59,6 +66,7 @@ export function buildMemoryBackendDeps(env: MemoryEnv = {}): AppDeps {
     },
     // Memory stack is local-only — allow paywall Subscribe without App Store.
     devEntitlements: services.entitlements,
+    assistantFor: () => services.assistant,
   };
 }
 
@@ -92,6 +100,7 @@ function createMemoryStores() {
 function createMemoryServices(stores: ReturnType<typeof createMemoryStores>, env: MemoryEnv) {
   const profiles = createProfileService(stores.profileRepo);
   const quota = createQuotaService(stores.quotaRepo);
+  const assistant = createMemoryAssistant(stores, quota, env);
   const consents = createConsentService(stores.consentRepo);
   const entitlements = createEntitlementService({
     entitlements: stores.entitlementRepo,
@@ -125,6 +134,7 @@ function createMemoryServices(stores: ReturnType<typeof createMemoryStores>, env
     deletionRequests: createMemoryDeletionRequestStore(),
   });
   return {
+    assistant,
     profiles,
     quota,
     entitlements,
@@ -149,4 +159,25 @@ function maybeRegisterEmail(
   if (email) {
     registerMemoryEmail(emailIndex, email, userId);
   }
+}
+
+/** Dev assistant: real Gemini when a key is configured, else a labelled stub. */
+function createMemoryAssistant(
+  stores: ReturnType<typeof createMemoryStores>,
+  quota: ReturnType<typeof createQuotaService>,
+  env: MemoryEnv,
+) {
+  return createAssistantService({
+    responder:
+      env.geminiApiKey && !env.preferFakeAnalyzer
+        ? createGeminiAssistantResponder({
+            apiKey: env.geminiApiKey,
+            model: env.geminiModel ?? GEMINI_DEFAULT_MODEL,
+          })
+        : createFakeAssistantResponder(),
+    usage: createMemoryAssistantUsageRepository(),
+    quota,
+    profiles: stores.profileRepo,
+    scans: stores.scanRepo,
+  });
 }
