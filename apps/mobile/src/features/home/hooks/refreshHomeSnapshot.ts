@@ -8,12 +8,15 @@ import type {
 } from '../mock/homeMockScenarios';
 import { EMPTY_QUOTA, EMPTY_ROUTINE, loadLiveHomeSnapshot } from './loadHomeSnapshot';
 
-export async function refreshHomeSnapshot(lastScan: ScanDto | null): Promise<{
+export async function refreshHomeSnapshot(
+  lastScan: ScanDto | null,
+  knownPlan: HomeSnapshot['quota']['plan'] | null,
+): Promise<{
   quota: HomeSnapshot['quota'];
   scan: HomeScanSnapshot | null;
   routine: HomeRoutineProgress;
 }> {
-  return loadLiveHomeSnapshot(lastScan);
+  return loadLiveHomeSnapshot(lastScan, knownPlan);
 }
 
 export function applyGuestHomeSnapshot(

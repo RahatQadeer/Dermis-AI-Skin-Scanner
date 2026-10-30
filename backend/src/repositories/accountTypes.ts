@@ -8,7 +8,11 @@ export type AccountExportPayload = {
   quota: unknown;
   scans: unknown[];
   routineSteps: unknown[];
+  /** Daily routine check-offs. */
+  routineCompletions?: unknown[];
   consents: unknown[];
+  /** Face-identity reference (embedding + model version), when enrolled. */
+  faceReference?: unknown;
 };
 
 export type AccountDataPort = {

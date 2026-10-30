@@ -7,7 +7,13 @@ import { useSession } from '@/src/features/session/SessionContext';
 
 import type { ProgressLoadError } from '../hooks/useProgressScans';
 
-export function ProgressEmptyStates({ loadError }: { loadError: ProgressLoadError | null }) {
+export function ProgressEmptyStates({
+  loadError,
+  onRetry,
+}: {
+  loadError: ProgressLoadError | null;
+  onRetry?: () => void;
+}) {
   const p = getCopy().screens.progress;
   const { goScan } = useScanNavigation();
   const session = useSession();
@@ -31,8 +37,8 @@ export function ProgressEmptyStates({ loadError }: { loadError: ProgressLoadErro
       <EmptyState
         title={p.loadErrorTitle}
         body={p.loadErrorBody}
-        actionLabel={p.emptyCta}
-        onAction={goScan}
+        actionLabel={onRetry ? getCopy().common.retry : p.emptyCta}
+        onAction={onRetry ?? goScan}
       />
     );
   }

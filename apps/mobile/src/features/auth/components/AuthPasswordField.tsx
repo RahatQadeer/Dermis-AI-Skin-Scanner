@@ -18,6 +18,8 @@ export type AuthPasswordFieldProps = {
   showMeter?: boolean;
   hint?: string;
   textContentType?: 'password' | 'newPassword';
+  returnKeyType?: 'go' | 'done' | 'next';
+  onSubmitEditing?: () => void;
 };
 
 export function AuthPasswordField({
@@ -29,6 +31,8 @@ export function AuthPasswordField({
   showMeter = false,
   hint,
   textContentType = 'password',
+  returnKeyType,
+  onSubmitEditing,
 }: AuthPasswordFieldProps) {
   const [visible, setVisible] = useState(false);
 
@@ -48,6 +52,8 @@ export function AuthPasswordField({
           autoCapitalize="none"
           autoCorrect={false}
           textContentType={textContentType}
+          returnKeyType={returnKeyType}
+          onSubmitEditing={onSubmitEditing}
           style={styles.input}
         />
         <ShowToggle visible={visible} onToggle={() => setVisible((current) => !current)} />

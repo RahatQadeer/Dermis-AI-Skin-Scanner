@@ -55,7 +55,8 @@ export const authCopy = {
   emailPlaceholder: 'you@example.com',
   passwordLabel: 'Password',
   passwordPlaceholder: 'At least 8 characters',
-  passwordHint: '8+ characters, a number and a symbol',
+  // Must match isPasswordAcceptable (@dermis/domain): symbol is optional.
+  passwordHint: '8+ characters with upper- and lowercase letters and a number',
   confirmPasswordLabel: 'Confirm password',
 
   // CTAs + prompts

@@ -8,9 +8,16 @@ export type ProfileIdentityProps = {
   displayName: string;
   email?: string | null;
   scanCount: number;
+  /** Account (profile) creation time; omitted from the line until known. */
+  memberSince: string | null;
 };
 
-export function ProfileIdentity({ displayName, email, scanCount }: ProfileIdentityProps) {
+export function ProfileIdentity({
+  displayName,
+  email,
+  scanCount,
+  memberSince,
+}: ProfileIdentityProps) {
   const p = getCopy().screens.profile;
 
   return (
@@ -28,11 +35,20 @@ export function ProfileIdentity({ displayName, email, scanCount }: ProfileIdenti
           </AppText>
         ) : null}
         <AppText variant="body" color={colors.mute}>
-          {`${p.memberSince} · ${scanCount} ${p.scansLabel}`}
+          {[
+            memberSince ? p.memberSince(formatMonthYear(memberSince)) : null,
+            `${scanCount} ${p.scansLabel}`,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
         </AppText>
       </View>
     </View>
   );
+}
+
+function formatMonthYear(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 }
 
 function toInitials(name: string): string {

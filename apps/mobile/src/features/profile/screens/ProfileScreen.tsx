@@ -14,11 +14,13 @@ import { ProfileIdentity } from '../components/ProfileIdentity';
 import { ProfileSettingsSection } from '../components/ProfileSettingsSection';
 import { ProfileStatCards } from '../components/ProfileStatCards';
 import { useProfileSettings } from '../hooks/useProfileSettings';
+import { useSavedSkinProfile } from '../hooks/useSavedSkinProfile';
 
 export function ProfileScreen() {
   const session = useSession();
   const snapshot = useHomeSnapshot();
   const settings = useProfileSettings();
+  const skinProfile = useSavedSkinProfile();
 
   return (
     <Screen scroll padded edges={['top', 'left', 'right']} contentStyle={styles.content}>
@@ -30,15 +32,12 @@ export function ProfileScreen() {
         }
         email={session.email}
         scanCount={snapshot.quota.lifetimeScanCount}
+        memberSince={skinProfile?.createdAt ?? null}
       />
-      <ProfileStatCards />
+      <ProfileStatCards profile={skinProfile} />
       <ProfileSettingsSection
         notificationsOn={settings.notificationsOn}
         onNotificationsChange={settings.setNotificationsOn}
-        lightingOn={settings.lightingOn}
-        onLightingChange={settings.setLightingOn}
-        shareDataOn={settings.shareDataOn}
-        onShareDataChange={settings.setShareDataOn}
         routineNudgesOn={settings.tipsOn}
         onRoutineNudgesChange={settings.setTipsOn}
       />

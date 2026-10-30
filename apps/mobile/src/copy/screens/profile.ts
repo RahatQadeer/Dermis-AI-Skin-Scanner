@@ -52,27 +52,30 @@ export const profileCopy = {
   signOutToast: 'Signed out.',
 
   // Identity
-  memberSince: 'Member since March',
+  memberSince: (monthYear: string) => `Member since ${monthYear}`,
   scansLabel: 'scans',
 
   // Profile stat cards
   statSkinType: 'Skin type',
-  statSkinTypeValue: 'Combination',
   statFitzpatrick: 'Fitzpatrick',
-  statFitzpatrickValue: 'Type IV',
   statSensitivity: 'Sensitivity',
-  statSensitivityValue: 'Low',
+  /** Shown while loading or when the assessment has no answer for a field. */
+  statNotSet: '—',
+  skinTypeLabels: { oily: 'Oily', combination: 'Combination', dry: 'Dry', normal: 'Normal' },
+  skinToneLabels: {
+    typeI_II: 'Type I–II',
+    typeIII: 'Type III',
+    typeIV: 'Type IV',
+    typeV_VI: 'Type V–VI',
+  },
+  sensitivityLabels: { rarely: 'Low', sometimes: 'Medium', easily: 'High' },
 
   // Preferences
   sectionPreferences: 'Preferences',
   prefScanReminders: 'Scan reminders',
-  prefScanRemindersHint: 'Every 7 days, 08:00',
-  prefLighting: 'Consistent-lighting check',
-  prefLightingHint: 'Warn if lux differs > 20% from baseline',
-  prefShareData: 'Share anonymised data',
-  prefShareDataHint: 'Improves scoring models',
-  prefRoutineNudges: 'Routine nudges',
-  prefRoutineNudgesHint: 'Evening actives at 21:30',
+  prefScanRemindersHint: 'Weekly, Mondays at 10:00',
+  prefRoutineNudges: 'Tips & product updates',
+  prefRoutineNudgesHint: 'Occasional skincare tips and Dermis news',
 
   // Data
   sectionData: 'Data',

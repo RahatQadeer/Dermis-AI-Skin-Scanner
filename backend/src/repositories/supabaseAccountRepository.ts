@@ -57,13 +57,16 @@ async function exportForUser(
   if (!profile) {
     return null;
   }
-  const [entitlement, quota, scans, routineSteps, consents] = await Promise.all([
-    fetchOne(rest, 'entitlements', `user_id=eq.${userId}`),
-    fetchOne(rest, 'scan_usage', `user_id=eq.${userId}`),
-    fetchMany(rest, 'scans', `user_id=eq.${userId}`),
-    fetchMany(rest, 'routine_steps', `user_id=eq.${userId}`),
-    fetchMany(rest, 'user_consents', `user_id=eq.${userId}`),
-  ]);
+  const [entitlement, quota, scans, routineSteps, routineCompletions, consents, faceReference] =
+    await Promise.all([
+      fetchOne(rest, 'entitlements', `user_id=eq.${userId}`),
+      fetchOne(rest, 'scan_usage', `user_id=eq.${userId}`),
+      fetchMany(rest, 'scans', `user_id=eq.${userId}`),
+      fetchMany(rest, 'routine_steps', `user_id=eq.${userId}`),
+      fetchMany(rest, 'routine_step_completions', `user_id=eq.${userId}`),
+      fetchMany(rest, 'user_consents', `user_id=eq.${userId}`),
+      fetchOne(rest, 'face_references', `user_id=eq.${userId}`),
+    ]);
   const row = profile as {
     notify_scan_reminders?: boolean;
     notify_product_updates?: boolean;
@@ -81,7 +84,9 @@ async function exportForUser(
     quota,
     scans,
     routineSteps,
+    routineCompletions,
     consents,
+    faceReference,
   };
 }
 

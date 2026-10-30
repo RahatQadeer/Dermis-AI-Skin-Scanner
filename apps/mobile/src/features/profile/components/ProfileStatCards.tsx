@@ -4,12 +4,24 @@ import { AppText } from '@/src/components/text/AppText';
 import { getCopy } from '@/src/copy';
 import { colors, radii, spacing } from '@/src/theme';
 
-export function ProfileStatCards() {
+import type { ProfileDto } from '../api/profileApi';
+
+/** The user's saved skin assessment (never placeholder values). */
+export function ProfileStatCards({ profile }: { profile: ProfileDto | null }) {
   const p = getCopy().screens.profile;
   const items = [
-    { label: p.statSkinType, value: p.statSkinTypeValue },
-    { label: p.statFitzpatrick, value: p.statFitzpatrickValue },
-    { label: p.statSensitivity, value: p.statSensitivityValue },
+    {
+      label: p.statSkinType,
+      value: profile?.skinType ? p.skinTypeLabels[profile.skinType] : p.statNotSet,
+    },
+    {
+      label: p.statFitzpatrick,
+      value: profile?.skinTone ? p.skinToneLabels[profile.skinTone] : p.statNotSet,
+    },
+    {
+      label: p.statSensitivity,
+      value: profile?.sensitivity ? p.sensitivityLabels[profile.sensitivity] : p.statNotSet,
+    },
   ];
 
   return (

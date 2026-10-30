@@ -17,7 +17,6 @@ export function useProfileSettings() {
   const p = getCopy().screens.profile;
   const toast = useToast();
   const toggles = useSettingsToggles({ session, showToast: toast.showToast, p });
-  const localPrefs = useLocalPrefs();
   const { setLastScan } = useScanCapture();
   const account = useAccountActions({
     session,
@@ -29,7 +28,6 @@ export function useProfileSettings() {
 
   return {
     ...toggles,
-    ...localPrefs,
     ...toast,
     deleteOpen,
     setDeleteOpen,
@@ -38,13 +36,6 @@ export function useProfileSettings() {
     onConfirmDeleteAccount: account.onConfirmDeleteAccount,
     busy: account.busy,
   };
-}
-
-/** UI-only preferences (no backend yet): lighting check on, data-sharing off. */
-function useLocalPrefs() {
-  const [lightingOn, setLightingOn] = useState(true);
-  const [shareDataOn, setShareDataOn] = useState(false);
-  return { lightingOn, setLightingOn, shareDataOn, setShareDataOn };
 }
 
 function useToast() {

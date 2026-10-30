@@ -17,13 +17,14 @@ export type ProgressBodyProps = {
   window: ProgressWindow;
   scans: readonly ProgressScan[];
   loadError?: ProgressLoadError | null;
+  onRetry?: () => void;
 };
 
-export function ProgressBody({ window, scans, loadError = null }: ProgressBodyProps) {
+export function ProgressBody({ window, scans, loadError = null, onRetry }: ProgressBodyProps) {
   const summary = buildProgressSummary(scans);
 
   if (!summary || scans.length === 0) {
-    return <ProgressEmptyStates loadError={loadError} />;
+    return <ProgressEmptyStates loadError={loadError} onRetry={onRetry} />;
   }
 
   return (

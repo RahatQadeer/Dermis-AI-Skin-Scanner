@@ -23,6 +23,10 @@ export function useHomeSnapshot(): HomeSnapshot & { loading: boolean } {
   const { lastScan } = useScanCapture();
   const live = session.apiEnabled && Boolean(session.accessToken);
   const readyRef = useRef(false);
+  const knownPlanRef = useRef<{
+    userId: string | null;
+    plan: HomeSnapshot['quota']['plan'];
+  } | null>(null);
 
   const [quota, setQuota] = useState<HomeSnapshot['quota']>(EMPTY_QUOTA);
   const [scan, setScan] = useState<HomeScanSnapshot | null>(null);
@@ -43,6 +47,8 @@ export function useHomeSnapshot(): HomeSnapshot & { loading: boolean } {
     quotaRefreshVersion,
     lastScan,
     readyRef,
+    knownPlanRef,
+    userId: session.userId,
     setQuota,
     setScan,
     setRoutine,

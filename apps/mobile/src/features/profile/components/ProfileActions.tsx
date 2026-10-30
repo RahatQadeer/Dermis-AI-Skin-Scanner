@@ -47,7 +47,7 @@ export function ProfileActions({
         }}
       />
       <ProfileLegalSection onLegalUnavailable={() => settings.showToast(p.legalUnavailable)} />
-      <ProfileAccountSection plan={plan} />
+      <ProfileAccountSection plan={plan} showToast={settings.showToast} />
       <DeleteAccountSheet
         visible={settings.deleteOpen}
         onClose={() => settings.setDeleteOpen(false)}

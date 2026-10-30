@@ -25,7 +25,7 @@ export function ProgressScreen() {
   const unlocked = isElementUnlocked(snapshot.quota.plan, 'progressAnalytics');
   const p = getCopy().screens.progress;
   const [window, setWindow] = useState<ProgressWindow>('90');
-  const { scans: allScans, loading, error } = useProgressScans();
+  const { scans: allScans, loading, error, refresh } = useProgressScans();
   const scans = useMemo(
     () => filterScansByWindow(allScans, window, new Date()),
     [allScans, window],
@@ -55,7 +55,7 @@ export function ProgressScreen() {
           {loading ? (
             <ActivityIndicator color={colors.ink} style={styles.loader} />
           ) : (
-            <ProgressBody window={window} scans={scans} loadError={error} />
+            <ProgressBody window={window} scans={scans} loadError={error} onRetry={refresh} />
           )}
         </LockedOverlay>
       )}

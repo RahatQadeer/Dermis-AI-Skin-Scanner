@@ -40,6 +40,10 @@ export function Screen({
         <ScrollView
           contentContainerStyle={scrollStyle}
           keyboardShouldPersistTaps="handled"
+          // iOS: inset content for the keyboard so focused fields and the submit
+          // button stay reachable on small screens (Android resizes the window).
+          automaticallyAdjustKeyboardInsets
+          keyboardDismissMode="interactive"
           showsVerticalScrollIndicator={false}
           showsHorizontalScrollIndicator={false}
           bounces={false}

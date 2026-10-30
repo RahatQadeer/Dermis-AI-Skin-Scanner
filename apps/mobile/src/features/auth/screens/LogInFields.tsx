@@ -78,6 +78,8 @@ export function LogInFields({ form }: { form: LogInForm }) {
         value={form.password}
         onChangeText={form.setPassword}
         error={form.errors.password}
+        returnKeyType="go"
+        onSubmitEditing={form.canSubmit ? form.submit : undefined}
       />
       <LogInFooter form={form} auth={auth} />
     </>

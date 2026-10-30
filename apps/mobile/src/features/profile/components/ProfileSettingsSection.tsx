@@ -10,10 +10,6 @@ import { spacing } from '@/src/theme';
 export type ProfileSettingsSectionProps = {
   notificationsOn: boolean;
   onNotificationsChange: (value: boolean) => void;
-  lightingOn: boolean;
-  onLightingChange: (value: boolean) => void;
-  shareDataOn: boolean;
-  onShareDataChange: (value: boolean) => void;
   routineNudgesOn: boolean;
   onRoutineNudgesChange: (value: boolean) => void;
 };
@@ -27,20 +23,6 @@ export function ProfileSettingsSection(props: ProfileSettingsSectionProps) {
       hint: p.prefScanRemindersHint,
       value: props.notificationsOn,
       onChange: props.onNotificationsChange,
-    },
-    {
-      key: 'lighting',
-      title: p.prefLighting,
-      hint: p.prefLightingHint,
-      value: props.lightingOn,
-      onChange: props.onLightingChange,
-    },
-    {
-      key: 'share',
-      title: p.prefShareData,
-      hint: p.prefShareDataHint,
-      value: props.shareDataOn,
-      onChange: props.onShareDataChange,
     },
     {
       key: 'nudges',
