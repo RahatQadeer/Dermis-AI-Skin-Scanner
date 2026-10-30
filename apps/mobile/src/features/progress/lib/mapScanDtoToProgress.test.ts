@@ -5,16 +5,33 @@ import type { ScanDto } from '@/src/features/scan/api/scanApi';
 
 import { mapScanDtosToProgress } from './mapScanDtoToProgress';
 
-const concerns = {
-  redness: 70,
-  fineLines: 68,
-  hydration: 71,
-  darkSpots: 69,
-  texture: 64,
-  pores: 58,
-} as const;
+const PRIORITY_REDNESS = {
+  redness: 1.5,
+  fineLines: 1,
+  hydration: 1,
+  darkSpots: 1,
+  texture: 1,
+  pores: 1,
+};
 
-function dto(id: string, takenAt: string, indexScore: number): ScanDto {
+function uniform(score: number): ScanDto['concerns'] {
+  return {
+    redness: score,
+    fineLines: score,
+    hydration: score,
+    darkSpots: score,
+    texture: score,
+    pores: score,
+  };
+}
+
+function dto(
+  id: string,
+  takenAt: string,
+  indexScore: number,
+  concerns: ScanDto['concerns'] = uniform(indexScore),
+  weights: ScanDto['weights'] = {},
+): ScanDto {
   return {
     id,
     userId: '00000000-0000-4000-8000-000000000001',
@@ -22,7 +39,7 @@ function dto(id: string, takenAt: string, indexScore: number): ScanDto {
     indexScore,
     concerns,
     zones: concerns as unknown as ScanDto['zones'],
-    weights: {},
+    weights,
     formulaVersion: 'index-v1',
     model: 'test',
     promptVersion: 'v1',
@@ -45,5 +62,31 @@ describe('mapScanDtosToProgress', () => {
       ],
     );
     assert.equal(mapped[0]!.capturedAt, '2026-09-24');
+  });
+
+  it('keeps the series comparable after the user changes priority concerns', () => {
+    // Same skin both times; only the profile priorities changed (none → redness).
+    const skin = { ...uniform(80), redness: 40 };
+    const mapped = mapScanDtosToProgress([
+      dto('before', '2026-09-01T08:00:00.000Z', 73, skin, {}),
+      dto('after', '2026-09-24T08:00:00.000Z', 71, skin, PRIORITY_REDNESS),
+    ]);
+    // Stored indexes differ (73 vs 71) but re-scored on the newest weights they match.
+    assert.equal(mapped[0]!.indexScore, 71);
+    assert.equal(mapped[1]!.indexScore, 71);
+  });
+
+  it('keeps the stored index for rows it cannot re-score comparably', () => {
+    const legacy = dto('legacy', '2026-08-01T08:00:00.000Z', 66, uniform(80), {});
+    legacy.formulaVersion = 'index-v0';
+    const partial = dto('partial', '2026-08-15T08:00:00.000Z', 64, uniform(80), {});
+    delete (partial.concerns as Partial<ScanDto['concerns']>).pores;
+    const mapped = mapScanDtosToProgress([
+      legacy,
+      partial,
+      dto('now', '2026-09-24T08:00:00.000Z', 71, uniform(71), PRIORITY_REDNESS),
+    ]);
+    assert.equal(mapped.find((s) => s.id === 'legacy')!.indexScore, 66);
+    assert.equal(mapped.find((s) => s.id === 'partial')!.indexScore, 64);
   });
 });

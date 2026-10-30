@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { estimateSkinAge } from './resultsDisplay';
+import { estimateSkinAge, pickPreviousScan } from './resultsDisplay';
 
 test('estimateSkinAge drops when youth-linked scores improve', () => {
   const older = estimateSkinAge(55, { fineLines: 40, texture: 45, darkSpots: 50 });
@@ -14,4 +14,18 @@ test('estimateSkinAge drops when youth-linked scores improve', () => {
 test('estimateSkinAge stays within 18–55', () => {
   assert.equal(estimateSkinAge(100, { fineLines: 100, texture: 100, darkSpots: 100 }), 18);
   assert.equal(estimateSkinAge(0, { fineLines: 0, texture: 0, darkSpots: 0 }), 55);
+});
+
+test('pickPreviousScan returns the scan right before the current one', () => {
+  const rows = [{ id: 's3' }, { id: 's2' }, { id: 's1' }] as unknown as Parameters<
+    typeof pickPreviousScan
+  >[0];
+  assert.equal(pickPreviousScan(rows, 's3')?.id, 's2');
+  assert.equal(pickPreviousScan(rows, 's1'), null);
+});
+
+test('pickPreviousScan uses the newest listed scan when current is not listed yet', () => {
+  const rows = [{ id: 's2' }, { id: 's1' }] as unknown as Parameters<typeof pickPreviousScan>[0];
+  assert.equal(pickPreviousScan(rows, 's3-fresh')?.id, 's2');
+  assert.equal(pickPreviousScan([], 's3-fresh'), null);
 });

@@ -8,6 +8,7 @@ import {
   SCORE_MIN,
 } from './constants';
 import type { ConcernScores, ConcernWeights } from './schemas/score';
+import { weightedIndex } from './weightedIndex';
 
 export type { ConcernScores, ConcernWeights };
 
@@ -70,15 +71,8 @@ export function calculateIndex(input: {
   const priorities = normalizePriorities(input.priorities ?? []);
   const weights = buildWeights(priorities);
 
-  let weightedSum = 0;
-  let weightSum = 0;
-  for (const id of CONCERN_IDS) {
-    weightedSum += weights[id] * input.scores[id];
-    weightSum += weights[id];
-  }
-
   return {
-    index: Math.round(weightedSum / weightSum),
+    index: weightedIndex(input.scores, weights),
     weights,
     formulaVersion: FORMULA_VERSION,
   };

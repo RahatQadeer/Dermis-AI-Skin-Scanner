@@ -28,6 +28,7 @@ export function useResultsReport(): ResultsReportState {
     liveSession,
     session.accessToken,
     lastScan?.id,
+    session.userId,
   );
 
   const currentScan = lastScan ?? history[0] ?? null;

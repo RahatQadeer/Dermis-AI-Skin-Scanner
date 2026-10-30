@@ -34,9 +34,8 @@ export async function fetchProgressScansForFocus(lastScan: ScanDto | null): Prom
       const code = isApiError(err) ? err.code : 'network';
       console.warn('[progress] listScans failed:', code, err);
     }
-    if (lastScan) {
-      return { scans: mapScanDtosToProgress([lastScan]), error: null };
-    }
+    // No single-scan fallback: one cached scan rendered as "history" shows a
+    // false baseline (delta 0) and hides the failure. Surface the error instead.
     return { scans: [], error: resolveProgressLoadError(err) };
   }
 }

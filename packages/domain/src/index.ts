@@ -17,6 +17,7 @@ export { scoreColor, type ScoreColorToken } from './scoreColor';
 export { deltaColor, type DeltaColorToken } from './deltaColor';
 export type { Plan, QuotaState, QuotaDecision } from './quota';
 export type { IndexResult } from './calculateIndex';
+export { weightedIndex } from './weightedIndex';
 export type { PasswordCheck, PasswordStrength, PasswordStrengthLabel } from './passwordStrength';
 export { PASSWORD_MIN_LENGTH, passwordStrength, isPasswordAcceptable } from './passwordStrength';
 export * from './schemas/index';

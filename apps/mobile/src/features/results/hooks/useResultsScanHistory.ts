@@ -2,12 +2,22 @@ import { useEffect, useState } from 'react';
 
 import { listScans, type ScanDto } from '@/src/features/scan/api/scanApi';
 
+const EMPTY: ScanDto[] = [];
+
 export function useResultsScanHistory(
   liveSession: boolean,
   accessToken: string | null,
   lastScanId: string | undefined,
+  userId: string | null,
 ): { history: ScanDto[]; loading: boolean } {
-  const [history, setHistory] = useState<ScanDto[]>([]);
+  const [owned, setOwned] = useState<{ userId: string | null; rows: ScanDto[] }>({
+    userId,
+    rows: [],
+  });
+  // Rows fetched for another account are never returned, even for the render
+  // before the refetch below starts. A token refresh (same user) keeps them.
+  const history = owned.userId === userId ? owned.rows : EMPTY;
+  const setHistory = (rows: ScanDto[]) => setOwned({ userId, rows });
   const [loading, setLoading] = useState(liveSession);
 
   useEffect(() => {
@@ -37,7 +47,8 @@ export function useResultsScanHistory(
     return () => {
       cancelled = true;
     };
-  }, [accessToken, lastScanId, liveSession]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- setHistory captures userId
+  }, [accessToken, lastScanId, liveSession, userId]);
 
   return { history, loading };
 }

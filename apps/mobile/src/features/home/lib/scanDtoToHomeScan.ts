@@ -1,6 +1,7 @@
 import { CONCERN_IDS, type ConcernId } from '@dermis/domain';
 
 import type { ScanDto } from '@/src/features/scan/api/scanApi';
+import { indexDeltaSincePrevious } from '@/src/features/scan/lib/indexDelta';
 
 import type { HomeScanSnapshot } from '../mock/homeMockScenarios';
 
@@ -19,7 +20,7 @@ export function scanDtoToHomeScan(
   const priorities = [...CONCERN_IDS]
     .sort((a, b) => concernScores[a] - concernScores[b])
     .slice(0, 3);
-  const indexDelta = previous != null ? scan.indexScore - previous.indexScore : undefined;
+  const indexDelta = previous != null ? indexDeltaSincePrevious(scan, previous) : undefined;
   return {
     indexScore: scan.indexScore,
     indexDelta,

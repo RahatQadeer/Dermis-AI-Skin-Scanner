@@ -2,6 +2,7 @@ import { ZONE_IDS, type ConcernId, type ZoneId } from '@dermis/domain';
 
 import { getCopy } from '@/src/copy';
 import type { ScanDto } from '@/src/features/scan/api/scanApi';
+import { indexDeltaSincePrevious } from '@/src/features/scan/lib/indexDelta';
 
 import {
   concernDeltaLabels,
@@ -62,7 +63,7 @@ export function buildResultsPresentation(
   }
 
   const usePrototypeExtras = Boolean(report && !currentScan);
-  const indexDelta = previous && report ? report.scan.indexScore - previous.indexScore : null;
+  const indexDelta = indexDeltaVsPrevious(report, previous, currentScan);
   const priorWhen = previous ? formatPriorWhen(previous.takenAt) : null;
 
   return {
@@ -74,6 +75,19 @@ export function buildResultsPresentation(
     insight: buildIndexInsight(indexDelta, priorWhen, usePrototypeExtras, r),
     concernDeltas: buildConcernDeltas(report, previous, usePrototypeExtras),
   };
+}
+
+function indexDeltaVsPrevious(
+  report: ResultsReport,
+  previous: ScanDto | null,
+  currentScan: ScanDto | null,
+): number | null {
+  if (!previous) {
+    return null;
+  }
+  return currentScan
+    ? indexDeltaSincePrevious(currentScan, previous)
+    : report.scan.indexScore - previous.indexScore;
 }
 
 function buildDeltaLabel(

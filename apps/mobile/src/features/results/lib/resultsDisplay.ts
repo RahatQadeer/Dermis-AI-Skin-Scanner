@@ -66,10 +66,15 @@ export function concernDeltaLabels(
   return out;
 }
 
+/**
+ * The scan immediately before `currentId` in newest-first history. When the
+ * current scan isn't listed yet (fresh upload, list not refetched), every listed
+ * scan predates it, so the newest listed scan is the previous one.
+ */
 export function pickPreviousScan(scans: readonly ScanDto[], currentId: string): ScanDto | null {
   const idx = scans.findIndex((s) => s.id === currentId);
   if (idx >= 0) {
     return scans[idx + 1] ?? null;
   }
-  return scans.length > 1 ? scans[1]! : null;
+  return scans[0] ?? null;
 }
