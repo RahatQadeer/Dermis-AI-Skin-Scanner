@@ -57,4 +57,6 @@ export const progressCopy = {
   singleScanHint: 'Take another scan to see improvements over time.',
   changeTitle: 'Change by concern',
   openScanA11y: (date: string) => `Open scan from ${date}`,
+  newFaceMarker: 'New face',
+  newFaceHint: 'Hi — scans below are from a previous face on this account.',
 } as const;

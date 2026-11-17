@@ -3,7 +3,9 @@ import { useCallback, useEffect } from 'react';
 import { refreshSession } from '@/src/features/auth/api/authApi';
 import { getApiClient } from '@/src/lib/api/client';
 import { isApiEnabled } from '@/src/lib/api/config';
+import { isApiError } from '@/src/lib/api/errors';
 
+import { ensureFreshLocalDataEpoch } from './clearLocalAppState';
 import { parseMemoryAccessToken } from './parseMemoryAccessToken';
 import { isRefreshRejected, isRefreshStillCurrent } from './refreshOutcome';
 import { loadOnboardingComplete, loadStoredSession, saveStoredSession } from './sessionStorage';
@@ -29,6 +31,11 @@ export function useSessionStorageHydrate(setters: SessionSetters): void {
     let cancelled = false;
     void (async () => {
       try {
+        // Wipe ghost sessions from broken builds (quiz loop / fake “account”).
+        await ensureFreshLocalDataEpoch();
+        if (cancelled) {
+          return;
+        }
         const [stored, onboarding] = await Promise.all([
           loadStoredSession(),
           loadOnboardingComplete(),
@@ -126,6 +133,8 @@ export function useSessionMeProfileSync(ctx: {
   setUserId: (v: string) => void;
   setEmail: (fn: (prev: string | null) => string | null) => void;
   setFirstName: (fn: (prev: string | null) => string | null) => void;
+  /** User deleted / JWT revoked — clear local session so Home is not shown. */
+  onAuthExpired: () => void;
 }): void {
   useEffect(() => {
     if (!ctx.hydrated || !ctx.accessToken || !isApiEnabled()) {
@@ -146,8 +155,14 @@ export function useSessionMeProfileSync(ctx: {
           setEmail: ctx.setEmail,
           setFirstName: ctx.setFirstName,
         });
-      } catch {
-        // Keep session; refresh handler may recover on the next API call.
+      } catch (err) {
+        if (cancelled) return;
+        // Dead account in Supabase (or revoked JWT) must not keep showing Home.
+        if (isApiError(err) && (err.status === 401 || err.status === 403)) {
+          ctx.onAuthExpired();
+          return;
+        }
+        // Network blip — keep session; refresh may recover on the next call.
       }
     })();
     return () => {

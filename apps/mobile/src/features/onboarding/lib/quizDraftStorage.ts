@@ -21,7 +21,7 @@ export async function saveQuizDraft(draft: QuizDraft, userId?: string | null): P
   }
 }
 
-/** Clears drafts only after a confirmed server save (or conflict). */
+/** Clears drafts only after a confirmed server save (or confirmed complete profile). */
 export async function clearQuizDraft(userId?: string | null): Promise<void> {
   await AsyncStorage.removeItem(PRE_AUTH_KEY);
   if (userId) {
@@ -35,20 +35,19 @@ function parseDraft(raw: string | null): QuizDraft | null {
   }
   try {
     const parsed = JSON.parse(raw) as Partial<QuizDraft>;
-    const draft: QuizDraft = {
+    return {
       ...emptyQuizDraft(),
       ...parsed,
       priorities: Array.isArray(parsed.priorities) ? parsed.priorities : [],
       ageBand: parsed.ageBand ?? null,
     };
-    return isQuizDraftComplete(draft) ? draft : null;
   } catch {
     return null;
   }
 }
 
-/** Returns a completed draft for this user (user key first, then pre-auth). */
-export async function loadCompletedQuizDraft(userId?: string | null): Promise<QuizDraft | null> {
+/** Any saved draft (including in-progress) for hydration. */
+export async function loadQuizDraft(userId?: string | null): Promise<QuizDraft | null> {
   if (userId) {
     const owned = parseDraft(await AsyncStorage.getItem(userDraftKey(userId)));
     if (owned) {
@@ -56,4 +55,10 @@ export async function loadCompletedQuizDraft(userId?: string | null): Promise<Qu
     }
   }
   return parseDraft(await AsyncStorage.getItem(PRE_AUTH_KEY));
+}
+
+/** Returns a completed draft for this user (user key first, then pre-auth). */
+export async function loadCompletedQuizDraft(userId?: string | null): Promise<QuizDraft | null> {
+  const draft = await loadQuizDraft(userId);
+  return draft && isQuizDraftComplete(draft) ? draft : null;
 }

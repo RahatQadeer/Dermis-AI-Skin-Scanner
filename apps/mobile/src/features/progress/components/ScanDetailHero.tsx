@@ -41,7 +41,14 @@ export function ScanDetailHero({
         <View style={styles.heroRight}>
           <ProgressRing progress={scan.indexScore} size={96} label={String(scan.indexScore)} />
           <View style={styles.sheep}>
-            <Mascot mood="happy" size={56} showBubble={false} />
+            <Mascot
+              mood="happy"
+              size={56}
+              lines={getCopy().mascot.dermis.tipLines}
+              revealOnTap
+              bubbleOverlay
+              compactBubble
+            />
           </View>
         </View>
       </View>
@@ -83,16 +90,19 @@ const styles = StyleSheet.create({
   hero: {
     backgroundColor: colors.hero,
     borderRadius: radii.xxl,
-    padding: spacing.lg,
+    padding: spacing.md,
+    overflow: 'visible',
     ...shadows.soft,
   },
   heroTop: {
     flexDirection: 'row',
-    gap: spacing.md,
+    gap: spacing.sm,
+    overflow: 'visible',
+    zIndex: 3,
   },
   heroText: {
     flex: 1,
-    gap: spacing.xs,
+    gap: spacing.xxs,
   },
   heroScore: {
     fontFamily: fontFamilies.headingBold,
@@ -130,5 +140,7 @@ const styles = StyleSheet.create({
   },
   sheep: {
     marginTop: -spacing.sm,
+    overflow: 'visible',
+    zIndex: 2,
   },
 });

@@ -26,7 +26,7 @@ export function ProfileLegalSection({ onLegalUnavailable }: ProfileLegalSectionP
         <ListRow
           title={p.recommendations}
           subtitle={p.recommendationsHint}
-          onPress={() => router.push('/(tabs)/recommendations')}
+          onPress={() => router.push('/(report)/recommendations')}
         />
         <ListRow
           title={p.privacy}

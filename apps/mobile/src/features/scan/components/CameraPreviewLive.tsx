@@ -46,6 +46,7 @@ export const CameraPreviewLive = forwardRef<CameraPreviewLiveHandle, CameraPrevi
           facing="front"
           mode="picture"
           mirror
+          animateShutter={false}
         />
         <FaceGuideOval locked={faceLocked} />
       </View>

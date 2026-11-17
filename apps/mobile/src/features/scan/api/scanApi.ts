@@ -6,6 +6,8 @@ import { SCAN_UPLOAD_TIMEOUT_MS } from '@/src/lib/api/httpClient';
 export type ScanDto = {
   id: string;
   userId: string;
+  /** Face series id — Progress shows a "New face" divider when this changes. */
+  faceEnrollmentId?: string | null;
   takenAt: string;
   indexScore: number;
   concerns: ConcernScores;
@@ -22,6 +24,13 @@ export type CreateScanInput = {
   idempotencyKey: string;
   imageBase64: string;
   contentType: 'image/jpeg' | 'image/png' | 'image/webp';
+  faceIdentity: {
+    embedding: number[];
+    modelVersion: string;
+    livenessPassed: true;
+    livenessChallengeId: string;
+    faceBox: { xMin: number; yMin: number; width: number; height: number };
+  };
 };
 
 export async function createScan(

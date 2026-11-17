@@ -43,7 +43,7 @@ export function ProfileActions({
         onSignOut={() => {
           session.signOut();
           settings.showToast(p.signOutToast);
-          router.replace('/sign-up');
+          router.replace('/log-in');
         }}
       />
       <ProfileLegalSection onLegalUnavailable={() => settings.showToast(p.legalUnavailable)} />

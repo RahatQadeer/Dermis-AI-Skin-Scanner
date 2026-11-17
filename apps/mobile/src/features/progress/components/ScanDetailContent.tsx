@@ -69,13 +69,13 @@ function CompareCol({
 
 const styles = StyleSheet.create({
   stack: {
-    gap: spacing.lg,
+    gap: spacing.md,
   },
   compareCard: {
     backgroundColor: colors.surface,
     borderRadius: radii.xxl,
-    padding: spacing.lg,
-    gap: spacing.md,
+    padding: spacing.md,
+    gap: spacing.sm,
     borderWidth: 1,
     borderColor: colors.border,
   },

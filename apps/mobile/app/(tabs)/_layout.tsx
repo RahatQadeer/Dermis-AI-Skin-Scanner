@@ -4,6 +4,7 @@ import { FullScreenLoader } from '@/src/components/layout/FullScreenLoader';
 import { getCopy } from '@/src/copy';
 import { MainTabBar } from '@/src/features/navigation/MainTabBar';
 import { resolveAuthedRoute } from '@/src/features/session/authRoute';
+import { loggedOutEntryRoute } from '@/src/features/session/loggedOutEntryRoute';
 import { useSession } from '@/src/features/session/SessionContext';
 import { colors } from '@/src/theme';
 
@@ -15,7 +16,7 @@ export default function TabLayout() {
     return null;
   }
   if (!session.accessToken) {
-    return <Redirect href={session.onboardingComplete ? '/sign-up' : '/welcome'} />;
+    return <Redirect href={loggedOutEntryRoute(session.onboardingComplete)} />;
   }
   // Authed: an incomplete backend profile must still finish the quiz first.
   const route = resolveAuthedRoute(session.skinProfileStatus);
@@ -46,8 +47,6 @@ export default function TabLayout() {
       <Tabs.Screen name="routine" options={{ title: nav.routine }} />
       <Tabs.Screen name="progress" options={{ title: nav.progress }} />
       <Tabs.Screen name="profile" options={{ title: nav.profile }} />
-      <Tabs.Screen name="results" options={{ title: nav.results, href: null }} />
-      <Tabs.Screen name="recommendations" options={{ title: nav.recommendations, href: null }} />
       <Tabs.Screen name="assistant" options={{ title: nav.assistant, href: null }} />
     </Tabs>
   );

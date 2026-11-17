@@ -7,7 +7,7 @@ import { getCopy } from '@/src/copy';
 import { isFaceIdentityEnabled } from '@/src/features/scan/lib/faceConfig';
 import { colors, spacing } from '@/src/theme';
 
-const FACE_ENROLL_REPLACE = '/(scan)/face-enroll?replace=1' as Href;
+const FACE_ENROLL_ADD = '/(scan)/face-enroll?addFace=1' as Href;
 
 export type ProfileFaceActionsProps = {
   signedIn: boolean;
@@ -15,7 +15,7 @@ export type ProfileFaceActionsProps = {
   onEditSkin: () => void;
 };
 
-/** Edit-skin + optional face re-register CTAs for Profile. */
+/** Edit-skin + add-new-face CTAs for Profile (keeps prior scan history). */
 export function ProfileFaceActions({ signedIn, canEditSkin, onEditSkin }: ProfileFaceActionsProps) {
   const router = useRouter();
   const p = getCopy().screens.profile;
@@ -29,13 +29,19 @@ export function ProfileFaceActions({ signedIn, canEditSkin, onEditSkin }: Profil
       {faceOn && signedIn ? (
         <>
           <AppText variant="caption" color={colors.mute}>
+            {p.faceStatusHint}
+          </AppText>
+          <AppText variant="caption" color={colors.mute}>
             {p.faceHint}
           </AppText>
           <Button
-            label={p.reregisterFace}
+            label={p.addNewFace}
             variant="outline"
-            onPress={() => router.push(FACE_ENROLL_REPLACE)}
+            onPress={() => router.push(FACE_ENROLL_ADD)}
           />
+          <AppText variant="caption" color={colors.mute}>
+            {p.faceAddHint}
+          </AppText>
         </>
       ) : null}
     </View>

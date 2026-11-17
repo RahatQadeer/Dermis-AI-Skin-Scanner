@@ -6,7 +6,7 @@ import { getCopy } from '@/src/copy';
 import { colors, radii, shadows, spacing } from '@/src/theme';
 
 /** Professor Puff on the left with a "picks" speech bubble beside it. */
-export function RecommendationsIntro() {
+export function RecommendationsIntro({ fromRoutine = false }: { fromRoutine?: boolean }) {
   const r = getCopy().screens.recommendations;
 
   return (
@@ -19,7 +19,7 @@ export function RecommendationsIntro() {
             {r.picksEyebrow}
           </AppText>
           <AppText variant="body" color={colors.ink}>
-            {r.picksBody}
+            {fromRoutine ? r.picksBodyFromRoutine : r.picksBody}
           </AppText>
         </View>
       </View>

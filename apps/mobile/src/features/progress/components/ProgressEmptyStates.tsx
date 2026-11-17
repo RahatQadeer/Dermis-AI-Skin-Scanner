@@ -27,7 +27,7 @@ export function ProgressEmptyStates({
         actionLabel={p.sessionErrorCta}
         onAction={() => {
           session.signOut();
-          router.replace('/sign-up');
+          router.replace('/log-in');
         }}
       />
     );

@@ -3,16 +3,19 @@ import { useEffect, useRef, useState, type RefObject } from 'react';
 import type { CameraPreviewLiveHandle } from '../components/CameraPreviewLive';
 import { assessLiveScanFrame } from '../lib/assessLiveScanFrame';
 import { getFaceDetector } from '../lib/faceDetectorSingleton';
-import type { LiveScanIssue } from '../lib/liveScanGuidance';
+import type { LiveScanAssessment, LiveScanIssue } from '../lib/liveScanGuidance';
 import {
   initialHysteresisState,
   nextHysteresis,
   type HysteresisState,
 } from './livePreviewHysteresis';
 
-const WARMUP_MS = 80;
-const INTERVAL_MS = 450;
-const RETRY_MS = 180;
+/** Snappy first check; light sampling after so capture feels instant. */
+const WARMUP_MS = 200;
+const INTERVAL_MS = 700;
+/** Slower re-check once framed — abort if the face leaves, without slowing unlock. */
+const READY_RECHECK_MS = 1200;
+const RETRY_MS = 450;
 
 export type LivePreviewQuality = {
   issue: LiveScanIssue | null;
@@ -20,24 +23,33 @@ export type LivePreviewQuality = {
   loading: boolean;
 };
 
-/** Live MediaPipe face framing + lighting/blur; tip updates every successful sample. */
+/**
+ * Live framing/lighting tips. Keeps re-checking after ready so countdown/capture
+ * can abort if the face leaves the oval — we never want to shoot a bad frame.
+ */
 export function useLivePreviewQuality(
   cameraRef: RefObject<CameraPreviewLiveHandle | null>,
   active: boolean,
+  /** Bump after a failed capture so framing must pass again (avoids instant re-fire). */
+  resetToken = 0,
 ): LivePreviewQuality {
   const [state, setState] = useState<HysteresisState>(initialHysteresisState);
   const runningRef = useRef(false);
   const hystRef = useRef<HysteresisState>(initialHysteresisState());
 
   useEffect(() => {
+    if (resetToken <= 0) return;
+    const reset = initialHysteresisState();
+    hystRef.current = reset;
+    setState(reset);
+  }, [resetToken]);
+
+  useEffect(() => {
     if (!active) {
-      const reset = initialHysteresisState();
-      hystRef.current = reset;
-      setState(reset);
       return;
     }
     return runLiveSampling(cameraRef, runningRef, hystRef, setState);
-  }, [active, cameraRef]);
+  }, [active, cameraRef, resetToken]);
 
   return { issue: state.issue, ready: state.ready, loading: state.loading };
 }
@@ -71,14 +83,14 @@ function runLiveSampling(
       const uri = await cameraRef.current?.sampleFrameUri();
       if (cancelled) return;
       if (!uri) {
-        // Camera busy — retry soon; do not freeze the last tip forever.
         schedule(RETRY_MS);
         return;
       }
       const result = await assessLiveScanFrame(uri);
       if (cancelled) return;
-      apply(hystRef, setState, result.ok, result.ok ? null : result.issue);
-      schedule(INTERVAL_MS);
+      applyAssessment(hystRef, setState, result);
+      // Keep monitoring after ready so a bad face aborts countdown/capture.
+      schedule(hystRef.current.ready ? READY_RECHECK_MS : INTERVAL_MS);
     } catch {
       if (!cancelled) {
         apply(hystRef, setState, false, 'detector_unavailable');
@@ -94,6 +106,14 @@ function runLiveSampling(
     cancelled = true;
     clearTimeout(timer);
   };
+}
+
+function applyAssessment(
+  hystRef: { current: HysteresisState },
+  setState: (s: HysteresisState) => void,
+  result: LiveScanAssessment,
+): void {
+  apply(hystRef, setState, result.ok, result.ok ? null : result.issue);
 }
 
 function apply(

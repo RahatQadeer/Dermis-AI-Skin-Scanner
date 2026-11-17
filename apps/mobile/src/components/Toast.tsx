@@ -1,13 +1,12 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/src/components/text/AppText';
 import { getCopy } from '@/src/copy';
 import { useFloatingBannerMotion } from '@/src/lib/useFloatingBannerMotion';
 import { colors, fontFamilies, motion, radii, shadows, spacing } from '@/src/theme';
 
-import { TAB_BAR_SCROLL_PAD } from './layout/tabBarTypes';
+import { useTabBarFloatingOffset } from './layout/useTabBarScrollPad';
 
 export type ToastProps = {
   message: string;
@@ -23,9 +22,8 @@ export function Toast({
   onDismiss,
   durationMs = motion.duration.toast,
 }: ToastProps) {
-  const insets = useSafeAreaInsets();
   const c = getCopy().feedback;
-  const bottom = TAB_BAR_SCROLL_PAD + (insets.bottom > 0 ? spacing.sm : spacing.md);
+  const bottom = useTabBarFloatingOffset();
   const animatedStyle = useFloatingBannerMotion({ visible, durationMs, onDismiss });
 
   if (!visible) {

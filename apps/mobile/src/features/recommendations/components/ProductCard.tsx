@@ -1,35 +1,38 @@
 import { memo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Card } from '@/src/components/Card';
 import { AppText } from '@/src/components/text/AppText';
 import { getCopy } from '@/src/copy';
 import { concernLabel } from '@/src/features/home/lib/concernLabel';
-import { colors, radii, spacing } from '@/src/theme';
+import type { RoutinePeriod } from '@/src/features/routine/types/routineTypes';
+import { colors, radii, spacing, touchTargets } from '@/src/theme';
 
 import type { PlaceholderProduct } from '../types/productTypes';
-
-const IMAGE_TINTS = [colors.noteSoft, colors.greenSoft, colors.amberSoft, colors.confettiSky];
+import { ProductThumb } from './ProductThumb';
 
 export type ProductCardProps = {
   product: PlaceholderProduct;
   index: number;
+  /** When set, shows AM/PM add actions (Routine → recommendations). */
+  onAddToRoutine?: (period: RoutinePeriod) => void;
+  addingPeriod?: RoutinePeriod | null;
 };
 
-export const ProductCard = memo(function ProductCard({ product, index }: ProductCardProps) {
-  const r = getCopy().screens.recommendations;
-  const tint = IMAGE_TINTS[index % IMAGE_TINTS.length];
+export const ProductCard = memo(function ProductCard({
+  product,
+  onAddToRoutine,
+  addingPeriod = null,
+}: ProductCardProps) {
+  const routine = getCopy().screens.routine;
   const chipLabel =
     product.badgeLabel ?? `${concernLabel(product.primaryConcern)} ${String(product.score)}`;
+  const busy = addingPeriod !== null;
 
   return (
     <Card accessibilityRole="summary">
       <View style={styles.row}>
-        <View style={[styles.image, { backgroundColor: tint }]}>
-          <AppText variant="caption" color={colors.mute} align="center">
-            {r.productImageLabel}
-          </AppText>
-        </View>
+        <ProductThumb productId={product.id} />
         <View style={styles.body}>
           <AppText variant="caption" color={colors.mute}>
             {product.category}
@@ -40,41 +43,63 @@ export const ProductCard = memo(function ProductCard({ product, index }: Product
           <AppText variant="body" color={colors.mute}>
             {product.summary}
           </AppText>
-          <View style={styles.footer}>
-            <View style={styles.chip}>
-              <AppText variant="caption" color={colors.greenDeep}>
-                {chipLabel}
-              </AppText>
-            </View>
+          <View style={styles.chip}>
+            <AppText variant="caption" color={colors.greenDeep}>
+              {chipLabel}
+            </AppText>
           </View>
+          {onAddToRoutine ? (
+            <View style={styles.actions}>
+              <AddChip
+                label={busy && addingPeriod === 'am' ? routine.addActiveBusy : routine.addActiveToAm}
+                disabled={busy}
+                onPress={() => onAddToRoutine('am')}
+              />
+              <AddChip
+                label={busy && addingPeriod === 'pm' ? routine.addActiveBusy : routine.addActiveToPm}
+                disabled={busy}
+                onPress={() => onAddToRoutine('pm')}
+              />
+            </View>
+          ) : null}
         </View>
       </View>
     </Card>
   );
 });
 
+function AddChip({
+  label,
+  disabled,
+  onPress,
+}: {
+  label: string;
+  disabled: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => [styles.addChip, (pressed || disabled) && styles.addPressed]}
+    >
+      <AppText variant="caption" color={colors.ink}>
+        {label}
+      </AppText>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     gap: spacing.md,
   },
-  image: {
-    width: 84,
-    height: 84,
-    borderRadius: radii.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xs,
-  },
   body: {
     flex: 1,
     gap: spacing.xs,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: spacing.xs,
   },
   chip: {
     alignSelf: 'flex-start',
@@ -82,5 +107,24 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
+  },
+  actions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  addChip: {
+    minHeight: touchTargets.min - 8,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.cream,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    justifyContent: 'center',
+  },
+  addPressed: {
+    opacity: 0.7,
   },
 });

@@ -69,7 +69,13 @@ export const profileCopy = {
   editFailToast: 'Could not update profile. Try again.',
   registerFace: 'Register my face',
   reregisterFace: 'Update face reference',
-  faceHint: 'Only your face can scan this account. Progress stays on your account.',
+  addNewFace: 'Add new face',
+  faceStatusHint: 'Face registration is required before skin scans.',
+  faceHint: 'Only the active registered face can scan this account.',
+  faceReplaceHint:
+    'To update your face, you must first verify with your currently registered face.',
+  faceAddHint:
+    'Adds a new face for this account. Prior scan history stays — Progress shows a New face marker.',
   skinTypeLabels: { oily: 'Oily', combination: 'Combination', dry: 'Dry', normal: 'Normal' },
   skinToneLabels: {
     typeI_II: 'Type I–II',
@@ -96,7 +102,9 @@ export const profileCopy = {
   sectionData: 'Data',
   dataExport: 'Export my data',
   dataPhotos: 'Delete photos after analysis',
-  dataPhotosValue: 'On',
+  dataPhotosHint:
+    'Always on. Scan photos are sent for analysis, then removed — we keep scores, not your selfie.',
+  dataPhotosValue: 'Always on',
   dataDeleteScans: 'Delete all scan data',
   dataDeleteAccount: 'Delete account',
   dataLogOut: 'Log out',

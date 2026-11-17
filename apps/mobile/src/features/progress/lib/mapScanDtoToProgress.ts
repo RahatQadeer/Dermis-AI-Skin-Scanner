@@ -31,6 +31,7 @@ export function mapScanDtosToProgress(scans: readonly ScanDto[]): ProgressScan[]
       scanNumber,
       indexScore: dto.indexScore,
       concernScores: concernScoresFromDto(dto),
+      faceEnrollmentId: dto.faceEnrollmentId ?? null,
     };
   });
 }

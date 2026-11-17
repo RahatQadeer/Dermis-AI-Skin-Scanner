@@ -39,7 +39,15 @@ export function ResultsIndexHero({ indexScore, deltaLabel, insight }: ResultsInd
             </View>
           ) : null}
         </View>
-        <Mascot character="dermis" mood="happy" size={96} showBubble={false} />
+        <Mascot
+          character="dermis"
+          mood="happy"
+          size={96}
+          lines={getCopy().mascot.dermis.tipLines}
+          revealOnTap
+          bubbleOverlay
+          compactBubble
+        />
       </View>
       <View style={styles.bubbleWrap}>
         <View style={styles.bubbleTail} />
@@ -71,6 +79,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: spacing.md,
+    overflow: 'visible',
+    zIndex: 3,
   },
   textCol: {
     flex: 1,

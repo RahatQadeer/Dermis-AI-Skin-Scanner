@@ -52,13 +52,16 @@ export function useSessionProviderBindings(
 
   bindApiTokenGetter(() => identity.accessTokenRef.current);
   bindApiRefreshHandler(refreshAccessToken);
-  useSessionSyncEffects(identity);
+  useSessionSyncEffects(identity, signOutRef);
 
   return { persistSession };
 }
 
 /** Post-auth background syncs: /v1/auth/me identity + /v1/profile completeness. */
-function useSessionSyncEffects(identity: Identity): void {
+function useSessionSyncEffects(
+  identity: Identity,
+  signOutRef: { current: () => void },
+): void {
   useSessionMeProfileSync({
     accessToken: identity.accessToken,
     refreshToken: identity.refreshToken,
@@ -66,6 +69,7 @@ function useSessionSyncEffects(identity: Identity): void {
     setUserId: identity.setUserId,
     setEmail: identity.setEmail,
     setFirstName: identity.setFirstName,
+    onAuthExpired: () => signOutRef.current(),
   });
 
   useSessionProfileSync({
@@ -75,6 +79,7 @@ function useSessionSyncEffects(identity: Identity): void {
     onboardingComplete: identity.onboardingComplete,
     setSkinProfileStatus: identity.setSkinProfileStatus,
     setOnboardingComplete: identity.setOnboardingComplete,
+    onAuthExpired: () => signOutRef.current(),
   });
 }
 

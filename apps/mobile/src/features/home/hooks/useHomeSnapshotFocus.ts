@@ -1,6 +1,6 @@
 import { resolveEffectivePlan } from '@dermis/domain';
 import { useFocusEffect } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import type { ScanDto } from '@/src/features/scan/api/scanApi';
 
@@ -15,6 +15,7 @@ import { applyGuestHomeSnapshot, refreshHomeSnapshot } from './refreshHomeSnapsh
 type HomeFocusCtx = {
   live: boolean;
   accessToken: string | null;
+  userId: string | null;
   quotaRefreshVersion: number;
   lastScan: ScanDto | null;
   readyRef: { current: boolean };
@@ -37,7 +38,24 @@ function applyLastScanFallback(ctx: HomeFocusCtx): void {
   ctx.readyRef.current = true;
 }
 
+/** Clears stale home cards when the signed-in account changes. */
+function useResetHomeOnUserChange(ctx: HomeFocusCtx): void {
+  const prevUserId = useRef(ctx.userId);
+  useEffect(() => {
+    if (prevUserId.current === ctx.userId) {
+      return;
+    }
+    prevUserId.current = ctx.userId;
+    ctx.readyRef.current = false;
+    ctx.setScan(null);
+    ctx.setRoutine({ amDone: 0, amTotal: 0, pmDone: 0, pmTotal: 0 });
+    ctx.setLoading(Boolean(ctx.live && ctx.accessToken));
+  }, [ctx]);
+}
+
 export function useHomeSnapshotFocus(ctx: HomeFocusCtx): void {
+  useResetHomeOnUserChange(ctx);
+
   useFocusEffect(
     useCallback(() => {
       void ctx.quotaRefreshVersion;
@@ -76,6 +94,6 @@ export function useHomeSnapshotFocus(ctx: HomeFocusCtx): void {
         cancelled = true;
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps -- focus refresh; version bump via quotaRefreshVersion
-    }, [ctx.accessToken, ctx.lastScan, ctx.live, ctx.quotaRefreshVersion]),
+    }, [ctx.accessToken, ctx.userId, ctx.lastScan, ctx.live, ctx.quotaRefreshVersion]),
   );
 }

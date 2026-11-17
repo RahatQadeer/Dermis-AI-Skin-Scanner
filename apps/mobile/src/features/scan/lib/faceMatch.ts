@@ -44,12 +44,17 @@ export type FaceGateInput = {
   /** The registered reference embedding, or null. */
   referenceEmbedding: readonly number[] | null;
   threshold: number;
+  /**
+   * Soft floor under `threshold`. Similarity in [uncertainFloor, threshold)
+   * → ask for a clearer retake instead of a hard mismatch.
+   */
+  uncertainFloor?: number;
 };
 
 export type FaceGateDecision =
   | { action: 'allow' }
   | { action: 'need_enroll' }
-  | { action: 'block'; reason: 'mismatch' | 'no_embedding' };
+  | { action: 'block'; reason: 'mismatch' | 'no_embedding' | 'uncertain' };
 
 /**
  * Decides what the identity gate should do before a scan. Fail-closed: when a
@@ -57,8 +62,9 @@ export type FaceGateDecision =
  * dedicated screen — analysis scans never auto-enroll.
  */
 export function decideFaceGate(input: FaceGateInput): FaceGateDecision {
+  // Fail-closed: disabling the gate never silently allows a scan.
   if (!input.enabled) {
-    return { action: 'allow' };
+    return { action: 'block', reason: 'no_embedding' };
   }
   if (!input.hasReference) {
     return { action: 'need_enroll' };
@@ -66,7 +72,14 @@ export function decideFaceGate(input: FaceGateInput): FaceGateDecision {
   if (!input.currentEmbedding || !input.referenceEmbedding) {
     return { action: 'block', reason: 'no_embedding' };
   }
-  return isSameIdentity(input.currentEmbedding, input.referenceEmbedding, input.threshold)
-    ? { action: 'allow' }
-    : { action: 'block', reason: 'mismatch' };
+  const similarity = cosineSimilarity(input.currentEmbedding, input.referenceEmbedding);
+  if (similarity >= input.threshold) {
+    return { action: 'allow' };
+  }
+  const floor =
+    input.uncertainFloor ?? Math.max(0.45, input.threshold * 0.82);
+  if (similarity >= floor) {
+    return { action: 'block', reason: 'uncertain' };
+  }
+  return { action: 'block', reason: 'mismatch' };
 }

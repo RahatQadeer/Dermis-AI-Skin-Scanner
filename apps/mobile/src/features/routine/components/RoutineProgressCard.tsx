@@ -46,7 +46,14 @@ export function RoutineProgressCard({
           {subtitle}
         </AppText>
       </View>
-      <Mascot mood="happy" size={56} showBubble={false} />
+      <Mascot
+        mood="happy"
+        size={56}
+        lines={getCopy().mascot.dermis.tipLines}
+        revealOnTap
+        bubbleOverlay
+        compactBubble
+      />
     </View>
   );
 }
@@ -59,6 +66,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.hero,
     borderRadius: radii.xl,
     padding: spacing.lg,
+    overflow: 'visible',
+    zIndex: 1,
   },
   text: {
     flex: 1,

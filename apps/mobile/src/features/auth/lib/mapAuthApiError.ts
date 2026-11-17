@@ -35,6 +35,9 @@ function resolveAuthErrorCode(auth: AuthCopy, code: string, fallback: string): M
     auth_provider_error: auth.authProviderError,
     email_confirmation_required: auth.emailConfirmationRequired,
     rate_limited: auth.rateLimited,
+    network_unreachable: auth.apiNotConfigured,
+    network_timeout: auth.apiNotConfigured,
+    api_not_configured: auth.apiNotConfigured,
   };
   const formError = messageByCode[code] ?? fallback;
   const field = fieldMap[code];

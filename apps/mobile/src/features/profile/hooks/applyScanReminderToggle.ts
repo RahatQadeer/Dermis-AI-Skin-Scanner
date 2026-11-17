@@ -15,6 +15,7 @@ type ApplyOpts = {
 };
 
 export async function applyScanReminderToggle(opts: ApplyOpts): Promise<void> {
+  // Caller already set optimistic local value; only adjust on failure / final sync.
   const sync = await syncScanReminders(opts.value);
   if (!sync.ok) {
     opts.setLocal(false);

@@ -5,6 +5,7 @@ import type { SessionState } from '@/src/features/session/SessionContext';
 
 import { signInWithPassword, signUpWithPassword } from '../api/authApi';
 import type { AuthMascotTone } from '../components/AuthMascot';
+import { bindSkinProfileAfterAuth } from '../lib/bindSkinProfileAfterAuth';
 import {
   hasFieldErrors,
   validateLogInFields,
@@ -57,6 +58,7 @@ export async function submitSignUpRequest(
       firstName: authSession.user.firstName ?? firstName.trim(),
       showPaywall: session.onboardingComplete && !isFeaturesUnlocked(),
     });
+    await bindSkinProfileAfterAuth(session, authSession.user.id);
     return { errors: {} };
   } catch (error) {
     const mapped = mapAuthApiError(error, 'signUp');
@@ -86,6 +88,7 @@ export async function submitLogInRequest(
       firstName: authSession.user.firstName,
       showPaywall: session.onboardingComplete && !isFeaturesUnlocked(),
     });
+    await bindSkinProfileAfterAuth(session, authSession.user.id);
     return { errors: {} };
   } catch (error) {
     const mapped = mapAuthApiError(error, 'logIn');

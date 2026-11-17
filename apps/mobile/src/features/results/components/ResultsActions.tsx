@@ -7,30 +7,47 @@ import { colors, fontFamilies, radii, spacing, touchTargets } from '@/src/theme'
 export type ResultsActionsProps = {
   onCompare: () => void;
   onUpdateRoutine: () => void;
+  onRecommendations: () => void;
 };
 
-export function ResultsActions({ onCompare, onUpdateRoutine }: ResultsActionsProps) {
+export function ResultsActions({
+  onCompare,
+  onUpdateRoutine,
+  onRecommendations,
+}: ResultsActionsProps) {
   const r = getCopy().screens.results;
   return (
-    <View style={styles.actions}>
+    <View style={styles.wrap}>
+      <View style={styles.actions}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={r.compareCta}
+          onPress={onCompare}
+          style={({ pressed }) => [styles.compare, pressed && styles.pressed]}
+        >
+          <AppText variant="bodyStrong" color={colors.ink} align="center" style={styles.label}>
+            {r.compareCta}
+          </AppText>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={r.updateRoutineCta}
+          onPress={onUpdateRoutine}
+          style={({ pressed }) => [styles.primary, pressed && styles.pressed]}
+        >
+          <AppText variant="bodyStrong" color={colors.surface} align="center" style={styles.label}>
+            {r.updateRoutineCta}
+          </AppText>
+        </Pressable>
+      </View>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={r.compareCta}
-        onPress={onCompare}
-        style={({ pressed }) => [styles.compare, pressed && styles.pressed]}
+        accessibilityLabel={r.recommendationsCta}
+        onPress={onRecommendations}
+        style={({ pressed }) => [styles.recs, pressed && styles.pressed]}
       >
         <AppText variant="bodyStrong" color={colors.ink} align="center" style={styles.label}>
-          {r.compareCta}
-        </AppText>
-      </Pressable>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={r.updateRoutineCta}
-        onPress={onUpdateRoutine}
-        style={({ pressed }) => [styles.primary, pressed && styles.pressed]}
-      >
-        <AppText variant="bodyStrong" color={colors.surface} align="center" style={styles.label}>
-          {r.updateRoutineCta}
+          {r.recommendationsCta}
         </AppText>
       </Pressable>
     </View>
@@ -38,6 +55,9 @@ export function ResultsActions({ onCompare, onUpdateRoutine }: ResultsActionsPro
 }
 
 const styles = StyleSheet.create({
+  wrap: {
+    gap: spacing.md,
+  },
   actions: {
     flexDirection: 'row',
     gap: spacing.md,
@@ -58,6 +78,16 @@ const styles = StyleSheet.create({
     minHeight: touchTargets.min + 4,
     borderRadius: radii.pill,
     backgroundColor: colors.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+  },
+  recs: {
+    minHeight: touchTargets.min + 4,
+    borderRadius: radii.pill,
+    backgroundColor: colors.noteSoft,
+    borderWidth: 1.5,
+    borderColor: colors.borderMuted,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.md,

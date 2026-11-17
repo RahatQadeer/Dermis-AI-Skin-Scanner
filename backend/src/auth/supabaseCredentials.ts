@@ -1,6 +1,6 @@
 import { isPasswordAcceptable } from '@dermis/domain/server';
 
-import { HttpError } from '../http/HttpError';
+import { HttpError, isHttpError } from '../http/HttpError';
 import {
   mapGoTrueError,
   toSession,
@@ -62,27 +62,62 @@ async function signUpWithGoTrue(
   const email = normalizeEmail(input.email);
   assertPassword(input.password);
   const signedUpName = input.firstName?.trim() || null;
-  if (ctx.config.serviceRoleKey) {
-    await adminCreateUser(ctx.fetchImpl, ctx.base, ctx.config.serviceRoleKey, {
-      email,
-      password: input.password,
-      firstName: input.firstName,
-    });
-    const session = await passwordGrant({
-      fetchImpl: ctx.fetchImpl,
-      base: ctx.base,
-      anonKey: ctx.config.anonKey,
-      email,
-      password: input.password,
-    });
-    return withSignupName(session, signedUpName);
-  }
-  const session = await anonSignUp(ctx.fetchImpl, ctx.base, ctx.config.anonKey, {
+  const grant = {
+    fetchImpl: ctx.fetchImpl,
+    base: ctx.base,
+    anonKey: ctx.config.anonKey,
     email,
     password: input.password,
-    firstName: input.firstName,
-  });
-  return withSignupName(session, signedUpName);
+  };
+
+  try {
+    if (ctx.config.serviceRoleKey) {
+      await adminCreateUser(ctx.fetchImpl, ctx.base, ctx.config.serviceRoleKey, {
+        email,
+        password: input.password,
+        firstName: input.firstName,
+      });
+    } else {
+      return withSignupName(
+        await anonSignUp(ctx.fetchImpl, ctx.base, ctx.config.anonKey, {
+          email,
+          password: input.password,
+          firstName: input.firstName,
+        }),
+        signedUpName,
+      );
+    }
+  } catch (err) {
+    // Same email must never create a second auth user / empty profile row.
+    // If the password matches, sign them into the existing account.
+    if (isEmailTakenError(err)) {
+      return signInExistingOrEmailTaken(grant, signedUpName);
+    }
+    throw err;
+  }
+
+  return withSignupName(await passwordGrant(grant), signedUpName);
+}
+
+function isEmailTakenError(err: unknown): boolean {
+  return isHttpError(err) && err.code === 'email_taken';
+}
+
+async function signInExistingOrEmailTaken(
+  grant: {
+    fetchImpl: typeof fetch;
+    base: string;
+    anonKey: string;
+    email: string;
+    password: string;
+  },
+  signedUpName: string | null,
+): Promise<AuthSessionResult> {
+  try {
+    return withSignupName(await passwordGrant(grant), signedUpName);
+  } catch {
+    throw new HttpError(409, 'email_taken');
+  }
 }
 
 async function signInWithGoTrue(

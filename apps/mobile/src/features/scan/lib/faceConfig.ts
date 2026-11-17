@@ -26,10 +26,23 @@ export function isFaceIdentityEnabled(): boolean {
   return url.startsWith('https://') || url.startsWith('http://');
 }
 
-/** Cosine-similarity pass threshold; conservative default, tunable per model. */
-const DEFAULT_FACE_MATCH_THRESHOLD = 0.55;
+/**
+ * Strict cosine pass threshold. Same person is typically ≥ ~0.92 with a good
+ * crop; different people are usually ≤ ~0.70. Keep this high so impostors fail.
+ * Override with EXPO_PUBLIC_FACE_MATCH_THRESHOLD in (0, 1).
+ */
+/** Strict — other people's faces must not pass as the registered user. */
+const DEFAULT_FACE_MATCH_THRESHOLD = 0.94;
 
 export function getFaceMatchThreshold(): number {
   const raw = Number(process.env.EXPO_PUBLIC_FACE_MATCH_THRESHOLD);
   return Number.isFinite(raw) && raw > 0 && raw < 1 ? raw : DEFAULT_FACE_MATCH_THRESHOLD;
+}
+
+/**
+ * Soft floor under the pass threshold. Scores in [soft, threshold) ask for a
+ * clearer selfie (lighting/angle). Anything below is a hard "not registered".
+ */
+export function getFaceMatchUncertainFloor(threshold = getFaceMatchThreshold()): number {
+  return Math.max(0.85, threshold - 0.05);
 }

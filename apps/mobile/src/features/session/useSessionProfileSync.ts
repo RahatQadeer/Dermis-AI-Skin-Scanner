@@ -1,20 +1,8 @@
 import { useEffect } from 'react';
 
-import { getCopy } from '@/src/copy';
-import {
-  clearQuizDraft,
-  loadCompletedQuizDraft,
-  saveQuizDraft,
-} from '@/src/features/onboarding/lib/quizDraftStorage';
-import { quizDraftToSkinProfile } from '@/src/features/onboarding/lib/quizLogic';
-import {
-  createProfile,
-  fetchProfile,
-  profileHasSkinData,
-} from '@/src/features/profile/api/profileApi';
 import { isApiEnabled } from '@/src/lib/api/config';
-import { isApiError } from '@/src/lib/api/errors';
 
+import { resolveSkinProfileStatus } from './resolveSkinProfileStatus';
 import { saveOnboardingComplete } from './sessionStorage';
 import type { SkinProfileStatus } from './useSessionIdentityState';
 
@@ -25,49 +13,22 @@ type ProfileSyncCtx = {
   onboardingComplete: boolean;
   setSkinProfileStatus: (v: SkinProfileStatus) => void;
   setOnboardingComplete: (v: boolean) => void;
+  /** Dead JWT — clear session so reload lands on Log in, not the quiz. */
+  onAuthExpired: () => void;
 };
 
-function isConflict(err: unknown): boolean {
-  return isApiError(err) && (err.status === 409 || err.code === 'profile_exists');
-}
-
-/** Flushes a stored quiz draft to the backend. Returns true if saved. */
-async function flushPendingQuizDraft(userId: string): Promise<boolean> {
-  const draft = await loadCompletedQuizDraft(userId);
-  const payload = draft ? quizDraftToSkinProfile(draft, getCopy().quiz) : null;
-  if (!payload) {
-    return false;
+function applyResolved(
+  status: SkinProfileStatus,
+  ctx: ProfileSyncCtx,
+  cancelled: () => boolean,
+): void {
+  if (cancelled() || status === 'unknown') {
+    return;
   }
-  // Bind draft to this user before the network call so logout cannot orphan it.
-  await saveQuizDraft(draft!, userId);
-  try {
-    await createProfile(payload);
-  } catch (err) {
-    if (!isConflict(err)) {
-      throw err;
-    }
-  }
-  await clearQuizDraft(userId);
-  return true;
-}
-
-async function resolveStatus(
-  userId: string,
-  apply: (status: SkinProfileStatus) => void,
-): Promise<void> {
-  try {
-    const profile = await fetchProfile();
-    if (profileHasSkinData(profile)) {
-      await clearQuizDraft(userId);
-      apply('complete');
-      return;
-    }
-    const flushed = await flushPendingQuizDraft(userId);
-    apply(flushed ? 'complete' : 'incomplete');
-  } catch {
-    // Fail closed on profile completeness: never skip the quiz without a row.
-    // A local draft can still flush on the next successful sync.
-    apply('incomplete');
+  ctx.setSkinProfileStatus(status);
+  if (status === 'complete') {
+    ctx.setOnboardingComplete(true);
+    void saveOnboardingComplete(true);
   }
 }
 
@@ -92,18 +53,37 @@ export function useSessionProfileSync(ctx: ProfileSyncCtx): void {
     }
 
     let cancelled = false;
+    const isCancelled = () => cancelled;
     ctx.setSkinProfileStatus('unknown');
-    const apply = (status: SkinProfileStatus) => {
+
+    void (async () => {
+      const first = await resolveSkinProfileStatus(userId);
       if (cancelled) {
         return;
       }
-      ctx.setSkinProfileStatus(status);
-      if (status === 'complete') {
-        ctx.setOnboardingComplete(true);
-        void saveOnboardingComplete(true);
+      if (first === 'auth_expired') {
+        ctx.onAuthExpired();
+        return;
       }
-    };
-    void resolveStatus(userId, apply);
+      if (first !== 'unknown') {
+        applyResolved(first, ctx, isCancelled);
+        return;
+      }
+      await new Promise((r) => setTimeout(r, 800));
+      if (cancelled) {
+        return;
+      }
+      const second = await resolveSkinProfileStatus(userId);
+      if (cancelled) {
+        return;
+      }
+      if (second === 'auth_expired') {
+        ctx.onAuthExpired();
+        return;
+      }
+      // Still unknown after retry: hold loader — never invent "incomplete" (re-opens quiz).
+      applyResolved(second, ctx, isCancelled);
+    })();
 
     return () => {
       cancelled = true;

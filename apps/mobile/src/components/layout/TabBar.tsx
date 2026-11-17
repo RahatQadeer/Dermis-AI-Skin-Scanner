@@ -49,13 +49,11 @@ function SideTab({
       accessibilityState={{ selected: active }}
       accessibilityLabel={tabLabel(id)}
       onPress={() => onSelect(id)}
-      style={({ pressed }) => [
-        styles.sideTab,
-        active ? styles.sideTabActive : null,
-        pressed && styles.pressed,
-      ]}
+      style={({ pressed }) => [styles.sideTab, pressed && styles.pressed]}
     >
-      <SideTabIcon id={id} active={active} />
+      <View style={[styles.iconWrap, active ? styles.iconWrapActive : null]}>
+        <SideTabIcon id={id} active={active} />
+      </View>
       <AppText
         variant="label"
         color={color}
@@ -64,7 +62,7 @@ function SideTab({
       >
         {tabLabel(id)}
       </AppText>
-      {active ? <View style={styles.activeDot} /> : <View style={styles.activeDotSpacer} />}
+      <View style={[styles.activeDot, active ? styles.activeDotOn : null]} />
     </Pressable>
   );
 }
@@ -144,9 +142,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: colors.surface,
     borderRadius: radii.pill,
-    paddingHorizontal: spacing.sm,
-    paddingTop: spacing.sm + 2,
-    paddingBottom: spacing.sm + 2,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.xs,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
     minHeight: 64,
   },
   sideTab: {
@@ -157,23 +157,25 @@ const styles = StyleSheet.create({
     gap: 2,
     paddingVertical: spacing.xs,
   },
-  sideTabActive: {
-    borderRadius: radii.md,
+  iconWrap: {
+    width: 40,
+    height: 32,
+    borderRadius: radii.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconWrapActive: {
     backgroundColor: colors.noteSoft,
-    borderBottomWidth: 2,
-    borderBottomColor: colors.pink,
   },
   activeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: radii.pill,
-    backgroundColor: colors.pink,
-    marginTop: 1,
-  },
-  activeDotSpacer: {
     width: 5,
     height: 5,
+    borderRadius: radii.pill,
+    backgroundColor: 'transparent',
     marginTop: 1,
+  },
+  activeDotOn: {
+    backgroundColor: colors.pink,
   },
   labelIdle: {
     fontFamily: fontFamilies.bodySemiBold,

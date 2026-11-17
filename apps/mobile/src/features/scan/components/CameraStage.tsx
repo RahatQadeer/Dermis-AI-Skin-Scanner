@@ -3,19 +3,19 @@ import { StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/src/components/text/AppText';
 import { getCopy } from '@/src/copy';
-import { colors, spacing } from '@/src/theme';
+import { colors, radii, spacing } from '@/src/theme';
 
 import { useScanCaptureFlow } from '../hooks/useScanCaptureFlow';
 import { CameraPermissionCard } from './CameraPermissionCard';
 import { CameraPreviewLive, type CameraPreviewLiveHandle } from './CameraPreviewLive';
 import { CameraPreviewMock } from './CameraPreviewMock';
-import { FlashOverlay } from './FlashOverlay';
+import { ScanCheckingOverlay } from './ScanCheckingOverlay';
 
 type Props = {
   capture: ReturnType<typeof useScanCaptureFlow>;
   cameraRef: RefObject<CameraPreviewLiveHandle | null>;
-  flashing: boolean;
-  afterFlash: () => void;
+  flashing?: boolean;
+  afterFlash?: () => void;
   faceLocked?: boolean;
   countdownSeconds?: number | null;
 };
@@ -23,8 +23,6 @@ type Props = {
 export function CameraStage({
   capture,
   cameraRef,
-  flashing,
-  afterFlash,
   faceLocked = false,
   countdownSeconds = null,
 }: Props) {
@@ -37,20 +35,22 @@ export function CameraStage({
       ) : (
         <CameraPreviewMock />
       )}
-      {countdownSeconds !== null && countdownSeconds > 0 ? (
+      {countdownSeconds !== null && countdownSeconds > 0 && !capture.capturing ? (
         <View style={styles.countdown} accessibilityLabel={c.countdownA11y(countdownSeconds)}>
-          <AppText variant="display" color={colors.surface}>
-            {String(countdownSeconds)}
-          </AppText>
+          <View style={styles.countdownBadge}>
+            <AppText variant="display" color={colors.surface}>
+              {String(countdownSeconds)}
+            </AppText>
+          </View>
         </View>
       ) : null}
+      <ScanCheckingOverlay visible={capture.capturing} />
       {capture.permissionDenied ? (
         <CameraPermissionCard
           canAskAgain={capture.canAskCameraAgain}
           onRequest={() => void capture.requestCamera()}
         />
       ) : null}
-      <FlashOverlay visible={flashing} onFinished={afterFlash} />
     </View>
   );
 }
@@ -64,7 +64,16 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(47, 58, 44, 0.35)',
+    backgroundColor: 'transparent',
     paddingBottom: spacing.xl,
+  },
+  countdownBadge: {
+    minWidth: 72,
+    minHeight: 72,
+    borderRadius: radii.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(47, 58, 44, 0.55)',
+    paddingHorizontal: spacing.md,
   },
 });

@@ -29,11 +29,13 @@ import { createAccountService } from './services/accountService';
 import { createConsentService } from './services/consentService';
 import { createEntitlementService } from './services/entitlementService';
 import { createFaceReferenceService } from './services/faceReferenceService';
+import { createLivenessChallengeService } from './services/livenessChallengeService';
 import { createProfileService } from './services/profileService';
 import { createQuotaService } from './services/quotaService';
 import { createRoutineService } from './services/routineService';
 import { createScanPipelineService } from './services/scanPipelineService';
 import { createSettingsService } from './services/settingsService';
+import { deterministicEmbedFromBytes } from './lib/deterministicFaceEmbed';
 
 export type MemoryEnv = {
   revenueCatWebhookSecret?: string;
@@ -59,6 +61,7 @@ export function buildMemoryBackendDeps(env: MemoryEnv = {}): AppDeps {
     },
     consentsFor: () => services.consents,
     faceReferencesFor: () => services.faceReferences,
+    livenessFor: () => services.liveness,
     publicAccount: services.account,
     revenueCatWebhook: {
       webhookSecret: resolveMemoryWebhookSecret(env.revenueCatWebhookSecret),
@@ -107,32 +110,13 @@ function createMemoryServices(stores: ReturnType<typeof createMemoryStores>, env
     webhookEvents: createMemoryWebhookEventRepository(),
     proEntitlementId: env.revenueCatProEntitlementId,
   });
-  const pipeline = createScanPipelineService({
-    scans: stores.scanRepo,
-    profiles: stores.profileRepo,
-    quota,
-    consent: consents,
-    analyzer: resolveSkinAnalyzer({
-      geminiApiKey: env.geminiApiKey,
-      geminiModel: env.geminiModel,
-      preferFake: env.preferFakeAnalyzer ?? !env.geminiApiKey,
-    }),
-    photos: createMemoryPhotoStorage(),
-    disabled: env.scanPipelineDisabled,
-  });
-  const account = createAccountService({
-    data: createMemoryAccountDataPort({
-      profiles: stores.profileRepo,
-      entitlements: stores.entitlementRepo,
-      quota: stores.quotaRepo,
-      scans: stores.scanRepo,
-      routine: stores.routineRepo,
-      consents: stores.consentRepo,
-      emailIndex: stores.emailIndex,
-    }),
-    authAdmin: createMemoryAuthAdmin(stores.deletedAuthUsers),
-    deletionRequests: createMemoryDeletionRequestStore(),
-  });
+  const faceReferences = createFaceReferenceService(stores.faceReferenceRepo);
+  const liveness = createLivenessChallengeService();
+  const pipeline = createMemoryPipeline(
+    stores,
+    { quota, consents, faceReferences, liveness },
+    env,
+  );
   return {
     assistant,
     profiles,
@@ -141,10 +125,57 @@ function createMemoryServices(stores: ReturnType<typeof createMemoryStores>, env
     pipeline,
     routine: createRoutineService(stores.routineRepo),
     settings: createSettingsService(stores.profileRepo),
-    account,
+    account: createMemoryAccount(stores),
     consents,
-    faceReferences: createFaceReferenceService(stores.faceReferenceRepo),
+    faceReferences,
+    liveness,
   };
+}
+
+function createMemoryPipeline(
+  stores: ReturnType<typeof createMemoryStores>,
+  shared: {
+    quota: ReturnType<typeof createQuotaService>;
+    consents: ReturnType<typeof createConsentService>;
+    faceReferences: ReturnType<typeof createFaceReferenceService>;
+    liveness: ReturnType<typeof createLivenessChallengeService>;
+  },
+  env: MemoryEnv,
+) {
+  return createScanPipelineService({
+    scans: stores.scanRepo,
+    profiles: stores.profileRepo,
+    quota: shared.quota,
+    consent: shared.consents,
+    faceReferences: shared.faceReferences,
+    liveness: shared.liveness,
+    // Byte-bound embedder (never client claim). Live Supabase path uses MobileFaceNet.
+    embedScanImage: async (bytes, box) => deterministicEmbedFromBytes(bytes, box),
+    analyzer: resolveSkinAnalyzer({
+      geminiApiKey: env.geminiApiKey,
+      geminiModel: env.geminiModel,
+      preferFake: env.preferFakeAnalyzer ?? !env.geminiApiKey,
+    }),
+    photos: createMemoryPhotoStorage(),
+    disabled: env.scanPipelineDisabled,
+  });
+}
+
+function createMemoryAccount(stores: ReturnType<typeof createMemoryStores>) {
+  return createAccountService({
+    data: createMemoryAccountDataPort({
+      profiles: stores.profileRepo,
+      entitlements: stores.entitlementRepo,
+      quota: stores.quotaRepo,
+      scans: stores.scanRepo,
+      routine: stores.routineRepo,
+      consents: stores.consentRepo,
+      faceReferences: stores.faceReferenceRepo,
+      emailIndex: stores.emailIndex,
+    }),
+    authAdmin: createMemoryAuthAdmin(stores.deletedAuthUsers),
+    deletionRequests: createMemoryDeletionRequestStore(),
+  });
 }
 
 function maybeRegisterEmail(

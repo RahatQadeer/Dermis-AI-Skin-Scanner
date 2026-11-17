@@ -62,6 +62,44 @@ test('signIn maps invalid login to invalid_credentials', async () => {
   );
 });
 
+test('signUp with existing email signs into that account when password matches', async () => {
+  const calls: string[] = [];
+  const port = createSupabaseCredentialsPort({
+    supabaseUrl: 'https://example.supabase.co',
+    anonKey: 'anon',
+    serviceRoleKey: 'service',
+    fetchImpl: async (input, init) => {
+      const url = String(input);
+      calls.push(url);
+      if (url.includes('/admin/users')) {
+        return new Response(JSON.stringify({ msg: 'User already registered' }), { status: 422 });
+      }
+      if (url.includes('/token')) {
+        assert.equal(init?.method, 'POST');
+        return new Response(
+          JSON.stringify({
+            access_token: 'at-existing',
+            refresh_token: 'rt-existing',
+            user: { id: 'same-user', email: 'rahat@gmail.com' },
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response('no', { status: 404 });
+    },
+  });
+
+  const session = await port.signUp({
+    email: 'rahat@gmail.com',
+    password: 'Longenough1',
+    firstName: 'Rahat',
+  });
+  assert.equal(session.user.id, 'same-user');
+  assert.equal(session.accessToken, 'at-existing');
+  assert.equal(calls.filter((u) => u.includes('/admin/users')).length, 1);
+  assert.equal(calls.filter((u) => u.includes('/token')).length, 1);
+});
+
 test('signUp rejects weak password before calling Supabase', async () => {
   let called = false;
   const port = createSupabaseCredentialsPort({

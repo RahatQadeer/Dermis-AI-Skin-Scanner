@@ -12,6 +12,7 @@ export type SupabaseScanConfig = {
 const dbScanRowSchema = z.object({
   id: z.string().uuid(),
   user_id: z.string().uuid(),
+  face_enrollment_id: z.string().uuid().nullable().optional(),
   taken_at: z.string(),
   index_score: z.number().int(),
   concerns: concernScoresSchema,
@@ -132,6 +133,7 @@ function toDb(input: ScanInsert): Record<string, unknown> {
   return {
     ...(input.id ? { id: input.id } : {}),
     user_id: input.userId,
+    face_enrollment_id: input.faceEnrollmentId,
     taken_at: input.takenAt,
     index_score: input.indexScore,
     concerns: input.concerns,
@@ -149,6 +151,7 @@ function fromDb(raw: unknown): ScanRecordRow {
   return {
     id: row.id,
     userId: row.user_id,
+    faceEnrollmentId: row.face_enrollment_id ?? null,
     takenAt: row.taken_at,
     indexScore: row.index_score,
     concerns: row.concerns,

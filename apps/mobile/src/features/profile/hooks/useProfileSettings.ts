@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { getCopy } from '@/src/copy';
 import { useSession } from '@/src/features/session/SessionContext';
@@ -57,7 +57,8 @@ function useSettingsToggles(ctx: {
   const [notificationsOn, setNotificationsOnLocal] = useState(false);
   const [tipsOn, setTipsOnLocal] = useState(true);
   useLoadSettings({
-    session: ctx.session,
+    accessToken: ctx.session.accessToken,
+    apiEnabled: ctx.session.apiEnabled,
     setNotifications: setNotificationsOnLocal,
     setTips: setTipsOnLocal,
     showToast: ctx.showToast,
@@ -89,8 +90,15 @@ function useScanReminderToggle(ctx: {
   showToast: (m: string) => void;
   p: ProfileCopy;
 }) {
+  const busyRef = useRef(false);
   return useCallback(
     (value: boolean) => {
+      if (busyRef.current) {
+        return;
+      }
+      // Optimistic UI — never flash off while permission/schedule resolves.
+      ctx.setLocal(value);
+      busyRef.current = true;
       void applyScanReminderToggle({
         value,
         setLocal: ctx.setLocal,
@@ -102,6 +110,8 @@ function useScanReminderToggle(ctx: {
           scheduleError: ctx.p.notificationsScheduleError,
           settingsSaveError: ctx.p.settingsSaveError,
         },
+      }).finally(() => {
+        busyRef.current = false;
       });
     },
     [ctx],
@@ -109,28 +119,35 @@ function useScanReminderToggle(ctx: {
 }
 
 function useLoadSettings(ctx: {
-  session: Session;
+  accessToken: string | null;
+  apiEnabled: boolean;
   setNotifications: (v: boolean) => void;
   setTips: (v: boolean) => void;
   showToast: (m: string) => void;
   loadError: string;
 }): void {
+  const setNotifications = ctx.setNotifications;
+  const setTips = ctx.setTips;
+  const showToast = ctx.showToast;
+  const loadError = ctx.loadError;
+
   useEffect(() => {
-    if (!ctx.session.apiEnabled || !ctx.session.accessToken) {
+    if (!ctx.apiEnabled || !ctx.accessToken) {
       return;
     }
     let cancelled = false;
     void loadProfileSettings({
-      setNotifications: ctx.setNotifications,
-      setTips: ctx.setTips,
-      showToast: ctx.showToast,
-      loadError: ctx.loadError,
+      setNotifications,
+      setTips,
+      showToast,
+      loadError,
       isCancelled: () => cancelled,
     });
     return () => {
       cancelled = true;
     };
-  }, [ctx]);
+    // Only reload when the session identity changes — not on every parent render.
+  }, [ctx.apiEnabled, ctx.accessToken, setNotifications, setTips, showToast, loadError]);
 }
 
 function useTogglePatch(ctx: {

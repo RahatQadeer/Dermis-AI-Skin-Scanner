@@ -4,6 +4,7 @@ import type { SessionState } from '@/src/features/session/SessionContext';
 import { isApiError } from '@/src/lib/api/errors';
 
 import { signInWithAppleIdToken } from '../api/authApi';
+import { bindSkinProfileAfterAuth } from '../lib/bindSkinProfileAfterAuth';
 import { mapAuthApiError } from '../lib/mapAuthApiError';
 
 export type AppleAuthCallbacks = {
@@ -27,6 +28,7 @@ export async function completeAppleSignIn(
       firstName: authSession.user.firstName,
       showPaywall: callbacks.session.onboardingComplete && !isFeaturesUnlocked(),
     });
+    await bindSkinProfileAfterAuth(callbacks.session, authSession.user.id);
   } catch (error) {
     const mapped = mapAuthApiError(error, 'logIn');
     if (isApiError(error)) {

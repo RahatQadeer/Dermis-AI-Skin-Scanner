@@ -30,6 +30,7 @@ export function ProfileDataSection({
         <ListRow title={p.dataExport} onPress={onExport} trailing={<Chevron />} />
         <ListRow
           title={p.dataPhotos}
+          subtitle={p.dataPhotosHint}
           trailing={
             <AppText variant="bodyStrong" color={colors.green}>
               {p.dataPhotosValue}

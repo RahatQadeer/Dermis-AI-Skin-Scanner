@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 
 import { writeLocalFaceConsent } from '@/src/features/consent/localConsentStore';
 import { cancelScanReminders } from '@/src/features/notifications/notificationsApi';
+import { clearFaceEnrolledLocally } from '@/src/features/scan/lib/faceEnrollmentStatus';
 import { clearCachedFaceReference } from '@/src/features/scan/lib/faceReferenceCache';
 
 import { clearStoredSession, saveOnboardingComplete, saveStoredSession } from './sessionStorage';
@@ -41,6 +42,7 @@ function toPersistInput(session: ServerSession): PersistInput {
 function clearPerUserLocalCaches(): void {
   void writeLocalFaceConsent(false);
   void clearCachedFaceReference();
+  void clearFaceEnrolledLocally();
   // Reminders are scheduled for the signed-in user; the next account (or a
   // signed-out device) must not keep receiving them.
   void cancelScanReminders();

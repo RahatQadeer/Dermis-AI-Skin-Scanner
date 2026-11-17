@@ -7,6 +7,9 @@ export {
   isCentreScanTab,
   TAB_BAR_ORDER,
   TAB_BAR_SCROLL_PAD,
+  tabBarFloatingOffset,
+  tabBarScrollPad,
   TAB_IDS,
   type TabId,
 } from './tabBarTypes';
+export { useTabBarFloatingOffset, useTabBarScrollPad } from './useTabBarScrollPad';

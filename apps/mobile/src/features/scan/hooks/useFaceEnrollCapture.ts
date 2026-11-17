@@ -5,7 +5,10 @@ import { getCopy } from '@/src/copy';
 import { useSession } from '@/src/features/session/SessionContext';
 
 import type { CameraPreviewLiveHandle } from '../components/CameraPreviewLive';
-import { enrollFaceReference, FaceIdentityError } from '../lib/verifyFaceIdentity';
+import { assessLiveScanFrame } from '../lib/assessLiveScanFrame';
+import { messageForLiveIssue } from '../lib/liveGuidanceCopy';
+import { messageForFaceSaveError } from '../lib/faceSaveErrors';
+import { enrollFaceReference, type FaceEnrollMode } from '../lib/verifyFaceIdentity';
 
 type CaptureControls = {
   busy: boolean;
@@ -16,7 +19,7 @@ type CaptureControls = {
 export function useFaceEnrollCapture(
   cameraRef: RefObject<CameraPreviewLiveHandle | null>,
   controls: CaptureControls,
-  replace: boolean,
+  mode: FaceEnrollMode,
 ) {
   const router = useRouter();
   const { userId } = useSession();
@@ -33,14 +36,15 @@ export function useFaceEnrollCapture(
     setSaving(true);
     setToast(null);
     try {
-      await captureAndSave(cameraRef, userId, replace, copy.captureFailed);
-      router.replace(replace ? '/(tabs)/profile' : '/(scan)/camera');
+      await captureAndSave(cameraRef, userId, mode, copy);
+      const toProfile = mode === 'replace' || mode === 'addFace';
+      router.replace(toProfile ? '/(tabs)/profile' : '/(scan)/camera');
     } catch (error) {
-      setToast(messageFromEnrollError(error, copy.saveFailed));
+      setToast(messageForFaceSaveError(error, copy.saveFailed));
     } finally {
       setSaving(false);
     }
-  }, [userId, saving, controls.busy, controls.liveQuality.ready, copy, router, replace, cameraRef]);
+  }, [userId, saving, controls.busy, controls.liveQuality.ready, copy, router, mode, cameraRef]);
 
   return { saving, toast, clearToast: () => setToast(null), enroll };
 }
@@ -48,19 +52,16 @@ export function useFaceEnrollCapture(
 async function captureAndSave(
   cameraRef: RefObject<CameraPreviewLiveHandle | null>,
   userId: string,
-  replace: boolean,
-  captureFailed: string,
+  mode: FaceEnrollMode,
+  copy: ReturnType<typeof getCopy>['screens']['faceEnroll'],
 ): Promise<void> {
   const uri = await cameraRef.current?.takePhoto();
   if (!uri) {
-    throw new Error(captureFailed);
+    throw new Error(copy.captureFailed);
   }
-  await enrollFaceReference(userId, uri, replace);
-}
-
-function messageFromEnrollError(error: unknown, fallback: string): string {
-  if (error instanceof FaceIdentityError || error instanceof Error) {
-    return error.message;
+  const assessment = await assessLiveScanFrame(uri);
+  if (!assessment.ok) {
+    throw new Error(messageForLiveIssue(assessment.issue));
   }
-  return fallback;
+  await enrollFaceReference(userId, uri, mode, mode === 'replace' ? uri : undefined);
 }

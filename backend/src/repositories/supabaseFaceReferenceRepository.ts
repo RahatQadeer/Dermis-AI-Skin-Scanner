@@ -1,4 +1,7 @@
+import { HttpError } from '../http/HttpError';
+
 import type {
+  FaceBoxNorm,
   FaceReferenceRecord,
   FaceReferenceRepository,
   FaceReferenceWriteInput,
@@ -13,9 +16,12 @@ export type SupabaseFaceReferenceConfig = {
 
 type DbFaceReferenceRow = {
   user_id: string;
+  enrollment_id?: string;
   embedding: number[];
   dim: number;
   model_version: string;
+  reference_jpeg?: string | null;
+  face_box_json?: FaceBoxNorm | null;
   registered_at: string;
   updated_at: string;
 };
@@ -76,18 +82,26 @@ async function upsert(
     headers: client.headers('resolution=merge-duplicates,return=representation'),
     body: JSON.stringify({
       user_id: userId,
+      enrollment_id: data.enrollmentId,
       embedding: data.embedding,
       dim: data.dim,
       model_version: data.modelVersion,
+      reference_jpeg: data.referenceJpeg,
+      face_box_json: data.faceBox,
       updated_at: new Date().toISOString(),
     }),
   });
   if (!response.ok) {
-    throw new Error('face_reference_save_failed');
+    const status = response.status === 404 ? 503 : 502;
+    throw new HttpError(
+      status,
+      'face_reference_save_failed',
+      'Could not save face reference. Apply face_references + enrollment migrations in Supabase.',
+    );
   }
   const rows = (await response.json()) as DbFaceReferenceRow[];
   if (!rows[0]) {
-    throw new Error('face_reference_save_failed');
+    throw new HttpError(502, 'face_reference_save_failed');
   }
   return fromDbRow(rows[0]);
 }
@@ -103,9 +117,12 @@ async function deleteByUserId(client: RestClient, userId: string): Promise<boole
 function fromDbRow(row: DbFaceReferenceRow): FaceReferenceRecord {
   return {
     userId: row.user_id,
+    enrollmentId: row.enrollment_id ?? row.user_id,
     embedding: row.embedding,
     dim: row.dim,
     modelVersion: row.model_version,
+    referenceJpeg: row.reference_jpeg ?? null,
+    faceBox: row.face_box_json ?? null,
     registeredAt: row.registered_at,
     updatedAt: row.updated_at,
   };

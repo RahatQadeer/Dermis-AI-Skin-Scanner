@@ -3,50 +3,57 @@ import { useEffect, useState } from 'react';
 
 import { useSession } from '@/src/features/session/SessionContext';
 
-import { fetchFaceReference } from '../api/faceReferenceApi';
 import { isFaceIdentityEnabled } from '../lib/faceConfig';
-import { readCachedFaceReference } from '../lib/faceReferenceCache';
+import { resolveFaceEnrolled } from '../lib/faceEnrollmentStatus';
 
-const FACE_ENROLL_HREF = '/(scan)/face-enroll' as Href;
+const FACE_SETUP_HREF = '/(scan)/face-setup' as Href;
 
 /**
- * When identity is enabled, analysis camera requires a registered reference.
- * Redirects to enroll without blocking the camera UI on a full-screen loader.
+ * Analysis camera requires a registered face (when identity is on).
+ * Never flash the scanner while consent/enroll status is still resolving.
  */
-export function useFaceEnrollmentGate(enabled: boolean): { checking: boolean } {
+export function useFaceEnrollmentGate(consentReady: boolean): {
+  checking: boolean;
+  cameraAllowed: boolean;
+} {
   const router = useRouter();
   const { userId, apiEnabled } = useSession();
-  const [checking, setChecking] = useState(false);
+  const identityOn = isFaceIdentityEnabled() && apiEnabled && Boolean(userId);
+  // Default locked — unlocking early was flashing the scanner for a second.
+  const [checking, setChecking] = useState(true);
+  const [cameraAllowed, setCameraAllowed] = useState(false);
 
   useEffect(() => {
-    if (!enabled || !isFaceIdentityEnabled() || !apiEnabled || !userId) {
-      setChecking(false);
+    if (!consentReady) {
+      setChecking(true);
+      setCameraAllowed(false);
       return;
     }
+    if (!identityOn || !userId) {
+      setChecking(false);
+      setCameraAllowed(true);
+      return;
+    }
+
     let cancelled = false;
+    setChecking(true);
+    setCameraAllowed(false);
     void (async () => {
-      try {
-        const cached = await readCachedFaceReference(userId);
-        if (cached || cancelled) {
-          return;
-        }
-        setChecking(true);
-        const dto = await fetchFaceReference();
-        if (cancelled) return;
-        if (!dto.enrolled) {
-          router.replace(FACE_ENROLL_HREF);
-          return;
-        }
-      } catch {
-        // Capture-time gate still enforces identity.
-      } finally {
-        if (!cancelled) setChecking(false);
+      const enrolled = await resolveFaceEnrolled(userId);
+      if (cancelled) return;
+      if (!enrolled) {
+        router.replace(FACE_SETUP_HREF);
+        setChecking(false);
+        return;
       }
+      setCameraAllowed(true);
+      setChecking(false);
     })();
+
     return () => {
       cancelled = true;
     };
-  }, [enabled, apiEnabled, userId, router]);
+  }, [consentReady, identityOn, userId, router]);
 
-  return { checking };
+  return { checking, cameraAllowed };
 }

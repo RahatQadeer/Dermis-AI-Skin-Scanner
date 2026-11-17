@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { Card } from '@/src/components/Card';
 import { AppText } from '@/src/components/text/AppText';
 import { getCopy } from '@/src/copy';
+import { concernLabel } from '@/src/features/home/lib/concernLabel';
 import { colors, spacing } from '@/src/theme';
 
 import type { HomeScanSnapshot } from '../mock/homeMockScenarios';
@@ -11,58 +12,51 @@ export type HomeStatCardsProps = {
   scan: HomeScanSnapshot | null;
 };
 
-function StatTile({
-  title,
-  value,
-  caption,
-  captionColor,
-}: {
-  title: string;
-  value: string;
-  caption: string;
-  captionColor: string;
-}) {
-  return (
-    <Card style={styles.tile}>
-      <AppText variant="caption" color={colors.mute}>
-        {title}
-      </AppText>
-      <AppText variant="title">{value}</AppText>
-      <AppText variant="caption" color={captionColor}>
-        {caption}
-      </AppText>
-    </Card>
-  );
-}
-
+/** Two focus scores from the latest scan — no placeholder SPF tiles. */
 export function HomeStatCards({ scan }: HomeStatCardsProps) {
   const h = getCopy().screens.home;
   if (!scan) {
     return null;
   }
+  const hydration = scan.concernScores.hydration;
+  const texture = scan.concernScores.texture;
   return (
-    <View style={styles.row}>
-      <View style={styles.cell}>
-        <StatTile
-          title={h.hydrationTitle}
-          value={String(scan.concernScores.hydration)}
-          caption={h.hydrationCaption}
-          captionColor={colors.greenDeep}
-        />
-      </View>
-      <View style={styles.cell}>
-        <StatTile
-          title={h.spfTitle}
-          value={h.spfValue}
-          caption={h.spfCaption}
-          captionColor={colors.amberDeep}
-        />
+    <View style={styles.block}>
+      <AppText variant="headline" color={colors.ink}>
+        {h.metricsTitle}
+      </AppText>
+      <View style={styles.row}>
+        <View style={styles.cell}>
+          <Card style={styles.tile}>
+            <AppText variant="caption" color={colors.mute}>
+              {concernLabel('hydration')}
+            </AppText>
+            <AppText variant="title">{String(hydration)}</AppText>
+            <AppText variant="caption" color={colors.mute}>
+              {h.metricsFromScan}
+            </AppText>
+          </Card>
+        </View>
+        <View style={styles.cell}>
+          <Card style={styles.tile}>
+            <AppText variant="caption" color={colors.mute}>
+              {concernLabel('texture')}
+            </AppText>
+            <AppText variant="title">{String(texture)}</AppText>
+            <AppText variant="caption" color={colors.mute}>
+              {h.metricsFromScan}
+            </AppText>
+          </Card>
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  block: {
+    gap: spacing.sm,
+  },
   row: {
     flexDirection: 'row',
     gap: spacing.sm,

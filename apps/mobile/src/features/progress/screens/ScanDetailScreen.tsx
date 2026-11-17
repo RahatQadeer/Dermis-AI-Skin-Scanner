@@ -5,7 +5,6 @@ import { StyleSheet } from 'react-native';
 
 import { Header } from '@/src/components/layout/Header';
 import { Screen } from '@/src/components/layout/Screen';
-import { TAB_BAR_SCROLL_PAD } from '@/src/components/layout/tabBarTypes';
 import { getCopy } from '@/src/copy';
 import { colors, spacing } from '@/src/theme';
 
@@ -36,12 +35,13 @@ export function ScanDetailScreen() {
     <Screen
       scroll
       padded
+      tabBarPadding
       edges={['top', 'left', 'right']}
       style={styles.screen}
       contentStyle={styles.content}
     >
       <StatusBar style="dark" />
-      <Header title={p.detailTitle} onBack={() => router.back()} />
+      <Header title={p.detailTitle} onBack={() => router.back()} compact />
       <ScanDetailContent
         scan={scan}
         previous={previous}
@@ -57,7 +57,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    gap: spacing.lg,
-    paddingBottom: TAB_BAR_SCROLL_PAD,
+    // Sit under the status bar with almost no extra top pad; keep section rhythm tight.
+    paddingTop: 0,
+    gap: spacing.md,
   },
 });

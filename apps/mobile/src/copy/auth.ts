@@ -11,7 +11,7 @@ export const authCopy = {
   passwordsMismatch: 'Passwords do not match.',
   signInFailed: 'Could not sign in. Check your details and try again.',
   signUpFailed: 'Could not create your account. Try again.',
-  emailTaken: 'That email already has an account. Try logging in.',
+  emailTaken: 'That email already has an account. Use Log in with the same password.',
   emailConfirmationRequired: 'Confirm your email, then log in.',
   rateLimited: 'Too many attempts. Wait a moment and try again.',
   authProviderError: 'Sign-in could not be completed. Try again, or use email.',

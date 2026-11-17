@@ -4,6 +4,7 @@ import { getCopy } from '@/src/copy';
 import type { SessionState } from '@/src/features/session/SessionContext';
 
 import { signInWithGoogleIdToken } from '../api/authApi';
+import { bindSkinProfileAfterAuth } from '../lib/bindSkinProfileAfterAuth';
 import { mapAuthApiError } from '../lib/mapAuthApiError';
 
 export type GoogleAuthCallbacks = {
@@ -27,6 +28,7 @@ export async function completeGoogleSignIn(
       firstName: authSession.user.firstName,
       showPaywall: callbacks.session.onboardingComplete && !isFeaturesUnlocked(),
     });
+    await bindSkinProfileAfterAuth(callbacks.session, authSession.user.id);
   } catch (error) {
     const mapped = mapAuthApiError(error, 'logIn');
     callbacks.onFormError(mapped.formError);

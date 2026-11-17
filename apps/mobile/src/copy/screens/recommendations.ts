@@ -1,12 +1,12 @@
 export const recommendationsCopy = {
   title: 'Recommended actives',
+  titleFromRoutine: 'Actives for your routine',
   picksEyebrow: "PROFESSOR PUFF'S PICKS",
-  picksBody:
-    'Ordered from your latest scan’s weakest concern scores — ingredient types only, not brands or a prescription.',
+  picksBody: 'Ranked from your latest scan — ingredient ideas only.',
+  picksBodyFromRoutine: 'Add an idea to morning or evening.',
   productImageLabel: 'product image',
-  subtitle: 'Wellness product ideas for common concerns — not medical advice.',
-  footnote:
-    'Ranked from your Gemini scan scores. Catalog items are ingredient examples — nothing can be purchased in the app, and this is not medical advice.',
+  subtitle: 'Wellness ingredient ideas — not medical advice.',
+  footnote: 'Ingredient examples only · not medical advice · nothing for sale in-app.',
   loadingA11y: 'Loading recommendations',
   emptyScanTitle: 'Scan first for picks',
   emptyScanBody: 'Take a skin scan so we can rank actives from your real concern scores.',
@@ -16,4 +16,5 @@ export const recommendationsCopy = {
   whyLabel: 'Why it may help',
   emptyFilterTitle: 'No ideas for this filter',
   emptyFilterBody: 'Try another concern or show all suggestions.',
+  backToRoutine: 'Back to routine',
 } as const;
