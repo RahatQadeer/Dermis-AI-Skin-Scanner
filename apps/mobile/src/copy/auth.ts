@@ -25,6 +25,7 @@ export const authCopy = {
   googleNeedsDevBuild:
     'Google Sign-In needs a development or preview build (not Expo Go). Install the EAS preview IPA, or use email for now.',
   resetSent: 'If that email exists, we sent reset instructions.',
+  resetFailed: 'Could not send a reset email. Check your connection and try again.',
 
   // Headlines + subcopy
   signUpTitle: 'Save your skin profile',

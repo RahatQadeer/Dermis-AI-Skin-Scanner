@@ -46,7 +46,56 @@ export function createSupabaseCredentialsPort(config: SupabaseCredentialsConfig)
         firstName: options?.firstName,
       }),
     refresh: (refreshToken: string) => refreshWithGoTrue(ctx, refreshToken),
+    recover: (email: string, redirectTo: string) => recoverWithGoTrue(ctx, email, redirectTo),
+    updatePassword: (accessToken: string, password: string) =>
+      updatePasswordWithGoTrue(ctx, accessToken, password),
   };
+}
+
+/**
+ * Sends the password-reset email. Never reveals whether the email exists:
+ * GoTrue answers the same for unknown addresses; only throttling surfaces.
+ */
+async function recoverWithGoTrue(ctx: CredCtx, email: string, redirectTo: string): Promise<void> {
+  const normalized = normalizeEmail(email);
+  const url = `${ctx.base}/auth/v1/recover?redirect_to=${encodeURIComponent(redirectTo)}`;
+  const response = await ctx.fetchImpl(url, {
+    method: 'POST',
+    headers: {
+      apikey: ctx.config.anonKey,
+      authorization: `Bearer ${ctx.config.anonKey}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ email: normalized }),
+  });
+  if (response.status === 429) {
+    throw new HttpError(429, 'rate_limited');
+  }
+  if (!response.ok) {
+    console.error('[auth] recover failed', response.status);
+  }
+}
+
+/** Sets a new password using the short-lived recovery session from the reset link. */
+async function updatePasswordWithGoTrue(
+  ctx: CredCtx,
+  accessToken: string,
+  password: string,
+): Promise<void> {
+  assertPassword(password);
+  const response = await ctx.fetchImpl(`${ctx.base}/auth/v1/user`, {
+    method: 'PUT',
+    headers: {
+      apikey: ctx.config.anonKey,
+      authorization: `Bearer ${accessToken}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ password }),
+  });
+  if (!response.ok) {
+    const body = (await response.json().catch(() => ({}))) as GoTrueTokenBody;
+    throw mapGoTrueError(response.status, body);
+  }
 }
 
 type CredCtx = {

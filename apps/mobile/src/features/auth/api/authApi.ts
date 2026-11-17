@@ -74,3 +74,8 @@ export async function refreshSession(refreshToken: string): Promise<AuthSessionD
   });
   return normalizeSession(res.session);
 }
+
+/** Asks the API to email a password-reset link. Same result whether or not the email exists. */
+export async function requestPasswordReset(email: string): Promise<void> {
+  await getApiClient().postPublic<{ ok: true }>('/v1/auth/recover', { email: email.trim() });
+}
