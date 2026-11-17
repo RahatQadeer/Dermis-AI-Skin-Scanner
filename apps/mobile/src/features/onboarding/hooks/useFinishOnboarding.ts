@@ -2,8 +2,9 @@ import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 
 import { getCopy } from '@/src/copy';
-import { createProfile } from '@/src/features/profile/api/profileApi';
+import { createProfile, patchProfile } from '@/src/features/profile/api/profileApi';
 import { useSession } from '@/src/features/session/SessionContext';
+import { saveLocalSkinProfileComplete } from '@/src/features/session/skinProfileLocal';
 import { isApiError } from '@/src/lib/api/errors';
 
 import { clearQuizDraft, saveQuizDraft } from '../lib/quizDraftStorage';
@@ -15,12 +16,12 @@ function isProfileConflict(err: unknown): boolean {
 
 export type FinishOnboardingResult = {
   finish: () => Promise<void>;
+  skip: () => Promise<void>;
   errorMessage: string | null;
   clearError: () => void;
   saving: boolean;
 };
 
-/** Persists the assessment for an already-authenticated user (post-auth quiz). */
 async function persistAuthedProfile(draft: QuizDraft, userId: string): Promise<'ok' | 'error'> {
   const payload = quizDraftToSkinProfile(draft, getCopy().quiz);
   if (!payload) {
@@ -28,21 +29,48 @@ async function persistAuthedProfile(draft: QuizDraft, userId: string): Promise<'
   }
   try {
     await createProfile(payload);
-    await clearQuizDraft(userId);
-    return 'ok';
   } catch (err) {
-    if (isProfileConflict(err)) {
-      await clearQuizDraft(userId);
-      return 'ok';
+    if (!isProfileConflict(err)) {
+      try {
+        await patchProfile(payload);
+      } catch {
+        return 'error';
+      }
     }
-    return 'error';
   }
+  await clearQuizDraft(userId);
+  await saveLocalSkinProfileComplete(userId, true);
+  return 'ok';
+}
+
+type SessionLike = ReturnType<typeof useSession>;
+
+type FinishAuthedOpts = {
+  draft: QuizDraft;
+  session: SessionLike;
+  router: ReturnType<typeof useRouter>;
+  setErrorMessage: (v: string | null) => void;
+  setSaving: (v: boolean) => void;
+};
+
+async function finishAuthed(opts: FinishAuthedOpts): Promise<void> {
+  const { draft, session, router, setErrorMessage, setSaving } = opts;
+  if (!session.userId) return;
+  setSaving(true);
+  await saveQuizDraft(draft, session.userId);
+  const result = await persistAuthedProfile(draft, session.userId);
+  setSaving(false);
+  if (result !== 'ok') {
+    setErrorMessage(getCopy().quiz.saveError);
+    return;
+  }
+  session.markSkinProfileComplete();
+  router.replace('/(tabs)/home');
 }
 
 /**
- * Finishes the skin-profile quiz. The draft is always saved locally first so the
- * answers survive navigation. When authenticated, they are written to the
- * backend; mark complete only after a successful save.
+ * Quiz → real account. Never send a guest (or dead token) to Home — that looked
+ * like “account created” while Supabase stayed empty.
  */
 export function useFinishOnboarding(draft: QuizDraft): FinishOnboardingResult {
   const router = useRouter();
@@ -50,27 +78,47 @@ export function useFinishOnboarding(draft: QuizDraft): FinishOnboardingResult {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const finish = useCallback(async () => {
-    setErrorMessage(null);
-    await saveQuizDraft(draft, session.userId);
-    if (session.accessToken && session.apiEnabled && session.userId) {
-      setSaving(true);
-      const result = await persistAuthedProfile(draft, session.userId);
-      setSaving(false);
-      if (result !== 'ok') {
-        setErrorMessage(getCopy().quiz.saveError);
-        return;
-      }
-      session.markSkinProfileComplete();
-      router.replace('/(tabs)/home');
-      return;
+  const continueToSignUp = useCallback(async () => {
+    await saveQuizDraft(draft, null);
+    if (session.accessToken) {
+      session.signOut();
     }
     session.markOnboardingComplete();
     router.replace('/sign-up');
   }, [draft, router, session]);
 
+  const finish = useCallback(async () => {
+    setErrorMessage(null);
+    const authed = Boolean(session.accessToken && session.apiEnabled && session.userId);
+    if (!authed || !session.userId) {
+      await continueToSignUp();
+      return;
+    }
+    await finishAuthed({ draft, session, router, setErrorMessage, setSaving });
+  }, [continueToSignUp, draft, router, session]);
+
+  const skip = useCallback(async () => {
+    setErrorMessage(null);
+    const authed = Boolean(session.accessToken && session.apiEnabled && session.userId);
+    if (!authed || !session.userId) {
+      await continueToSignUp();
+      return;
+    }
+    setSaving(true);
+    await saveQuizDraft(draft, session.userId);
+    const result = await persistAuthedProfile(draft, session.userId);
+    setSaving(false);
+    if (result === 'ok') {
+      session.markSkinProfileComplete();
+      router.replace('/(tabs)/home');
+      return;
+    }
+    await continueToSignUp();
+  }, [continueToSignUp, draft, router, session]);
+
   return {
     finish,
+    skip,
     errorMessage,
     clearError: () => setErrorMessage(null),
     saving,

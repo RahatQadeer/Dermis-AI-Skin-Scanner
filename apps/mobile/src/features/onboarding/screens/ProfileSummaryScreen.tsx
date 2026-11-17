@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/src/components/text/AppText';
@@ -19,14 +19,27 @@ import { useQuizDraft } from '../state/QuizDraftProvider';
 
 export function ProfileSummaryScreen() {
   const router = useRouter();
-  const { draft } = useQuizDraft();
-  const { finish, errorMessage, saving } = useFinishOnboarding(draft);
+  const { draft, hydrated } = useQuizDraft();
+  const { finish, skip, errorMessage, saving } = useFinishOnboarding(draft);
 
   useEffect(() => {
+    // Wait for AsyncStorage hydrate — empty draft on first paint used to bounce
+    // every reload back to /quiz even when answers were already saved.
+    if (!hydrated) {
+      return;
+    }
     if (!isQuizDraftComplete(draft)) {
       router.replace('/quiz');
     }
-  }, [draft, router]);
+  }, [draft, hydrated, router]);
+
+  if (!hydrated) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator color={colors.ink} />
+      </View>
+    );
+  }
 
   if (!isQuizDraftComplete(draft)) {
     return null;
@@ -39,6 +52,9 @@ export function ProfileSummaryScreen() {
       onFinish={() => {
         if (!saving) void finish();
       }}
+      onSkip={() => {
+        if (!saving) void skip();
+      }}
     />
   );
 }
@@ -47,10 +63,12 @@ function SummaryLayout({
   draft,
   errorMessage,
   onFinish,
+  onSkip,
 }: {
   draft: ReturnType<typeof useQuizDraft>['draft'];
   errorMessage: string | null;
   onFinish: () => void;
+  onSkip: () => void;
 }) {
   const insets = useSafeAreaInsets();
   const summary = getCopy().screens.summary;
@@ -86,13 +104,19 @@ function SummaryLayout({
           </AppText>
         ) : null}
         <View style={styles.spacer} />
-        <SummaryFooter bottomInset={insets.bottom} onScan={onFinish} onSkip={onFinish} />
+        <SummaryFooter bottomInset={insets.bottom} onScan={onFinish} onSkip={onSkip} />
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  loader: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.cream,
+  },
   root: {
     flex: 1,
     backgroundColor: colors.cream,

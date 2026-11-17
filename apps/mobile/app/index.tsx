@@ -2,6 +2,7 @@ import { Redirect } from 'expo-router';
 
 import { FullScreenLoader } from '@/src/components/layout/FullScreenLoader';
 import { resolveAuthedRoute } from '@/src/features/session/authRoute';
+import { loggedOutEntryRoute } from '@/src/features/session/loggedOutEntryRoute';
 import { useSession } from '@/src/features/session/SessionContext';
 
 /**
@@ -20,7 +21,7 @@ export default function RootIndex() {
   }
 
   if (!session.accessToken) {
-    return <Redirect href={session.onboardingComplete ? '/sign-up' : '/welcome'} />;
+    return <Redirect href={loggedOutEntryRoute(session.onboardingComplete)} />;
   }
 
   const route = resolveAuthedRoute(session.skinProfileStatus);
