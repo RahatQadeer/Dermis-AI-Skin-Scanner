@@ -156,19 +156,15 @@ function cropResizeNormalize(image: PixelBuffer, face: FaceLandmarkLike): tf.Ten
 
   const angle = eyeAlignRadians({
     box: face.box,
-    rightEye: face.rightEye
-      ? { x: face.rightEye.x - x, y: face.rightEye.y - y }
-      : undefined,
-    leftEye: face.leftEye
-      ? { x: face.leftEye.x - x, y: face.leftEye.y - y }
-      : undefined,
+    rightEye: face.rightEye ? { x: face.rightEye.x - x, y: face.rightEye.y - y } : undefined,
+    leftEye: face.leftEye ? { x: face.leftEye.x - x, y: face.leftEye.y - y } : undefined,
   });
 
   const useAlign = Math.abs(angle) > 0.02 && Math.abs(angle) < 0.6;
   const aligned = useAlign
-    ? (tf.image.rotateWithOffset(crop.expandDims(0) as tf.Tensor4D, -angle).squeeze([
-        0,
-      ]) as tf.Tensor3D)
+    ? (tf.image
+        .rotateWithOffset(crop.expandDims(0) as tf.Tensor4D, -angle)
+        .squeeze([0]) as tf.Tensor3D)
     : crop;
 
   const resized = tf.image.resizeBilinear(aligned, [INPUT_SIZE, INPUT_SIZE]);

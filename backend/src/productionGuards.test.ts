@@ -61,9 +61,12 @@ test('open billing mode works in production', () => {
 });
 
 test('billing defaults to open when unset', () => {
-  withEnv({ NODE_ENV: 'production', DERMIS_BILLING_MODE: undefined, EXPO_PUBLIC_BILLING_MODE: undefined }, () => {
-    assert.equal(isBillingOpen(), true);
-  });
+  withEnv(
+    { NODE_ENV: 'production', DERMIS_BILLING_MODE: undefined, EXPO_PUBLIC_BILLING_MODE: undefined },
+    () => {
+      assert.equal(isBillingOpen(), true);
+    },
+  );
 });
 
 test('store billing mode re-enables gates', () => {

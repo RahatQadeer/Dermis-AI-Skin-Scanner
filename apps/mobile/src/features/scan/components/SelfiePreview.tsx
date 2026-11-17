@@ -14,56 +14,57 @@ type Props = {
 };
 
 /** Soft selfie camera for one-time face registration (not the scan stage). */
-export const SelfiePreview = forwardRef<CameraPreviewLiveHandle, Props>(
-  function SelfiePreview({ active, ready = false }, ref) {
-    const cameraRef = useRef<CameraView>(null);
-    const captureBusyRef = useRef(false);
-    const sampleBusyRef = useRef(false);
+export const SelfiePreview = forwardRef<CameraPreviewLiveHandle, Props>(function SelfiePreview(
+  { active, ready = false },
+  ref,
+) {
+  const cameraRef = useRef<CameraView>(null);
+  const captureBusyRef = useRef(false);
+  const sampleBusyRef = useRef(false);
 
-    useImperativeHandle(ref, () => ({
-      takePhoto: async () => {
-        if (!active || captureBusyRef.current || !cameraRef.current) {
-          return null;
-        }
-        captureBusyRef.current = true;
-        try {
-          return await takeSelfieFrame(cameraRef, 0.85);
-        } finally {
-          captureBusyRef.current = false;
-        }
-      },
-      sampleFrameUri: async () => {
-        if (!active || captureBusyRef.current || sampleBusyRef.current || !cameraRef.current) {
-          return null;
-        }
-        sampleBusyRef.current = true;
-        try {
-          return await takeSelfieFrame(cameraRef, 0.3);
-        } finally {
-          sampleBusyRef.current = false;
-        }
-      },
-    }));
+  useImperativeHandle(ref, () => ({
+    takePhoto: async () => {
+      if (!active || captureBusyRef.current || !cameraRef.current) {
+        return null;
+      }
+      captureBusyRef.current = true;
+      try {
+        return await takeSelfieFrame(cameraRef, 0.85);
+      } finally {
+        captureBusyRef.current = false;
+      }
+    },
+    sampleFrameUri: async () => {
+      if (!active || captureBusyRef.current || sampleBusyRef.current || !cameraRef.current) {
+        return null;
+      }
+      sampleBusyRef.current = true;
+      try {
+        return await takeSelfieFrame(cameraRef, 0.3);
+      } finally {
+        sampleBusyRef.current = false;
+      }
+    },
+  }));
 
-    if (!active) {
-      return <View style={styles.preview} />;
-    }
+  if (!active) {
+    return <View style={styles.preview} />;
+  }
 
-    return (
-      <View style={styles.preview}>
-        <CameraView
-          ref={cameraRef}
-          style={StyleSheet.absoluteFill}
-          facing="front"
-          mode="picture"
-          mirror
-          animateShutter={false}
-        />
-        <SelfieGuideCircle ready={ready} />
-      </View>
-    );
-  },
-);
+  return (
+    <View style={styles.preview}>
+      <CameraView
+        ref={cameraRef}
+        style={StyleSheet.absoluteFill}
+        facing="front"
+        mode="picture"
+        mirror
+        animateShutter={false}
+      />
+      <SelfieGuideCircle ready={ready} />
+    </View>
+  );
+});
 
 const styles = StyleSheet.create({
   preview: {

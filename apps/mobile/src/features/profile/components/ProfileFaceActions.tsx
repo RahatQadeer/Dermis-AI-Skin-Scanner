@@ -23,9 +23,7 @@ export function ProfileFaceActions({ signedIn, canEditSkin, onEditSkin }: Profil
 
   return (
     <View style={styles.wrap}>
-      {canEditSkin ? (
-        <Button label={p.editProfile} variant="outline" onPress={onEditSkin} />
-      ) : null}
+      {canEditSkin ? <Button label={p.editProfile} variant="outline" onPress={onEditSkin} /> : null}
       {faceOn && signedIn ? (
         <>
           <AppText variant="caption" color={colors.mute}>

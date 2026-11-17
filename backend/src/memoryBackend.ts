@@ -112,11 +112,7 @@ function createMemoryServices(stores: ReturnType<typeof createMemoryStores>, env
   });
   const faceReferences = createFaceReferenceService(stores.faceReferenceRepo);
   const liveness = createLivenessChallengeService();
-  const pipeline = createMemoryPipeline(
-    stores,
-    { quota, consents, faceReferences, liveness },
-    env,
-  );
+  const pipeline = createMemoryPipeline(stores, { quota, consents, faceReferences, liveness }, env);
   return {
     assistant,
     profiles,

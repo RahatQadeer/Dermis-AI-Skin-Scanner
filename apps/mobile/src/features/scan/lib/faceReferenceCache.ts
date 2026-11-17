@@ -22,7 +22,11 @@ export async function readCachedFaceReference(userId: string): Promise<number[] 
   }
   try {
     const parsed = JSON.parse(raw) as Partial<CachedFaceRef>;
-    if (parsed.userId !== userId || !Array.isArray(parsed.embedding) || parsed.embedding.length === 0) {
+    if (
+      parsed.userId !== userId ||
+      !Array.isArray(parsed.embedding) ||
+      parsed.embedding.length === 0
+    ) {
       return null;
     }
     // Drop cache from an older embedding pipeline so we never match with bad vectors.

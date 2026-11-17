@@ -1,9 +1,6 @@
 import { HttpError } from '../http/HttpError';
 import { cosineSimilarity, isSameIdentity, resolveFaceMatchThreshold } from '../lib/faceMatch';
-import {
-  embedScanFace,
-  type NormalizedFaceBox,
-} from '../lib/serverFaceEmbedder';
+import { embedScanFace, type NormalizedFaceBox } from '../lib/serverFaceEmbedder';
 import type { FaceReferenceService } from './faceReferenceService';
 import type { LivenessChallengeService } from './livenessChallengeService';
 
@@ -312,8 +309,7 @@ export async function assertScanFaceIdentity(
   requireLiveness(deps, ctx, claim);
   const enrollment = await loadEnrollment(deps, ctx, claim);
   const embed: EmbedImage =
-    deps.embedImage ??
-    ((bytes, box) => embedScanFace({ jpegBytes: bytes, box }));
+    deps.embedImage ?? ((bytes, box) => embedScanFace({ jpegBytes: bytes, box }));
 
   const scan = await embedAndBindScan(embed, ctx, enrollment, { claim, jpegBytes });
   const enrolled = await embedEnrollment(embed, ctx, enrollment, scan);

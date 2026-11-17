@@ -98,9 +98,7 @@ async function captureAssessAndSave(
   }
   const assessment = await assessLiveScanFrame(uri);
   if (!assessment.ok) {
-    throw new Error(
-      assessment.issue ? messageForLiveIssue(assessment.issue) : copy.needClearFace,
-    );
+    throw new Error(assessment.issue ? messageForLiveIssue(assessment.issue) : copy.needClearFace);
   }
   // Same-person replace proves with this capture; addFace does not need old-face proof.
   await enrollFaceReference(userId, uri, mode, mode === 'replace' ? uri : undefined);

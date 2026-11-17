@@ -103,10 +103,7 @@ export function TabBar({ active, onSelect }: TabBarProps) {
 
   return (
     <View
-      style={[
-        styles.host,
-        { paddingBottom: insets.bottom > 0 ? spacing.md : spacing.sm },
-      ]}
+      style={[styles.host, { paddingBottom: insets.bottom > 0 ? spacing.md : spacing.sm }]}
       pointerEvents="box-none"
     >
       <View style={[styles.bar, shadows.soft]} accessibilityRole="tablist">

@@ -37,14 +37,12 @@ export function ProgressHistoryList({ scans }: ProgressHistoryListProps) {
         {scans.map((scan, index) => {
           const older = scans[index + 1];
           const sameSeries =
-            older != null &&
-            (scan.faceEnrollmentId ?? null) === (older.faceEnrollmentId ?? null);
+            older != null && (scan.faceEnrollmentId ?? null) === (older.faceEnrollmentId ?? null);
           const delta = sameSeries
             ? indexDelta(scan.indexScore, older?.indexScore)
             : indexDelta(scan.indexScore, undefined);
           const showNewFaceDivider =
-            older != null &&
-            (scan.faceEnrollmentId ?? '') !== (older.faceEnrollmentId ?? '');
+            older != null && (scan.faceEnrollmentId ?? '') !== (older.faceEnrollmentId ?? '');
           return (
             <Fragment key={scan.id}>
               <ProgressScanHistoryCard

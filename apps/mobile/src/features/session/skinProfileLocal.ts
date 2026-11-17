@@ -9,7 +9,10 @@ export async function loadLocalSkinProfileComplete(userId: string): Promise<bool
   return (await AsyncStorage.getItem(key(userId))) === '1';
 }
 
-export async function saveLocalSkinProfileComplete(userId: string, complete: boolean): Promise<void> {
+export async function saveLocalSkinProfileComplete(
+  userId: string,
+  complete: boolean,
+): Promise<void> {
   if (complete) {
     await AsyncStorage.setItem(key(userId), '1');
   } else {

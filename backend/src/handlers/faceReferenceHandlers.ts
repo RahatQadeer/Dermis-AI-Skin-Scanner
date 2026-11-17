@@ -44,15 +44,8 @@ export async function handleRegisterFaceReference(
   if (!parsed.success) {
     throw new HttpError(400, 'invalid_body');
   }
-  const {
-    embedding,
-    modelVersion,
-    imageBase64,
-    faceBox,
-    replace,
-    addFace,
-    currentFaceEmbedding,
-  } = parsed.data;
+  const { embedding, modelVersion, imageBase64, faceBox, replace, addFace, currentFaceEmbedding } =
+    parsed.data;
   const record = await service.register(
     userId,
     {

@@ -39,12 +39,7 @@ export function RecommendationsScreen() {
   const onBack = useRecommendationsBack(fromRoutine);
 
   return (
-    <Screen
-      scroll
-      padded
-      edges={['top', 'left', 'right', 'bottom']}
-      contentStyle={styles.content}
-    >
+    <Screen scroll padded edges={['top', 'left', 'right', 'bottom']} contentStyle={styles.content}>
       <StatusBar style="dark" />
       <Header title={fromRoutine ? r.titleFromRoutine : r.title} onBack={onBack} />
       <RecommendationsContent

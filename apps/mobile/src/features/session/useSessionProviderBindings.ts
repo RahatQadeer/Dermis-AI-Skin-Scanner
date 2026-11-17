@@ -58,10 +58,7 @@ export function useSessionProviderBindings(
 }
 
 /** Post-auth background syncs: /v1/auth/me identity + /v1/profile completeness. */
-function useSessionSyncEffects(
-  identity: Identity,
-  signOutRef: { current: () => void },
-): void {
+function useSessionSyncEffects(identity: Identity, signOutRef: { current: () => void }): void {
   useSessionMeProfileSync({
     accessToken: identity.accessToken,
     refreshToken: identity.refreshToken,

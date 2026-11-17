@@ -13,7 +13,8 @@ function makeEmbedding(seed: number): number[] {
 }
 
 const FACE_BOX = { xMin: 0.2, yMin: 0.2, width: 0.5, height: 0.5 };
-const REF_JPEG = '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAF/9k=';
+const REF_JPEG =
+  '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAF/9k=';
 
 function enrollInput(embedding: number[], modelVersion: string) {
   return {
@@ -24,7 +25,6 @@ function enrollInput(embedding: number[], modelVersion: string) {
     faceBox: FACE_BOX,
   };
 }
-
 
 test('status is not-enrolled until a reference is registered', async () => {
   const service = createFaceReferenceService(createMemoryFaceReferenceRepository());
@@ -51,8 +51,7 @@ test('registering twice without replace is rejected (one-time enrollment)', asyn
   const service = createFaceReferenceService(createMemoryFaceReferenceRepository());
   await service.register(USER_A, enrollInput(makeEmbedding(1), 'mfn-v1'));
   await assert.rejects(
-    () =>
-      service.register(USER_A, enrollInput(makeEmbedding(9), 'mfn-v1')),
+    () => service.register(USER_A, enrollInput(makeEmbedding(9), 'mfn-v1')),
     (err) => err instanceof HttpError && err.status === 409,
   );
 });
@@ -61,19 +60,13 @@ test('register with replace requires proof when model version is unchanged', asy
   const service = createFaceReferenceService(createMemoryFaceReferenceRepository());
   const first = await service.register(USER_A, enrollInput(makeEmbedding(1), 'mfn-v1'));
   await assert.rejects(
-    () =>
-      service.register(
-        USER_A,
-        enrollInput(makeEmbedding(9), 'mfn-v1'),
-        { replace: true },
-      ),
+    () => service.register(USER_A, enrollInput(makeEmbedding(9), 'mfn-v1'), { replace: true }),
     (err) => err instanceof HttpError && err.code === 'face_replace_reauth_required',
   );
-  const replaced = await service.register(
-    USER_A,
-    enrollInput(makeEmbedding(9), 'mfn-v1'),
-    { replace: true, currentFaceEmbedding: makeEmbedding(1) },
-  );
+  const replaced = await service.register(USER_A, enrollInput(makeEmbedding(9), 'mfn-v1'), {
+    replace: true,
+    currentFaceEmbedding: makeEmbedding(1),
+  });
   assert.deepEqual(replaced.embedding, makeEmbedding(9));
   assert.equal(replaced.registeredAt, first.registeredAt);
 });
@@ -98,11 +91,9 @@ test('references are isolated per user', async () => {
 test('addFace rotates enrollment id without requiring old-face proof', async () => {
   const service = createFaceReferenceService(createMemoryFaceReferenceRepository());
   const first = await service.register(USER_A, enrollInput(makeEmbedding(1), 'mfn-v1'));
-  const second = await service.register(
-    USER_A,
-    enrollInput(makeEmbedding(9), 'mfn-v1'),
-    { addFace: true },
-  );
+  const second = await service.register(USER_A, enrollInput(makeEmbedding(9), 'mfn-v1'), {
+    addFace: true,
+  });
   assert.notEqual(second.enrollmentId, first.enrollmentId);
   assert.deepEqual(second.embedding, makeEmbedding(9));
 });

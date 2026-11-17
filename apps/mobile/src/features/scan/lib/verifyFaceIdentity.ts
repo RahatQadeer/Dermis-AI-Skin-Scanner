@@ -16,8 +16,7 @@ import { writeCachedFaceReference } from './faceReferenceCache';
 import { resolveReference, type ResolvedReference } from './resolveFaceReference';
 
 /** Exact copy when another person attempts a scan. */
-export const FACE_IDENTITY_MISMATCH_MESSAGE =
-  'This face does not match your registered profile.';
+export const FACE_IDENTITY_MISMATCH_MESSAGE = 'This face does not match your registered profile.';
 /** Close match but not confident — lighting / angle / hold still (not a clear impostor). */
 export const FACE_IDENTITY_UNCERTAIN_MESSAGE =
   "Couldn't confirm it's you. Face the camera in bright, even light and try again.";

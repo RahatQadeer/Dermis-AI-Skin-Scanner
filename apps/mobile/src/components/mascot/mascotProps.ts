@@ -32,7 +32,14 @@ export type MascotProps = {
 
 export type ResolvedMascotProps = Omit<
   MascotProps,
-  'character' | 'mood' | 'showBubble' | 'revealOnTap' | 'bubbleOverlay' | 'size' | 'compactBubble' | 'walkOnTap'
+  | 'character'
+  | 'mood'
+  | 'showBubble'
+  | 'revealOnTap'
+  | 'bubbleOverlay'
+  | 'size'
+  | 'compactBubble'
+  | 'walkOnTap'
 > &
   Required<
     Pick<

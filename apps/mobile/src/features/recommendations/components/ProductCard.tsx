@@ -24,10 +24,8 @@ export const ProductCard = memo(function ProductCard({
   onAddToRoutine,
   addingPeriod = null,
 }: ProductCardProps) {
-  const routine = getCopy().screens.routine;
   const chipLabel =
     product.badgeLabel ?? `${concernLabel(product.primaryConcern)} ${String(product.score)}`;
-  const busy = addingPeriod !== null;
 
   return (
     <Card accessibilityRole="summary">
@@ -49,24 +47,38 @@ export const ProductCard = memo(function ProductCard({
             </AppText>
           </View>
           {onAddToRoutine ? (
-            <View style={styles.actions}>
-              <AddChip
-                label={busy && addingPeriod === 'am' ? routine.addActiveBusy : routine.addActiveToAm}
-                disabled={busy}
-                onPress={() => onAddToRoutine('am')}
-              />
-              <AddChip
-                label={busy && addingPeriod === 'pm' ? routine.addActiveBusy : routine.addActiveToPm}
-                disabled={busy}
-                onPress={() => onAddToRoutine('pm')}
-              />
-            </View>
+            <ProductAddActions onAdd={onAddToRoutine} addingPeriod={addingPeriod} />
           ) : null}
         </View>
       </View>
     </Card>
   );
 });
+
+function ProductAddActions({
+  onAdd,
+  addingPeriod,
+}: {
+  onAdd: (period: RoutinePeriod) => void;
+  addingPeriod: RoutinePeriod | null;
+}) {
+  const routine = getCopy().screens.routine;
+  const busy = addingPeriod !== null;
+  return (
+    <View style={styles.actions}>
+      <AddChip
+        label={busy && addingPeriod === 'am' ? routine.addActiveBusy : routine.addActiveToAm}
+        disabled={busy}
+        onPress={() => onAdd('am')}
+      />
+      <AddChip
+        label={busy && addingPeriod === 'pm' ? routine.addActiveBusy : routine.addActiveToPm}
+        disabled={busy}
+        onPress={() => onAdd('pm')}
+      />
+    </View>
+  );
+}
 
 function AddChip({
   label,

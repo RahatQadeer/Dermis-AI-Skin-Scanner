@@ -300,4 +300,3 @@ async function handleProfileRoute(
 
   return json({ error: 'method_not_allowed' }, 405);
 }
-

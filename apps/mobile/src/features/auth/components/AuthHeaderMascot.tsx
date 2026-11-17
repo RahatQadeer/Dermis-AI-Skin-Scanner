@@ -20,7 +20,9 @@ export function AuthHeaderMascot({ tone, bubble }: AuthHeaderMascotProps) {
   const [tipIndex, setTipIndex] = useState(0);
   const [tapped, setTapped] = useState(false);
   const idleMessage =
-    tone === 'idle' && tapped ? (tips[tipIndex % tips.length] ?? bubble) : lineForAuthTone(tone, bubble);
+    tone === 'idle' && tapped
+      ? (tips[tipIndex % tips.length] ?? bubble)
+      : lineForAuthTone(tone, bubble);
 
   return (
     <View style={styles.row}>

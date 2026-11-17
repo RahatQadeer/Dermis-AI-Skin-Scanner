@@ -15,7 +15,8 @@ export const homeCopy = {
   indexDelta: (n: number) => (n >= 0 ? `▲ ${String(n)}` : `▼ ${String(Math.abs(n))}`),
   heroBubble: 'Your latest scan is ready.',
   heroBubbleUp: (n: number) => `Up ${String(n)} vs last scan. Nice work!`,
-  heroBubbleDown: (n: number) => `Down ${String(Math.abs(n))} vs last scan — keep the routine going.`,
+  heroBubbleDown: (n: number) =>
+    `Down ${String(Math.abs(n))} vs last scan — keep the routine going.`,
   heroBubbleFlat: 'Steady vs your last scan.',
   heroBubbleEmpty: "Let's get your baseline!",
   concernBarsHint: 'Each bar is one concern score from this scan (green = better).',

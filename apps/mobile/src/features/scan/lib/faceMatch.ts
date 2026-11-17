@@ -76,8 +76,7 @@ export function decideFaceGate(input: FaceGateInput): FaceGateDecision {
   if (similarity >= input.threshold) {
     return { action: 'allow' };
   }
-  const floor =
-    input.uncertainFloor ?? Math.max(0.45, input.threshold * 0.82);
+  const floor = input.uncertainFloor ?? Math.max(0.45, input.threshold * 0.82);
   if (similarity >= floor) {
     return { action: 'block', reason: 'uncertain' };
   }

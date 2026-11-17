@@ -30,10 +30,7 @@ function b64(bytes: Uint8Array): string {
 }
 
 /** Production-like inject: embedding is a pure function of JPEG bytes + box. */
-async function embedFromBytes(
-  jpegBytes: Uint8Array,
-  box: typeof FACE_BOX,
-): Promise<number[]> {
+async function embedFromBytes(jpegBytes: Uint8Array, box: typeof FACE_BOX): Promise<number[]> {
   return deterministicEmbedFromBytes(jpegBytes, box);
 }
 
@@ -265,8 +262,7 @@ test('missing model / embedder failure is rejected (fail closed)', async () => {
         },
         scanJpeg,
       ),
-    (err: unknown) =>
-      err instanceof HttpError && err.code === 'face_recognition_unavailable',
+    (err: unknown) => err instanceof HttpError && err.code === 'face_recognition_unavailable',
   );
 });
 

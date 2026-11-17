@@ -57,8 +57,7 @@ export function buildProgressSummary(
   const chronological = [...scansNewestFirst].reverse();
   const oldest = chronological[0]!;
   const newest = chronological[chronological.length - 1]!;
-  const previous =
-    chronological.length >= 2 ? chronological[chronological.length - 2]! : null;
+  const previous = chronological.length >= 2 ? chronological[chronological.length - 2]! : null;
 
   return {
     current: newest.indexScore,

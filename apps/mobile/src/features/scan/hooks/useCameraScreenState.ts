@@ -19,9 +19,7 @@ export function useCameraScreenState() {
   const controls = useCameraCaptureControls(cameraRef);
   // Pass consent.ready alone — gate stays locked until consent + enroll are resolved
   // (avoids a 1s flash of the scanner before redirecting to face setup).
-  const enrollGate = useFaceEnrollmentGate(
-    Boolean(consent.ready && consent.faceAnalysisGranted),
-  );
+  const enrollGate = useFaceEnrollmentGate(Boolean(consent.ready && consent.faceAnalysisGranted));
 
   useRetakeMessageEffect(params.retakeMessage, retakeMessage, setRetakeToast, setRetakeMessage);
   useFaceAnalysisConsentRedirect(consent.ready, consent.faceAnalysisGranted, router);

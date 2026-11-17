@@ -25,11 +25,7 @@ function scan(id: string, enrollment: string | null): ProgressScan {
 
 describe('activeEnrollmentScans', () => {
   it('keeps only the newest face series', () => {
-    const rows = [
-      scan('c', 'face-2'),
-      scan('b', 'face-2'),
-      scan('a', 'face-1'),
-    ];
+    const rows = [scan('c', 'face-2'), scan('b', 'face-2'), scan('a', 'face-1')];
     assert.deepEqual(
       activeEnrollmentScans(rows).map((s) => s.id),
       ['c', 'b'],

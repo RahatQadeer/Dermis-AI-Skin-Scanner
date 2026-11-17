@@ -60,14 +60,8 @@ function resolveMessage(key: MessageKey, camera: CameraCopy, enroll: EnrollCopy)
   }
 }
 
-function messageForApiCode(
-  code: string,
-  detail: string | undefined,
-  fallback: string,
-): string {
-  const key = Object.hasOwn(API_CODE_MESSAGE_KEYS, code)
-    ? API_CODE_MESSAGE_KEYS[code]
-    : undefined;
+function messageForApiCode(code: string, detail: string | undefined, fallback: string): string {
+  const key = Object.hasOwn(API_CODE_MESSAGE_KEYS, code) ? API_CODE_MESSAGE_KEYS[code] : undefined;
   if (key) {
     return resolveMessage(key, getCopy().screens.camera, getCopy().screens.faceEnroll);
   }
