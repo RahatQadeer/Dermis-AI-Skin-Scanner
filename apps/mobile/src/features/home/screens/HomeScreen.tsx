@@ -6,16 +6,14 @@ import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { HealthDisclaimer } from '@/src/components/HealthDisclaimer';
 import { Screen } from '@/src/components/layout/Screen';
-import { TAB_BAR_SCROLL_PAD } from '@/src/components/layout/tabBarTypes';
 import { AppText } from '@/src/components/text/AppText';
 import { getCopy } from '@/src/copy';
 import { useScanNavigation } from '@/src/features/consent/hooks/useScanNavigation';
 import { colors, spacing } from '@/src/theme';
 
+import { FaceRegisterPrompt } from '../components/FaceRegisterPrompt';
 import { HomeHeader } from '../components/HomeHeader';
 import { HomeHeroCard } from '../components/HomeHeroCard';
-import { AssistantEntryCard } from '@/src/features/assistant/components/AssistantEntryCard';
-
 import { HomePrioritiesCard } from '../components/HomePrioritiesCard';
 import { HomeQuotaRow } from '../components/HomeQuotaRow';
 import { HomeRoutineCard } from '../components/HomeRoutineCard';
@@ -51,24 +49,34 @@ export function HomeScreen() {
   }
 
   return (
-    <Screen scroll padded edges={['top', 'left', 'right']} contentStyle={styles.content}>
+    <Screen
+      scroll
+      padded
+      tabBarPadding
+      edges={['top', 'left', 'right']}
+      contentStyle={styles.content}
+    >
       <StatusBar style="dark" />
       <HomeHeader
         name={snapshot.displayName.trim() ? snapshot.displayName : null}
         onAvatar={() => router.push('/profile')}
       />
       {snapshot.scan ? (
-        <HomeHeroCard scan={snapshot.scan} onViewReport={() => router.push('/(tabs)/results')} />
+        <HomeHeroCard
+          scan={snapshot.scan}
+          onViewReport={() => router.push('/(report)/results')}
+          onViewRecommendations={() => router.push('/(report)/recommendations')}
+        />
       ) : (
         <HomeHeroEmpty onScan={goScan} />
       )}
-      <HomeScanCta plan={snapshot.quota.plan} onPress={goScan} />
+      {snapshot.scan ? <HomeScanCta plan={snapshot.quota.plan} onPress={goScan} /> : null}
       <HomeQuotaRow quota={snapshot.quota} onUpgrade={() => router.push('/paywall')} />
       <HomeRoutineCard routine={snapshot.routine} onContinue={() => router.push('/routine')} />
-      <AssistantEntryCard />
       <HomeStatCards scan={snapshot.scan} />
       {snapshot.scan ? <HomePrioritiesCard scan={snapshot.scan} /> : null}
       <HealthDisclaimer compact />
+      <FaceRegisterPrompt />
     </Screen>
   );
 }
@@ -76,7 +84,6 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   content: {
     gap: spacing.lg,
-    paddingBottom: TAB_BAR_SCROLL_PAD,
   },
   loading: {
     flex: 1,

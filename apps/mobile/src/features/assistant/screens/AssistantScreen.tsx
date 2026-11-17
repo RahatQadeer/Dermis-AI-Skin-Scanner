@@ -28,7 +28,7 @@ export function AssistantScreen() {
     (!snapshot.loading && !isElementUnlocked(snapshot.quota.plan, 'aiAssistant'));
 
   return (
-    <Screen padded edges={['top', 'left', 'right', 'bottom']}>
+    <Screen padded tabBarPadding edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

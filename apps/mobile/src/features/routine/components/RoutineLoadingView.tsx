@@ -11,7 +11,13 @@ export function RoutineLoadingView() {
   return (
     <View style={styles.wrap} accessibilityLabel={r.loadingA11y} accessibilityRole="progressbar">
       <View style={styles.card}>
-        <Mascot mood="idle" size={72} showBubble={false} />
+        <Mascot
+          mood="idle"
+          size={72}
+          lines={getCopy().mascot.dermis.tipLines}
+          revealOnTap
+          compactBubble
+        />
         <ActivityIndicator color={colors.pinkBright} size="large" />
         <AppText variant="caption" color={colors.mute} align="center">
           {r.loadingA11y}

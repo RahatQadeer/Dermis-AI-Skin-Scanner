@@ -7,7 +7,7 @@ test('all six moods map to a motion kind', () => {
   assert.equal(MASCOT_MOODS.length, 6);
   for (const mood of MASCOT_MOODS) {
     const kind = defaultMotionForMood(mood);
-    assert.ok(['bob', 'blink', 'hop', 'sway', 'none'].includes(kind));
+    assert.ok(['bob', 'blink', 'hop', 'sway', 'walk', 'none'].includes(kind));
   }
 });
 
@@ -17,4 +17,9 @@ test('surprised uses hop', () => {
 
 test('wink uses blink', () => {
   assert.equal(defaultMotionForMood('wink'), 'blink');
+});
+
+test('happy and idle bob by default', () => {
+  assert.equal(defaultMotionForMood('happy'), 'bob');
+  assert.equal(defaultMotionForMood('idle'), 'bob');
 });

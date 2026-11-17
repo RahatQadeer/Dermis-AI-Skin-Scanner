@@ -24,7 +24,7 @@ export const resultsCopy = {
   doneCta: 'Back to home',
   compareCta: 'Compare over time',
   updateRoutineCta: 'Update routine',
-  recommendationsCta: 'Product ideas',
+  recommendationsCta: 'View recommendations',
   pdfExportCta: 'Export PDF',
   pdfUnlockCta: 'Unlock PDF with Pro',
   pdfDocumentTitle: 'Dermis skin report',

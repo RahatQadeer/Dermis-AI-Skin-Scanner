@@ -2,10 +2,11 @@ import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { LockedOverlay } from '@/src/components/LockedOverlay';
-import { TAB_BAR_SCROLL_PAD } from '@/src/components/layout/tabBarTypes';
+import { useTabBarScrollPad } from '@/src/components/layout/useTabBarScrollPad';
 import { AppText } from '@/src/components/text/AppText';
 import { getCopy } from '@/src/copy';
 import { colors, spacing } from '@/src/theme';
+import { useResponsive } from '@/src/theme/useResponsive';
 
 import { EditButton } from '../components/EditButton';
 import { RoutineBody } from '../components/RoutineBody';
@@ -20,10 +21,19 @@ export function RoutineScreenBody(props: {
 }) {
   const router = useRouter();
   const nav = getCopy().nav;
+  const tabPad = useTabBarScrollPad();
+  const { short, narrow } = useResponsive();
 
   return (
     <ScrollView
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[
+        styles.content,
+        {
+          paddingHorizontal: narrow ? spacing.md : spacing.lg,
+          paddingTop: short ? spacing.xs : spacing.sm,
+          paddingBottom: tabPad,
+        },
+      ]}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
       bounces={false}
@@ -54,9 +64,6 @@ export function RoutineScreenBody(props: {
 const styles = StyleSheet.create({
   content: {
     gap: spacing.lg,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    paddingBottom: TAB_BAR_SCROLL_PAD,
   },
   titleRow: {
     flexDirection: 'row',

@@ -42,7 +42,13 @@ export function PaywallHero() {
   const p = getCopy().paywall;
   return (
     <View style={styles.hero}>
-      <Mascot mood="happy" size={120} showBubble={false} />
+      <Mascot
+        mood="happy"
+        size={120}
+        lines={getCopy().mascot.dermis.tipLines}
+        revealOnTap
+        compactBubble
+      />
       <AppText variant="display" color={colors.surface} align="center">
         {p.headline}
       </AppText>

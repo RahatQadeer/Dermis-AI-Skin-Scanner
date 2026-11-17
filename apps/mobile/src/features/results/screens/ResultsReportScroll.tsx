@@ -4,7 +4,6 @@ import { StyleSheet } from 'react-native';
 
 import { Header } from '@/src/components/layout/Header';
 import { Screen } from '@/src/components/layout/Screen';
-import { TAB_BAR_SCROLL_PAD } from '@/src/components/layout/tabBarTypes';
 import { ToastHost } from '@/src/components/layout/ToastHost';
 import { getCopy } from '@/src/copy';
 import { colors, spacing } from '@/src/theme';
@@ -39,7 +38,7 @@ export function ResultsReportScroll(props: ResultsReportScrollProps) {
     <Screen
       scroll
       padded
-      edges={['top', 'left', 'right']}
+      edges={['top', 'left', 'right', 'bottom']}
       style={styles.screen}
       contentStyle={styles.content}
     >
@@ -61,8 +60,9 @@ export function ResultsReportScroll(props: ResultsReportScrollProps) {
         zoneId={props.zoneId}
         onSelectZone={props.onSelectZone}
         goPaywall={props.goPaywall}
-        onCompare={() => props.router.push('/(tabs)/progress')}
-        onUpdateRoutine={() => props.router.push('/(tabs)/routine')}
+        onCompare={() => props.router.push('/progress')}
+        onUpdateRoutine={() => props.router.push('/routine')}
+        onRecommendations={() => props.router.push('/(report)/recommendations')}
       />
       <ToastHost
         message={props.pdf.toastMessage}
@@ -75,5 +75,5 @@ export function ResultsReportScroll(props: ResultsReportScrollProps) {
 
 const styles = StyleSheet.create({
   screen: { backgroundColor: colors.resultsCanvas },
-  content: { gap: spacing.xl, paddingBottom: TAB_BAR_SCROLL_PAD + spacing.lg },
+  content: { gap: spacing.xl },
 });

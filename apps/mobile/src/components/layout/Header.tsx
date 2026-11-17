@@ -12,17 +12,19 @@ export type HeaderProps = {
   right?: ReactNode;
   /** Hide back even if onBack is set (e.g. root of stack). */
   showBack?: boolean;
+  /** Tighter vertical size for screens that need more content near the top. */
+  compact?: boolean;
 };
 
-export function Header({ title, onBack, right, showBack }: HeaderProps) {
+export function Header({ title, onBack, right, showBack, compact = false }: HeaderProps) {
   const nav = getCopy().nav;
   const canBack = Boolean(onBack) && showBack !== false;
 
   return (
-    <View style={styles.row} accessibilityRole="header">
+    <View style={[styles.row, compact ? styles.rowCompact : null]} accessibilityRole="header">
       <View style={styles.side}>
         {canBack ? (
-          <IconButton accessibilityLabel={nav.backA11y} onPress={onBack} size={44}>
+          <IconButton accessibilityLabel={nav.backA11y} onPress={onBack} size={compact ? 40 : 44}>
             <AppText variant="headline" color={colors.ink}>
               {nav.backGlyph}
             </AppText>
@@ -50,6 +52,10 @@ const styles = StyleSheet.create({
     minHeight: 56,
     gap: spacing.sm,
     paddingVertical: spacing.xs,
+  },
+  rowCompact: {
+    minHeight: 44,
+    paddingVertical: 0,
   },
   side: {
     minWidth: 48,

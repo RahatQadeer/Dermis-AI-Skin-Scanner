@@ -11,6 +11,7 @@ const PATH_TAB_RULES: { fragment: string; tab: TabId }[] = [
   { fragment: '/analysing', tab: 'scan' },
   { fragment: '/ai-consent', tab: 'scan' },
   { fragment: '/face-enroll', tab: 'scan' },
+  { fragment: '/face-setup', tab: 'scan' },
   { fragment: '/privacy', tab: 'scan' },
   // Secondary surfaces keep a parent tab highlighted.
   { fragment: '/results', tab: 'home' },

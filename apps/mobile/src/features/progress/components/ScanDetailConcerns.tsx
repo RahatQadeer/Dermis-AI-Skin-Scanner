@@ -37,7 +37,7 @@ export function ScanDetailConcerns({ scan }: ScanDetailConcernsProps) {
 
 const styles = StyleSheet.create({
   block: {
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   title: {
     fontFamily: fontFamilies.headingBold,
@@ -45,14 +45,14 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     borderRadius: radii.xxl,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     borderWidth: 1,
     borderColor: colors.border,
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
   row: {
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   rowDivider: {
     borderBottomWidth: StyleSheet.hairlineWidth,

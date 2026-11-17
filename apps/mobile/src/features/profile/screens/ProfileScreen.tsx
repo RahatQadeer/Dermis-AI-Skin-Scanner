@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { StyleSheet } from 'react-native';
 
 import { Screen } from '@/src/components/layout/Screen';
-import { TAB_BAR_SCROLL_PAD } from '@/src/components/layout/tabBarTypes';
 import { ToastHost } from '@/src/components/layout/ToastHost';
 import { useHomeSnapshot } from '@/src/features/home/hooks/useHomeSnapshot';
 import { resolveAccountDisplayName } from '@/src/features/session/accountDisplayName';
@@ -29,7 +28,13 @@ export function ProfileScreen() {
   const canEdit = canEditSkin(skin.profile);
 
   return (
-    <Screen scroll padded edges={['top', 'left', 'right']} contentStyle={styles.content}>
+    <Screen
+      scroll
+      padded
+      tabBarPadding
+      edges={['top', 'left', 'right']}
+      contentStyle={styles.content}
+    >
       <StatusBar style="dark" />
       <ProfileBody
         displayName={
@@ -113,6 +118,5 @@ function canEditSkin(profile: ProfileDto | null): boolean {
 const styles = StyleSheet.create({
   content: {
     gap: spacing.lg,
-    paddingBottom: TAB_BAR_SCROLL_PAD,
   },
 });

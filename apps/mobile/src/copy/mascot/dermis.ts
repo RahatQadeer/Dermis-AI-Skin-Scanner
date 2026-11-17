@@ -10,6 +10,13 @@ export const dermisMascotCopy = {
     'Your scan is analysed securely when you choose to scan.',
     'Six concerns, scored from 0 to 100.',
   ],
+  /** Short tips for dense screens (Home, Routine, Scan detail, etc.). */
+  tipLines: [
+    'Baa! Tap me anytime for a tip.',
+    'Bright, even light makes the best scans.',
+    'Small daily steps beat one big change.',
+    'Scores are wellness estimates — not a diagnosis.',
+  ],
   quizPatience: 'Baa! Take your time.',
   cameraPrompt: 'Face in the oval, please!',
   countdownSurprised: 'Hold still…',

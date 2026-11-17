@@ -5,7 +5,6 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { LockedOverlay } from '@/src/components/LockedOverlay';
 import { Screen } from '@/src/components/layout/Screen';
-import { TAB_BAR_SCROLL_PAD } from '@/src/components/layout/tabBarTypes';
 import { AppText } from '@/src/components/text/AppText';
 import { getCopy } from '@/src/copy';
 import { useHomeSnapshot } from '@/src/features/home/hooks/useHomeSnapshot';
@@ -32,7 +31,13 @@ export function ProgressScreen() {
   );
 
   return (
-    <Screen scroll padded edges={['top', 'left', 'right']} contentStyle={styles.content}>
+    <Screen
+      scroll
+      padded
+      tabBarPadding
+      edges={['top', 'left', 'right']}
+      contentStyle={styles.content}
+    >
       <StatusBar style="dark" />
       <View style={styles.titleRow}>
         <AppText variant="title" color={colors.ink}>
@@ -66,7 +71,6 @@ export function ProgressScreen() {
 const styles = StyleSheet.create({
   content: {
     gap: spacing.lg,
-    paddingBottom: TAB_BAR_SCROLL_PAD,
   },
   titleRow: {
     flexDirection: 'row',

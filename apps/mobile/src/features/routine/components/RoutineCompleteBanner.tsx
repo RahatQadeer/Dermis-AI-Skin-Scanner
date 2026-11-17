@@ -1,9 +1,8 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PartyConfetti } from '@/src/components/celebration/PartyConfetti';
-import { TAB_BAR_SCROLL_PAD } from '@/src/components/layout/tabBarTypes';
+import { useTabBarFloatingOffset } from '@/src/components/layout/useTabBarScrollPad';
 import { Mascot } from '@/src/components/mascot/Mascot';
 import { AppText } from '@/src/components/text/AppText';
 import { getCopy } from '@/src/copy';
@@ -22,7 +21,7 @@ function CompletePill({ message, onDismiss }: { message: string; onDismiss: () =
   return (
     <View style={styles.pill} accessibilityRole="alert">
       <View style={styles.sheep}>
-        <Mascot character="dermis" mood="happy" size={36} showBubble={false} />
+        <Mascot character="dermis" mood="happy" size={36} showBubble={false} walkOnTap={false} />
       </View>
       <AppText variant="bodyStrong" color={colors.surface} style={styles.message}>
         {message}
@@ -49,9 +48,8 @@ export function RoutineCompleteBanner({
   onDismiss,
   durationMs = 3200,
 }: RoutineCompleteBannerProps) {
-  const insets = useSafeAreaInsets();
   const r = getCopy().screens.routine;
-  const bottom = TAB_BAR_SCROLL_PAD + (insets.bottom > 0 ? spacing.sm : spacing.md);
+  const bottom = useTabBarFloatingOffset();
   const animatedStyle = useFloatingBannerMotion({
     visible,
     durationMs,

@@ -1,4 +1,4 @@
-import type { ConcernId, ZoneId } from '@dermis/domain';
+import { ZONE_IDS, type ConcernId, type ZoneId } from '@dermis/domain';
 import { resolveEffectivePlan, type Plan } from '@dermis/domain/server';
 
 import { useHomeSnapshot } from '@/src/features/home/hooks/useHomeSnapshot';
@@ -18,6 +18,63 @@ export type ResultsReportState = {
   loading: boolean;
 };
 
+type HomeSnapshotState = ReturnType<typeof useHomeSnapshot>;
+
+const EMPTY_REPORT_STATE: ResultsReportState = {
+  report: null,
+  previous: null,
+  currentScan: null,
+  loading: false,
+};
+
+/** No scan from capture/history: fall back to Home snapshot, then mock (offline demo only). */
+function resolveWithoutScan(
+  snapshot: HomeSnapshotState,
+  liveSession: boolean,
+  mock: ResultsReport,
+): ResultsReportState {
+  // Fall back to the Home snapshot so "View report" still opens when history is slow.
+  if (snapshot.scan) {
+    return {
+      ...EMPTY_REPORT_STATE,
+      report: {
+        plan: resolveEffectivePlan(snapshot.quota.plan as Plan),
+        scan: {
+          indexScore: snapshot.scan.indexScore,
+          concernScores: snapshot.scan.concernScores,
+          priorities: snapshot.scan.priorities,
+        },
+        zoneScores: emptyZoneScores(),
+      },
+    };
+  }
+  if (liveSession) {
+    return EMPTY_REPORT_STATE;
+  }
+  return { ...EMPTY_REPORT_STATE, report: mock };
+}
+
+function buildScanReport(
+  currentScan: ScanDto,
+  history: ScanDto[],
+  snapshot: HomeSnapshotState,
+): ResultsReportState {
+  return {
+    loading: false,
+    currentScan,
+    previous: pickPreviousScan(history, currentScan.id),
+    report: {
+      plan: resolveEffectivePlan(snapshot.quota.plan as Plan),
+      scan: {
+        indexScore: currentScan.indexScore,
+        concernScores: currentScan.concerns as Record<ConcernId, number>,
+        priorities: snapshot.scan?.priorities ?? [],
+      },
+      zoneScores: currentScan.zones as Record<ZoneId, number>,
+    },
+  };
+}
+
 export function useResultsReport(): ResultsReportState {
   const mock = useResultsMockReport();
   const { lastScan } = useScanCapture();
@@ -33,29 +90,16 @@ export function useResultsReport(): ResultsReportState {
 
   const currentScan = lastScan ?? history[0] ?? null;
 
-  if (!currentScan) {
-    if (liveSession) {
-      return { report: null, previous: null, currentScan: null, loading: historyLoading };
-    }
-    return { report: mock, previous: null, currentScan: null, loading: false };
+  // Home already shows a scan — never leave View report on an empty state while loading.
+  if (!currentScan && liveSession && historyLoading) {
+    return { ...EMPTY_REPORT_STATE, loading: true };
   }
+  if (!currentScan) {
+    return resolveWithoutScan(snapshot, liveSession, mock);
+  }
+  return buildScanReport(currentScan, history, snapshot);
+}
 
-  const previous = pickPreviousScan(history, currentScan.id);
-  const zoneScores = currentScan.zones as Record<ZoneId, number>;
-  const concernScores = currentScan.concerns as Record<ConcernId, number>;
-
-  return {
-    loading: false,
-    currentScan,
-    previous,
-    report: {
-      plan: resolveEffectivePlan(snapshot.quota.plan as Plan),
-      scan: {
-        indexScore: currentScan.indexScore,
-        concernScores,
-        priorities: snapshot.scan?.priorities ?? [],
-      },
-      zoneScores,
-    },
-  };
+function emptyZoneScores(): Record<ZoneId, number> {
+  return Object.fromEntries(ZONE_IDS.map((id) => [id, 0])) as Record<ZoneId, number>;
 }

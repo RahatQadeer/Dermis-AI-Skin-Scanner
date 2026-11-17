@@ -5,7 +5,10 @@ export type MascotCharacter = (typeof MASCOT_CHARACTERS)[number];
 export const MASCOT_MOODS = ['idle', 'happy', 'wink', 'wow', 'think', 'surprised'] as const;
 export type MascotMood = (typeof MASCOT_MOODS)[number];
 
-export type MascotMotionKind = 'bob' | 'blink' | 'hop' | 'sway' | 'none';
+export type MascotMotionKind = 'bob' | 'blink' | 'hop' | 'sway' | 'walk' | 'none';
+
+/** How long the tap-triggered walk lasts before returning to idle motion. */
+export const MASCOT_WALK_ON_TAP_MS = 2200;
 
 export function defaultMotionForMood(mood: MascotMood): MascotMotionKind {
   switch (mood) {

@@ -44,7 +44,44 @@ function runBob(values: MotionValues) {
   );
 }
 
+/** Side-to-side stride + bounce + lean — reads as a gentle walk in place. */
+function runWalk(values: MotionValues) {
+  const step = 380;
+  values.translateX.value = withRepeat(
+    withSequence(
+      withTiming(9, { duration: step, easing: EASE }),
+      withTiming(-9, { duration: step * 2, easing: EASE }),
+      withTiming(0, { duration: step, easing: EASE }),
+    ),
+    -1,
+    false,
+  );
+  values.translateY.value = withRepeat(
+    withSequence(
+      withTiming(-4, { duration: step / 2, easing: EASE }),
+      withTiming(0, { duration: step / 2, easing: EASE }),
+      withTiming(-4, { duration: step / 2, easing: EASE }),
+      withTiming(0, { duration: step / 2, easing: EASE }),
+    ),
+    -1,
+    false,
+  );
+  values.rotate.value = withRepeat(
+    withSequence(
+      withTiming(5, { duration: step, easing: EASE }),
+      withTiming(-5, { duration: step * 2, easing: EASE }),
+      withTiming(0, { duration: step, easing: EASE }),
+    ),
+    -1,
+    false,
+  );
+}
+
 function runMotion(kind: MascotMotionKind, values: MotionValues) {
+  if (kind === 'walk') {
+    runWalk(values);
+    return;
+  }
   if (kind === 'sway') {
     values.translateX.value = withRepeat(
       withSequence(

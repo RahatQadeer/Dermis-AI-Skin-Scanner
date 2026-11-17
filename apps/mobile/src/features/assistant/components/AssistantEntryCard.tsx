@@ -17,7 +17,7 @@ export function AssistantEntryCard() {
       onPress={() => router.push('/assistant')}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
     >
-      <Mascot mood="happy" size={44} showBubble={false} />
+      <Mascot mood="happy" size={44} showBubble={false} walkOnTap={false} />
       <View style={styles.text}>
         <AppText variant="bodyStrong">{a.openCta}</AppText>
         <AppText variant="caption" color={colors.muteBody}>
