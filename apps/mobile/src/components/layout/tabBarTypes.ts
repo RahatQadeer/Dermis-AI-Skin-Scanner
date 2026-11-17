@@ -1,4 +1,4 @@
-import { spacing } from '@/src/theme';
+import { spacing } from '@/src/theme/spacing';
 
 export const TAB_IDS = ['home', 'progress', 'scan', 'routine', 'profile'] as const;
 export type TabId = (typeof TAB_IDS)[number];

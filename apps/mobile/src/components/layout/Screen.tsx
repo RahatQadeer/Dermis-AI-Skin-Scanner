@@ -67,6 +67,7 @@ export function Screen({
             alwaysBounceVertical={false}
             alwaysBounceHorizontal={false}
             overScrollMode="never"
+            removeClippedSubviews
           >
             {children}
           </ScrollView>
