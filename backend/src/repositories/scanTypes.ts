@@ -3,6 +3,8 @@ import type { ConcernScores, ConcernWeights, ZoneScores } from '@dermis/domain/s
 export type ScanRecordRow = {
   id: string;
   userId: string;
+  /** Face series that produced this scan (Progress "New face" dividers). */
+  faceEnrollmentId: string | null;
   takenAt: string;
   indexScore: number;
   concerns: ConcernScores;

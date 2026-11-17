@@ -9,6 +9,7 @@ import type {
 } from './accountTypes';
 import type { ConsentRepository } from './consentTypes';
 import type { EntitlementRepository } from './entitlementTypes';
+import type { FaceReferenceRepository } from './faceReferenceTypes';
 import type { ProfileRepository } from './profileTypes';
 import type { QuotaRepository } from './quotaTypes';
 import type { RoutineRepository } from './routineTypes';
@@ -21,6 +22,7 @@ export type MemoryAccountDeps = {
   scans: ScanRepository;
   routine: RoutineRepository;
   consents: ConsentRepository;
+  faceReferences?: FaceReferenceRepository;
   /** Normalized email → userId for public deletion lookup. */
   emailIndex: Map<string, string>;
 };
@@ -118,6 +120,7 @@ async function purgeUserData(deps: MemoryAccountDeps, userId: string): Promise<b
   await deps.scans.deleteAllForUser(userId);
   await deps.routine.deleteAllForUser(userId);
   await deps.consents.deleteAllForUser(userId);
+  await deps.faceReferences?.deleteByUserId(userId);
   await deps.entitlements.deleteByUserId?.(userId);
   await deps.quota.deleteByUserId?.(userId);
   await deps.profiles.deleteByUserId(userId);

@@ -12,4 +12,6 @@ export type ProgressScan = {
   scanNumber: number;
   indexScore: number;
   concernScores: Record<ConcernId, number>;
+  /** Face series — changes when the user adds a new face. */
+  faceEnrollmentId: string | null;
 };

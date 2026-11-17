@@ -44,6 +44,7 @@ async function build() {
   ] as const) {
     await scans.insert({
       userId,
+      faceEnrollmentId: null,
       takenAt: '2026-10-29T08:00:00.000Z',
       indexScore: score,
       concerns,

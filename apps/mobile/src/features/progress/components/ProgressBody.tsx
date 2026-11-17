@@ -4,6 +4,7 @@ import { AppText } from '@/src/components/text/AppText';
 import { getCopy } from '@/src/copy';
 import { colors, spacing } from '@/src/theme';
 
+import { activeEnrollmentScans } from '../lib/activeEnrollmentScans';
 import { buildProgressSummary } from '../lib/buildProgressSummary';
 import { formatShortDate } from '../lib/formatShortDate';
 import { windowDayCount } from '../lib/filterScansByWindow';
@@ -23,7 +24,8 @@ export type ProgressBodyProps = {
 };
 
 export function ProgressBody({ window, scans, loadError = null, onRetry }: ProgressBodyProps) {
-  const summary = buildProgressSummary(scans);
+  const activeScans = activeEnrollmentScans(scans);
+  const summary = buildProgressSummary(activeScans);
   const p = getCopy().screens.progress;
 
   if (!summary || scans.length === 0) {
@@ -57,11 +59,11 @@ export function ProgressBody({ window, scans, loadError = null, onRetry }: Progr
           {p.singleScanHint}
         </AppText>
       )}
-      {scans.length >= 2 ? (
+      {activeScans.length >= 2 ? (
         <ProgressBeforeAfter
           baselineDate={formatShortDate(summary.startDate)}
           baselineScore={summary.baseline}
-          latestDate={formatShortDate(scans[0]!.capturedAt)}
+          latestDate={formatShortDate(activeScans[0]!.capturedAt)}
           latestScore={summary.current}
         />
       ) : null}

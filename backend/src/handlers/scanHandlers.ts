@@ -48,6 +48,7 @@ function toScanDto(scan: ScanRecordRow) {
   return {
     id: scan.id,
     userId: scan.userId,
+    faceEnrollmentId: scan.faceEnrollmentId,
     takenAt: scan.takenAt,
     indexScore: scan.indexScore,
     concerns: scan.concerns,
