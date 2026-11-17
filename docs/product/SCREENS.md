@@ -25,11 +25,11 @@
 | 8   | Home                        | `home`       | `/(tabs)/home`                   | Yes     | Light      | `scan` / home feature TBD |
 | 9   | Camera scan                 | `scan`       | `/(scan)/camera`                 | No      | Dark       | `scan`                    |
 | 10  | Analysing                   | `analyzing`  | `/(scan)/analysing`              | No      | Dark       | `scan`                    |
-| 11  | Results & zone map          | `results`    | `/(tabs)/results`                | Yes     | Light      | `results`                 |
+| 11  | Results & zone map          | `results`    | `/(report)/results`              | No      | Light      | `results`                 |
 | 12  | Routine                     | `routine`    | `/(tabs)/routine`                | Yes     | Light      | `routine`                 |
 | 13  | Progress                    | `progress`   | `/(tabs)/progress`               | Yes     | Light      | `progress`                |
 | 14  | Scan detail                 | `scanDetail` | `/(tabs)/progress/[scanId]`      | Yes     | Light      | `progress`                |
-| 15  | Recommendations             | `products`   | `/(tabs)/recommendations`        | Yes     | Light      | `recommendations`         |
+| 15  | Recommendations             | `products`   | `/(report)/recommendations`      | No      | Light      | `recommendations`         |
 | 16  | Profile                     | `profile`    | `/(tabs)/profile`                | Yes     | Light      | `profile`                 |
 
 **Tab bar (main):** Home, Progress, **centre scan** (pink sheep), Routine, Profile — floating pill; Results/Recommendations via in-app links.
