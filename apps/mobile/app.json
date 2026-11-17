@@ -24,6 +24,7 @@
       }
     },
     "android": {
+      "package": "com.righttail.dermis",
       "adaptiveIcon": {
         "backgroundColor": "#E6EEDF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

@@ -15,6 +15,7 @@
     "preview": {
       "distribution": "internal",
       "autoIncrement": true,
+      "environment": "preview",
       "env": {
         "EXPO_PUBLIC_BILLING_MODE": "open",
         "EXPO_PUBLIC_UNLOCK_ALL_FEATURES": "1"
