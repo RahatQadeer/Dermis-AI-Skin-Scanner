@@ -21,15 +21,15 @@ test('isSameIdentity applies the threshold', () => {
   assert.equal(isSameIdentity([1, 0, 0], [0, 1, 0], 0.6), false);
 });
 
-test('decideFaceGate allows everything when the gate is disabled', () => {
+test('decideFaceGate fails closed when the gate is disabled', () => {
   const d = decideFaceGate({
     enabled: false,
     hasReference: true,
-    currentEmbedding: null,
-    referenceEmbedding: null,
-    threshold: 0.6,
+    currentEmbedding: [1, 0],
+    referenceEmbedding: [1, 0],
+    threshold: 0.7,
   });
-  assert.deepEqual(d, { action: 'allow' });
+  assert.deepEqual(d, { action: 'block', reason: 'no_embedding' });
 });
 
 test('decideFaceGate requires dedicated enrollment when there is no reference', () => {
@@ -38,7 +38,7 @@ test('decideFaceGate requires dedicated enrollment when there is no reference', 
     hasReference: false,
     currentEmbedding: [0.1, 0.2],
     referenceEmbedding: null,
-    threshold: 0.6,
+    threshold: 0.7,
   });
   assert.deepEqual(d, { action: 'need_enroll' });
 });
@@ -49,9 +49,25 @@ test('decideFaceGate blocks a mismatched face', () => {
     hasReference: true,
     currentEmbedding: [1, 0, 0],
     referenceEmbedding: [0, 1, 0],
-    threshold: 0.6,
+    threshold: 0.7,
   });
   assert.deepEqual(d, { action: 'block', reason: 'mismatch' });
+});
+
+test('decideFaceGate asks for a clearer retake in the uncertain band', () => {
+  // Cosine ≈ 0.65 — under 0.70 pass, above 0.57 soft floor.
+  const d = decideFaceGate({
+    enabled: true,
+    hasReference: true,
+    currentEmbedding: [1, 0, 0],
+    referenceEmbedding: [0.65, Math.sqrt(1 - 0.65 * 0.65), 0],
+    threshold: 0.7,
+    uncertainFloor: 0.57,
+  });
+  assert.equal(d.action, 'block');
+  if (d.action === 'block') {
+    assert.equal(d.reason, 'uncertain');
+  }
 });
 
 test('decideFaceGate fails closed when no embedding is available for a known user', () => {
@@ -60,7 +76,7 @@ test('decideFaceGate fails closed when no embedding is available for a known use
     hasReference: true,
     currentEmbedding: null,
     referenceEmbedding: [0, 1, 0],
-    threshold: 0.6,
+    threshold: 0.7,
   });
   assert.deepEqual(d, { action: 'block', reason: 'no_embedding' });
 });
@@ -71,7 +87,7 @@ test('decideFaceGate allows a matching face', () => {
     hasReference: true,
     currentEmbedding: [0.9, 0.1, 0],
     referenceEmbedding: [0.9, 0.1, 0],
-    threshold: 0.6,
+    threshold: 0.7,
   });
   assert.deepEqual(d, { action: 'allow' });
 });

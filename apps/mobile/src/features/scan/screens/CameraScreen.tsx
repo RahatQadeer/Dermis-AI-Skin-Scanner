@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { IconButton } from '@/src/components/IconButton';
 import { Screen } from '@/src/components/layout/Screen';
@@ -26,6 +26,8 @@ export function CameraScreen() {
     if (isFaceIdentityEnabled()) void preloadFaceEmbedder();
   }, []);
 
+  const prompt = cameraPrompt(c, state);
+
   return (
     <Screen
       padded
@@ -34,29 +36,28 @@ export function CameraScreen() {
       contentStyle={styles.content}
     >
       <StatusBar style="light" />
-      <CameraHeader
-        label={c.frontViewLabel}
-        onBack={
-          state.router.canGoBack()
-            ? () => state.router.back()
-            : () => state.router.replace('/(tabs)/home')
-        }
-      />
-      <IdentityHint copy={c} />
-      <CameraStage
-        capture={state.capture}
-        cameraRef={state.cameraRef}
-        flashing={state.flashing || state.capture.capturing}
-        afterFlash={state.afterFlash}
-        faceLocked={state.liveQuality.ready || state.countdown.active}
-        countdownSeconds={state.countdown.secondsLeft}
-      />
-      <ScanQualityChips liveIssue={state.liveQuality.issue} ready={state.liveQuality.ready} />
+      <CameraHeader label={c.frontViewLabel} onBack={state.goBack} />
+      {state.cameraAllowed ? (
+        <CameraStage
+          capture={state.capture}
+          cameraRef={state.cameraRef}
+          faceLocked={state.capture.capturing}
+          countdownSeconds={0}
+        />
+      ) : (
+        <View style={styles.gate} accessibilityLabel={c.liveDetectorLoading}>
+          <ActivityIndicator color={colors.pinkBright} />
+          <AppText variant="body" color={colors.surface} align="center">
+            {c.liveDetectorLoading}
+          </AppText>
+        </View>
+      )}
+      <ScanQualityChips liveIssue={state.liveQuality.issue} ready={state.captureReady} />
       <CameraBottomBar
-        prompt={cameraPrompt(c, state)}
+        prompt={prompt}
         onShutter={state.shutter}
         busy={state.busy}
-        ready={state.liveQuality.ready}
+        ready={state.captureReady}
       />
       <ToastHost
         message={state.errorToast ?? ''}
@@ -69,27 +70,16 @@ export function CameraScreen() {
   );
 }
 
-function IdentityHint({ copy }: { copy: ReturnType<typeof getCopy>['screens']['camera'] }) {
-  return isFaceIdentityEnabled() ? (
-    <AppText variant="caption" color={colors.pinkBright} align="center">
-      {copy.identityOnHint}
-    </AppText>
-  ) : (
-    <AppText variant="caption" color={colors.mute} align="center">
-      {copy.framingOnlyHint}
-    </AppText>
-  );
-}
-
 function cameraPrompt(
   c: ReturnType<typeof getCopy>['screens']['camera'],
   state: ReturnType<typeof useCameraScreenState>,
 ): string {
-  if (state.countdown.active) {
-    return state.countdown.secondsLeft === 1 ? c.faceLocked : c.faceGetReady;
+  if (!state.cameraAllowed) return c.liveDetectorLoading;
+  if (state.capture.capturing || state.statusMessage) {
+    return state.statusMessage ?? c.capturing;
   }
-  if (state.liveQuality.ready) return c.liveReady;
   if (state.liveQuality.issue) return messageForLiveIssue(state.liveQuality.issue);
+  if (state.captureReady) return c.statusReady;
   return c.tip;
 }
 
@@ -124,9 +114,9 @@ function CameraBottomBar({
   return (
     <View style={styles.bottom}>
       <View style={styles.mascot}>
-        <Mascot mood="happy" size={48} showBubble={false} />
+        <Mascot mood="happy" size={48} showBubble={false} walkOnTap={false} />
         <View style={styles.bubble}>
-          <SpeechBubble message={prompt} tail="left" compact />
+          <SpeechBubble message={prompt} tail="left" />
         </View>
       </View>
       <ScanShutterButton onPress={onShutter} disabled={busy} ready={ready} />
@@ -142,11 +132,20 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: spacing.md,
   },
+  gate: {
+    flex: 1,
+    minHeight: 360,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     minHeight: 48,
+    zIndex: 5,
   },
   headerLabel: {
     flex: 1,
@@ -166,6 +165,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
+    overflow: 'visible',
+    zIndex: 2,
   },
   bubble: {
     flex: 1,

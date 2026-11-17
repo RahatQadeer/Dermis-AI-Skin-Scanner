@@ -24,6 +24,7 @@ async function createScanWithSameKeyRetry(pending: PendingScanCapture) {
     idempotencyKey: pending.idempotencyKey,
     imageBase64: pending.imageBase64,
     contentType: pending.contentType,
+    faceIdentity: pending.faceIdentity,
   };
   try {
     return await createScan(input);

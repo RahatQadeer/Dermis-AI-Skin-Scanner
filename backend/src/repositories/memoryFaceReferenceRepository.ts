@@ -1,4 +1,10 @@
-import type { FaceReferenceRecord, FaceReferenceRepository } from './faceReferenceTypes';
+import { randomUUID } from 'node:crypto';
+
+import type {
+  FaceReferenceRecord,
+  FaceReferenceRepository,
+  FaceReferenceWriteInput,
+} from './faceReferenceTypes';
 
 /** In-memory face reference store (tests + memory backend). */
 export function createMemoryFaceReferenceRepository(): FaceReferenceRepository {
@@ -8,14 +14,17 @@ export function createMemoryFaceReferenceRepository(): FaceReferenceRepository {
     async findByUserId(userId) {
       return rows.get(userId) ?? null;
     },
-    async upsert(userId, data) {
+    async upsert(userId, data: FaceReferenceWriteInput) {
       const now = new Date().toISOString();
       const existing = rows.get(userId);
       const record: FaceReferenceRecord = {
         userId,
+        enrollmentId: data.enrollmentId || existing?.enrollmentId || randomUUID(),
         embedding: data.embedding,
         dim: data.dim,
         modelVersion: data.modelVersion,
+        referenceJpeg: data.referenceJpeg,
+        faceBox: data.faceBox,
         registeredAt: existing?.registeredAt ?? now,
         updatedAt: now,
       };

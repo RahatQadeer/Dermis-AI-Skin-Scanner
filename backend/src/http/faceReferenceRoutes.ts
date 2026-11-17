@@ -18,7 +18,7 @@ export async function handleFaceReferenceRoute(
   const faceReferences = deps.faceReferencesFor({ userId: user.id, accessToken });
 
   if (method === 'GET') {
-    return handleGetFaceReference(faceReferences, user.id);
+    return handleGetFaceReference(faceReferences, user.id, new URL(request.url));
   }
   if (method === 'POST') {
     return handleRegisterFaceReference(faceReferences, user.id, await request.json());

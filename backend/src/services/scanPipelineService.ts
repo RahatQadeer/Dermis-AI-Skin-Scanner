@@ -6,6 +6,13 @@ import type { PhotoStorage } from '../adapters/PhotoStorage';
 import { HttpError } from '../http/HttpError';
 import type { ProfileRepository } from '../repositories/profileTypes';
 import type { ScanRecordRow, ScanRepository } from '../repositories/scanTypes';
+import {
+  assertScanFaceIdentity,
+  type AssertScanFaceIdentityDeps,
+  type ScanFaceIdentityClaim,
+} from './faceIdentityGate';
+import type { FaceReferenceService } from './faceReferenceService';
+import type { LivenessChallengeService } from './livenessChallengeService';
 import type { QuotaService } from './quotaService';
 import { decodeAndValidateImage } from './validateScanImage';
 
@@ -14,6 +21,7 @@ export type CreateScanInput = {
   idempotencyKey: string;
   imageBase64: string;
   contentType: string;
+  faceIdentity: ScanFaceIdentityClaim;
 };
 
 export type ScanPipelineService = {
@@ -39,14 +47,20 @@ export type ScanPipelineDeps = {
   photos: PhotoStorage;
   /** Required before analyze — refuses without current face_analysis consent. */
   consent: FaceAnalysisConsentGate;
+  /** Enrolled face reference — required for server-side identity match on every scan. */
+  faceReferences: FaceReferenceService;
+  /** Liveness challenges — consumed once per scan. */
+  liveness: LivenessChallengeService;
+  /** Optional test inject for server-side face embedding. */
+  embedScanImage?: AssertScanFaceIdentityDeps['embedImage'];
   /** Kill switch — when true, refuse new scans. */
   disabled?: boolean;
 };
 
 /**
  * Auth is handled by the HTTP layer. Pipeline:
- * idempotency → consent → quota check → validate → store photo → analyze →
- * consume+insert → delete photo.
+ * idempotency → consent → face identity → quota check → validate → store photo →
+ * analyze → consume+insert → delete photo.
  */
 /**
  * Same user + idempotency key while a request is still running (client retry
@@ -72,48 +86,67 @@ function coalesceInFlight(
   return job;
 }
 
-export function createScanPipelineService(deps: ScanPipelineDeps): ScanPipelineService {
-  const createScanOnce: ScanPipelineService['createScan'] = async (input) => {
-    if (deps.disabled) {
-      throw new HttpError(503, 'scan_pipeline_disabled');
-    }
+async function createScanOnce(
+  deps: ScanPipelineDeps,
+  input: CreateScanInput,
+): ReturnType<ScanPipelineService['createScan']> {
+  if (deps.disabled) {
+    throw new HttpError(503, 'scan_pipeline_disabled');
+  }
 
-    const existing = await deps.scans.findByIdempotencyKey(input.userId, input.idempotencyKey);
-    if (existing) {
-      return { scan: existing, replayed: true };
-    }
+  const existing = await deps.scans.findByIdempotencyKey(input.userId, input.idempotencyKey);
+  if (existing) {
+    return { scan: existing, replayed: true };
+  }
 
-    await deps.consent.requireFaceAnalysisConsent(input.userId);
+  await deps.consent.requireFaceAnalysisConsent(input.userId);
 
-    // Fail fast before spending Gemini time/tokens.
-    const quota = await deps.quota.getStatus(input.userId);
-    if (quota.remaining <= 0) {
-      throw new HttpError(402, quota.plan === 'pro' ? 'daily_limit' : 'free_limit');
-    }
+  // Decode first so identity is bound to pixels (never trust client embedding alone).
+  const bytes = decodeAndValidateImage(input.imageBase64, input.contentType);
 
-    const bytes = decodeAndValidateImage(input.imageBase64, input.contentType);
-    const photoPath = await deps.photos.store({
-      userId: input.userId,
+  // Identity + liveness before quota spend / Gemini.
+  await assertScanFaceIdentity(
+    {
+      faceReferences: deps.faceReferences,
+      liveness: deps.liveness,
+      embedImage: deps.embedScanImage,
+    },
+    input.userId,
+    input.faceIdentity,
+    bytes,
+  );
+
+  // Fail fast before spending Gemini time/tokens.
+  const quota = await deps.quota.getStatus(input.userId);
+  if (quota.remaining <= 0) {
+    throw new HttpError(402, quota.plan === 'pro' ? 'daily_limit' : 'free_limit');
+  }
+
+  const photoPath = await deps.photos.store({
+    userId: input.userId,
+    bytes,
+    contentType: input.contentType,
+  });
+
+  try {
+    return await runAnalyzeAndPersist(deps, {
+      input,
       bytes,
       contentType: input.contentType,
+      photoPath,
     });
+  } catch (error) {
+    await deps.photos.delete(photoPath);
+    throw mapPipelineError(error);
+  }
+}
 
-    try {
-      return await runAnalyzeAndPersist(deps, {
-        input,
-        bytes,
-        contentType: input.contentType,
-        photoPath,
-      });
-    } catch (error) {
-      await deps.photos.delete(photoPath);
-      throw mapPipelineError(error);
-    }
-  };
-
+export function createScanPipelineService(deps: ScanPipelineDeps): ScanPipelineService {
   return {
     createScan: (input) =>
-      coalesceInFlight(`${input.userId}:${input.idempotencyKey}`, () => createScanOnce(input)),
+      coalesceInFlight(`${input.userId}:${input.idempotencyKey}`, () =>
+        createScanOnce(deps, input),
+      ),
     async listScans(userId) {
       const rows = await deps.scans.listByUserId(userId);
       return rows.slice().sort((a, b) => b.takenAt.localeCompare(a.takenAt));
@@ -178,9 +211,11 @@ async function persistScanAfterQuota(
   index: ReturnType<typeof calculateIndex>,
 ): Promise<{ scan: ScanRecordRow; replayed: boolean }> {
   try {
+    const activeFace = await deps.faceReferences.get(ctx.input.userId);
     const scan = await deps.scans.insert({
       id: randomUUID(),
       userId: ctx.input.userId,
+      faceEnrollmentId: activeFace?.enrollmentId ?? null,
       takenAt: new Date().toISOString(),
       indexScore: index.index,
       concerns: analysis.concerns,

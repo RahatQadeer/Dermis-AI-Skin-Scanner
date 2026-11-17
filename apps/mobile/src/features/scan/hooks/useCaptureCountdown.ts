@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-/** Short 2–1 beat so auto-take feels instant once the frame is green. */
-const COUNT_FROM = 2;
-const TICK_MS = 450;
+/** Single short beat once ready — keep the scan snappy. */
+const COUNT_FROM = 1;
+const TICK_MS = 350;
 
 /**
- * 3–2–1 hold-still gate before capture. Expo Go readiness (light + motion) is
- * separate; server Gemini still rejects unclear faces after the photo is taken.
+ * Hold-still gate before auto-capture. Once started, callers must not cancel
+ * on ready flicker — that caused the blink / timer restart loop.
  */
 export function useCaptureCountdown(onFinished: () => void) {
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);

@@ -48,7 +48,7 @@ export function useAnalysingResultsNavigation(completeNow: () => void) {
     }
     goResultsWhenScanReadyRef.current = false;
     finishingRef.current = true;
-    router.replace('/(tabs)/results');
+    router.replace('/(report)/results');
   }, [lastScan, router]);
 
   useEffect(() => {

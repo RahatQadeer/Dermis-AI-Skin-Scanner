@@ -1,8 +1,9 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef, type RefObject } from 'react';
+import { useRef, type RefObject } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { Button } from '@/src/components/Button';
 import { IconButton } from '@/src/components/IconButton';
 import { Screen } from '@/src/components/layout/Screen';
 import { ToastHost } from '@/src/components/layout/ToastHost';
@@ -11,42 +12,83 @@ import { getCopy } from '@/src/copy';
 import { colors, motion, spacing } from '@/src/theme';
 
 import type { CameraPreviewLiveHandle } from '../components/CameraPreviewLive';
-import { CameraStage } from '../components/CameraStage';
-import { ScanShutterButton } from '../components/ScanShutterButton';
-import { useCameraCaptureControls } from '../hooks/useCameraCaptureControls';
-import { useFaceEnrollCapture } from '../hooks/useFaceEnrollCapture';
-import { preloadFaceEmbedder } from '../lib/faceEmbedder';
+import { SelfiePreview } from '../components/SelfiePreview';
+import { useFaceSelfieRegister } from '../hooks/useFaceSelfieRegister';
+import { messageForLiveIssue } from '../lib/liveGuidanceCopy';
+import type { FaceEnrollMode } from '../lib/verifyFaceIdentity';
 
-/** One-time face registration before identity-gated analysis scans. */
+const CAMERA_HREF = '/(scan)/camera' as Href;
+
+function resolveEnrollMode(params: { replace?: string; addFace?: string }): FaceEnrollMode {
+  if (params.addFace === '1' || params.addFace === 'true') return 'addFace';
+  if (params.replace === '1' || params.replace === 'true') return 'replace';
+  return 'enroll';
+}
+
+/** One-time selfie registration — visually separate from the analysis scanner. */
 export function FaceEnrollScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ replace?: string }>();
-  const replace = params.replace === '1' || params.replace === 'true';
+  const params = useLocalSearchParams<{ replace?: string; addFace?: string }>();
+  const mode = resolveEnrollMode(params);
   const cameraRef = useRef<CameraPreviewLiveHandle | null>(null);
-  const controls = useCameraCaptureControls(cameraRef);
-  const enroll = useFaceEnrollCapture(cameraRef, controls, replace);
-  const copy = getCopy().screens.faceEnroll;
-  useEffect(() => {
-    void preloadFaceEmbedder();
-  }, []);
+  const enroll = useFaceSelfieRegister(cameraRef, mode);
+
+  if (enroll.done) {
+    return <FaceRegisterSuccess mode={mode} />;
+  }
 
   return (
+    <FaceSelfieForm
+      cameraRef={cameraRef}
+      enroll={enroll}
+      onBack={() => {
+        // Exit the scan funnel cleanly (same as camera Back).
+        router.replace('/(tabs)/home');
+      }}
+    />
+  );
+}
+
+function FaceSelfieForm({
+  cameraRef,
+  enroll,
+  onBack,
+}: {
+  cameraRef: RefObject<CameraPreviewLiveHandle | null>;
+  enroll: ReturnType<typeof useFaceSelfieRegister>;
+  onBack: () => void;
+}) {
+  const copy = getCopy().screens.faceEnroll;
+  return (
     <Screen
+      scroll
       padded
       edges={['top', 'left', 'right', 'bottom']}
-      style={styles.screen}
+      style={styles.cream}
       contentStyle={styles.content}
     >
-      <StatusBar style="light" />
-      <EnrollHeader
-        title={copy.title}
-        onBack={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/home'))}
-      />
-      <AppText variant="body" color={colors.surface} align="center">
+      <StatusBar style="dark" />
+      <SelfieHeader title={copy.title} onBack={onBack} />
+      <AppText variant="body" color={colors.muteBody} align="center">
         {copy.body}
       </AppText>
-      <EnrollCamera controls={controls} cameraRef={cameraRef} saving={enroll.saving} />
-      <EnrollShutter copy={copy} controls={controls} enroll={enroll} />
+      <SelfiePreview
+        ref={cameraRef}
+        active={enroll.permissionGranted}
+        ready={enroll.framingReady && !enroll.saving}
+      />
+      <AppText variant="caption" color={colors.mute} align="center">
+        {copy.privacyFooter}
+      </AppText>
+      <AppText variant="bodyStrong" color={colors.ink} align="center">
+        {enrollPrompt(copy, enroll)}
+      </AppText>
+      <Button
+        label={copy.shutterLabel}
+        loading={enroll.saving}
+        disabled={!enroll.permissionGranted || enroll.saving}
+        onPress={() => void enroll.register()}
+      />
       <ToastHost
         message={enroll.toast ?? ''}
         visible={Boolean(enroll.toast)}
@@ -58,51 +100,50 @@ export function FaceEnrollScreen() {
   );
 }
 
-function EnrollCamera({
-  controls,
-  cameraRef,
-  saving,
-}: {
-  controls: ReturnType<typeof useCameraCaptureControls>;
-  cameraRef: RefObject<CameraPreviewLiveHandle | null>;
-  saving: boolean;
-}) {
+function FaceRegisterSuccess({ mode }: { mode: FaceEnrollMode }) {
+  const router = useRouter();
+  const copy = getCopy().screens.faceEnroll;
+  const fromProfile = mode === 'replace' || mode === 'addFace';
+  const title = mode === 'addFace' ? copy.addFaceSuccessTitle : copy.successTitle;
+  const body = mode === 'addFace' ? copy.addFaceSuccessBody : copy.successBody;
   return (
-    <CameraStage
-      capture={controls.capture}
-      cameraRef={cameraRef}
-      flashing={saving}
-      afterFlash={() => undefined}
-      faceLocked={controls.liveQuality.ready}
-      countdownSeconds={null}
-    />
+    <Screen padded edges={['top', 'left', 'right', 'bottom']} style={styles.cream}>
+      <StatusBar style="dark" />
+      <View style={styles.success}>
+        <AppText variant="display" color={colors.ink} align="center">
+          {title}
+        </AppText>
+        <AppText variant="body" color={colors.muteBody} align="center">
+          {body}
+        </AppText>
+        <Button
+          label={fromProfile ? copy.successHome : copy.successCta}
+          onPress={() => router.replace(fromProfile ? '/(tabs)/profile' : CAMERA_HREF)}
+        />
+        {fromProfile ? null : (
+          <Button
+            label={copy.successHome}
+            variant="outline"
+            onPress={() => router.replace('/(tabs)/home')}
+          />
+        )}
+      </View>
+    </Screen>
   );
 }
 
-function EnrollShutter({
-  copy,
-  controls,
-  enroll,
-}: {
-  copy: ReturnType<typeof getCopy>['screens']['faceEnroll'];
-  controls: ReturnType<typeof useCameraCaptureControls>;
-  enroll: ReturnType<typeof useFaceEnrollCapture>;
-}) {
-  return (
-    <View style={styles.bottom}>
-      <AppText variant="bodyStrong" color={colors.surface} align="center">
-        {controls.liveQuality.ready ? copy.readyPrompt : copy.framePrompt}
-      </AppText>
-      <ScanShutterButton
-        onPress={() => void enroll.enroll()}
-        disabled={enroll.saving || controls.busy}
-        ready={controls.liveQuality.ready}
-      />
-    </View>
-  );
+function enrollPrompt(
+  copy: ReturnType<typeof getCopy>['screens']['faceEnroll'],
+  enroll: ReturnType<typeof useFaceSelfieRegister>,
+): string {
+  if (enroll.saving) return copy.savingPrompt;
+  if (!enroll.permissionGranted) return copy.framePrompt;
+  if (enroll.liveIssue) return messageForLiveIssue(enroll.liveIssue);
+  if (!enroll.framingReady) return copy.holdPrompt;
+  return copy.readyPrompt;
 }
 
-function EnrollHeader({ title, onBack }: { title: string; onBack: () => void }) {
+function SelfieHeader({ title, onBack }: { title: string; onBack: () => void }) {
   return (
     <View style={styles.header}>
       <IconButton accessibilityLabel={getCopy().nav.backA11y} onPress={onBack} size={44}>
@@ -110,7 +151,7 @@ function EnrollHeader({ title, onBack }: { title: string; onBack: () => void }) 
           {getCopy().nav.backGlyph}
         </AppText>
       </IconButton>
-      <AppText variant="label" color={colors.surface} align="center" style={styles.headerLabel}>
+      <AppText variant="headline" color={colors.ink} align="center" style={styles.headerLabel}>
         {title}
       </AppText>
       <View style={styles.headerSpacer} />
@@ -119,12 +160,12 @@ function EnrollHeader({ title, onBack }: { title: string; onBack: () => void }) 
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    backgroundColor: colors.ink,
+  cream: {
+    backgroundColor: colors.cream,
   },
   content: {
-    flex: 1,
     gap: spacing.md,
+    paddingBottom: spacing.xl,
   },
   header: {
     flexDirection: 'row',
@@ -136,9 +177,9 @@ const styles = StyleSheet.create({
   headerSpacer: {
     width: 44,
   },
-  bottom: {
+  success: {
+    flex: 1,
+    justifyContent: 'center',
     gap: spacing.md,
-    alignItems: 'center',
-    paddingBottom: spacing.md,
   },
 });

@@ -29,6 +29,7 @@ import { handleRevenueCatWebhook } from '../handlers/revenueCatWebhookHandler';
 import { handleCreateScan, handleDeleteAllScans, handleListScans } from '../handlers/scanHandlers';
 import { DELETE_ACCOUNT_HTML } from './deleteAccountPage';
 import { handleFaceReferenceRoute } from './faceReferenceRoutes';
+import { handleLivenessRoute } from './livenessRoutes';
 import { json } from './respond';
 import { routeRoutineAndSettings } from './routineRoutes';
 import type { AppDeps } from './createApp';
@@ -111,6 +112,9 @@ async function matchCoreAuthed(
   }
   if (path === '/v1/face-reference') {
     return handleFaceReferenceRoute(request, method, deps);
+  }
+  if (path.startsWith('/v1/face-liveness/')) {
+    return handleLivenessRoute(request, method, path, deps);
   }
   return null;
 }

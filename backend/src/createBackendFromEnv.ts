@@ -37,9 +37,13 @@ import { createAccountService } from './services/accountService';
 import { createConsentService } from './services/consentService';
 import { createEntitlementService } from './services/entitlementService';
 import { createFaceReferenceService } from './services/faceReferenceService';
+import { createLivenessChallengeService } from './services/livenessChallengeService';
 import { createProfileService } from './services/profileService';
 import { createQuotaService } from './services/quotaService';
 import type { BackendEnv } from './backendEnv';
+
+/** Process-wide liveness store (pipeline is built per request). */
+const sharedLiveness = createLivenessChallengeService();
 
 type LiveStores = {
   scans: ScanRepository;
@@ -66,6 +70,8 @@ function createMemoryOrHybridBackend(env: BackendEnv): (request: Request) => Pro
     deps.credentials = createSupabaseCredentialsPort({
       supabaseUrl: env.supabaseUrl,
       anonKey: env.supabaseAnonKey,
+      // Admin create + password grant when available (avoids anon signup rate limits / confirm gating).
+      serviceRoleKey: env.supabaseServiceRoleKey,
     });
   }
   return createApp(deps);
@@ -118,6 +124,8 @@ function buildLiveDeps(env: BackendEnv, auth: AuthPort, stores: LiveStores): App
     credentials: createSupabaseCredentialsPort({
       supabaseUrl: url,
       anonKey: anon,
+      // Confirm email server-side so the app gets a session immediately on sign-up.
+      serviceRoleKey: env.supabaseServiceRoleKey,
     }),
     profilesFor: ({ accessToken }) =>
       createProfileService(
@@ -131,6 +139,7 @@ function buildLiveDeps(env: BackendEnv, auth: AuthPort, stores: LiveStores): App
       createFaceReferenceService(
         createSupabaseFaceReferenceRepository({ supabaseUrl: url, anonKey: anon, accessToken }),
       ),
+    livenessFor: () => sharedLiveness,
     routineSettingsFor: ({ accessToken }) => ({
       // Persisted in Postgres under the user's JWT (RLS); the in-memory store
       // lost every routine on restart/deploy.
@@ -162,6 +171,14 @@ function liveScanPipeline(opts: {
     consent: createConsentService(
       createSupabaseConsentRepository({ supabaseUrl: url, anonKey: anon, accessToken }),
     ),
+    faceReferences: createFaceReferenceService(
+      createSupabaseFaceReferenceRepository({
+        supabaseUrl: url,
+        anonKey: anon,
+        accessToken,
+      }),
+    ),
+    liveness: sharedLiveness,
     analyzer: resolveSkinAnalyzer({
       geminiApiKey: env.geminiApiKey,
       geminiModel: env.geminiModel,

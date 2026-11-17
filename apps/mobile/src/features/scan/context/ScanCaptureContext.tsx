@@ -19,6 +19,14 @@ export type PendingScanCapture = {
   idempotencyKey: string;
   imageBase64: string;
   contentType: 'image/jpeg';
+  /** Live embedding + liveness challenge — server re-embeds the photo. */
+  faceIdentity: {
+    embedding: number[];
+    modelVersion: string;
+    livenessPassed: true;
+    livenessChallengeId: string;
+    faceBox: { xMin: number; yMin: number; width: number; height: number };
+  };
 };
 
 type ScanCaptureState = {

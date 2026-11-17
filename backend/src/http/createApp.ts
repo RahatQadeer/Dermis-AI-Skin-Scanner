@@ -6,6 +6,7 @@ import type { AccountService } from '../services/accountService';
 import type { ConsentService } from '../services/consentService';
 import type { EntitlementService } from '../services/entitlementService';
 import type { FaceReferenceService } from '../services/faceReferenceService';
+import type { LivenessChallengeService } from '../services/livenessChallengeService';
 import type { ProfileService } from '../services/profileService';
 import type { QuotaService } from '../services/quotaService';
 import type { ScanPipelineService } from '../services/scanPipelineService';
@@ -56,6 +57,7 @@ export type AppDeps = {
   accountFor?: AccountServiceFactory;
   consentsFor?: ConsentServiceFactory;
   faceReferencesFor?: FaceReferenceServiceFactory;
+  livenessFor?: (ctx: { userId: string }) => LivenessChallengeService;
   /** Shared account service for public deletion (no user context). */
   publicAccount?: AccountService;
   revenueCatWebhook?: RevenueCatWebhookDeps;

@@ -1,6 +1,7 @@
 import type { LiveScanIssue } from '../lib/liveScanGuidance';
 
-export const READY_STREAK = 2;
+/** One clear OK unlocks framing fast; two fails drop ready so tips stay honest. */
+export const READY_STREAK = 1;
 export const FAIL_STREAK = 2;
 
 export type HysteresisState = {

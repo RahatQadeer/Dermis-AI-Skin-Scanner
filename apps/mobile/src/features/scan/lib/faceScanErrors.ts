@@ -12,6 +12,12 @@ const FACE_CODES = new Set([
   'face_glasses',
   'face_not_front',
   'face_not_clear',
+  'face_identity_mismatch',
+  'face_reference_required',
+  'face_liveness_required',
+  'face_recognition_unavailable',
+  'face_replace_reauth_required',
+  'face_model_mismatch',
 ]);
 
 export function isFaceScanError(error: unknown): boolean {
@@ -42,6 +48,13 @@ function faceCopyByCode(code: string): string | undefined {
     face_obstructed: camera.faceObstructed,
     face_glasses: camera.faceGlasses,
     face_not_front: camera.faceNotFront,
+    face_identity_mismatch: camera.identityMismatch,
+    face_reference_required: camera.identityNeedEnroll,
+    face_liveness_required: camera.livenessHoldRetry,
+    face_recognition_unavailable: camera.identityUnavailable,
+    face_replace_reauth_required: camera.identityMismatch,
+    face_model_mismatch:
+      'Face check was updated. Please re-register your face in Profile → Update face reference.',
   };
   return map[code];
 }

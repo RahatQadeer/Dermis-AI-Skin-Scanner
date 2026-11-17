@@ -17,7 +17,11 @@ export function useCameraScreenState() {
   const cameraRef = useRef<CameraPreviewLiveHandle>(null);
   const [retakeToast, setRetakeToast] = useState<string | null>(null);
   const controls = useCameraCaptureControls(cameraRef);
-  const enrollGate = useFaceEnrollmentGate(consent.ready && consent.faceAnalysisGranted);
+  // Pass consent.ready alone — gate stays locked until consent + enroll are resolved
+  // (avoids a 1s flash of the scanner before redirecting to face setup).
+  const enrollGate = useFaceEnrollmentGate(
+    Boolean(consent.ready && consent.faceAnalysisGranted),
+  );
 
   useRetakeMessageEffect(params.retakeMessage, retakeMessage, setRetakeToast, setRetakeMessage);
   useFaceAnalysisConsentRedirect(consent.ready, consent.faceAnalysisGranted, router);
@@ -29,19 +33,32 @@ export function useCameraScreenState() {
     controls.capture.clearError();
   }, [controls, setRetakeMessage]);
 
+  const goBack = useCallback(() => {
+    // Always leave the scan funnel — stack.back() often returns to
+    // face-setup / consent / analysing, which immediately forwards again
+    // and makes Back look broken.
+    controls.countdown.cancel();
+    router.replace('/(tabs)/home');
+  }, [controls.countdown, router]);
+
   return {
     router,
+    goBack,
     cameraRef: cameraRef as RefObject<CameraPreviewLiveHandle | null>,
-    flashing: controls.flashing,
+    flashing: false,
     capture: controls.capture,
     shutter: controls.shutter,
     afterFlash: controls.afterFlash,
     countdown: controls.countdown,
     errorToast: controls.coachToast ?? retakeToast ?? controls.capture.errorToast,
     clearError,
-    // Enroll redirect runs in background — do not freeze the shutter for ~1s.
-    busy: controls.busy,
+    busy: controls.busy || !enrollGate.cameraAllowed,
     liveQuality: controls.liveQuality,
+    captureReady: controls.captureReady && enrollGate.cameraAllowed,
+    identityChecking: controls.identityChecking,
+    identityMessage: controls.identityMessage,
+    statusMessage: controls.statusMessage,
+    cameraAllowed: enrollGate.cameraAllowed,
     enrollChecking: enrollGate.checking,
   };
 }

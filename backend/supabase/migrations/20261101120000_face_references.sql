@@ -1,8 +1,9 @@
 -- Face identity reference (approach D2): per-user embedding for on-device
 -- matching before each scan. Stores only the non-image vector; the raw face
 -- photo is never persisted. User-scoped via RLS (no service role needed).
+-- Idempotent: safe if the table was already created.
 
-create table public.face_references (
+create table if not exists public.face_references (
   user_id uuid primary key references public.profiles (id) on delete cascade,
   embedding real[] not null,
   dim smallint not null,
@@ -16,16 +17,19 @@ create table public.face_references (
 
 alter table public.face_references enable row level security;
 
+drop policy if exists face_references_select_own on public.face_references;
 create policy face_references_select_own on public.face_references
   for select
   to authenticated
   using (user_id = auth.uid());
 
+drop policy if exists face_references_insert_own on public.face_references;
 create policy face_references_insert_own on public.face_references
   for insert
   to authenticated
   with check (user_id = auth.uid());
 
+drop policy if exists face_references_update_own on public.face_references;
 create policy face_references_update_own on public.face_references
   for update
   to authenticated
@@ -34,6 +38,7 @@ create policy face_references_update_own on public.face_references
 
 grant select, insert, update on public.face_references to authenticated;
 
+drop trigger if exists face_references_set_updated_at on public.face_references;
 create trigger face_references_set_updated_at
   before update on public.face_references
   for each row
